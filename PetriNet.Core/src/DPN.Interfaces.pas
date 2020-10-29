@@ -133,6 +133,7 @@ type
   end;
 
   IPlaza = interface(IBloqueable)
+  ['{78994088-B3B8-4F1D-A053-E3EFC70A8F74}']
     function GetOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 
     function GetTokens: IReadOnlyList<IToken>;
@@ -200,10 +201,14 @@ type
   EEstrategiaDisparoTransicion = (ArcosMandan, TokenByToken);
 
   ITransicion = interface(INodoPetriNet)
+  ['{905A0070-02F5-4F86-BC13-72E1398342D4}']
     function GetPrioridad: Integer;
     procedure SetPrioridad(const APrioridad: integer);
 
     function GetIsHabilitado: Boolean;
+
+    function GetTransicionesIntentadas: int64;
+    function GetTransicionesRealizadas: int64;
 
     function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
 
@@ -237,6 +242,9 @@ type
 
     property Condiciones: IReadOnlyList<ICondicion> read GetCondiciones;
     property Acciones: IReadOnlyList<IAccion> read GetAcciones;
+
+    property TransicionesIntentadas: int64 read GetTransicionesIntentadas;
+    property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
 
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
   end;
@@ -291,10 +299,13 @@ type
   end;
 
   IModelo = interface(INodoPetriNet)
+  ['{2393661C-D3AD-40BD-82DA-D6946AA3E5CA}']
     function GetElementos: IList<INodoPetriNet>;
 
     function GetTipoModelo: string;
     procedure SetTipoModelo(const Valor: string);
+
+    function GetTransiciones: IList<ITransicion>;
 
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
@@ -303,19 +314,25 @@ type
   TListaModelos = IList<IModelo>;
   TArrayModelos = TArray<IModelo>;
 
-  IPetriNet = interface
-    function GetGrafo: IModelo;
-    procedure SetGrafo(AGrafo: IModelo);
+  EEstadoPetriNet = (Iniciada, Detenida, GrafoNoAsignado);
 
-    function GetMultipleEnablednessOfTransitions: Boolean;
-    procedure SetMultipleEnablednessOfTransitions(const AValor: Boolean);
-
-    procedure Start;
-    procedure Stop;
-
-    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
-    property Grafo: IModelo read GetGrafo write SetGrafo;
-  end;
+//  IPetriNet = interface
+//    function GetGrafo: IModelo;
+//    procedure SetGrafo(AGrafo: IModelo);
+//
+//    function GetEstado: EEstadoPetriNet;
+//    procedure SetEstado(const AValor: EEstadoPetriNet);
+//
+//    function GetMultipleEnablednessOfTransitions: Boolean;
+//    procedure SetMultipleEnablednessOfTransitions(const AValor: Boolean);
+//
+//    procedure Start;
+//    procedure Stop;
+//
+//    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
+//    property Grafo: IModelo read GetGrafo write SetGrafo;
+//    property Estado: EEstadoPetriNet read GetEstado write SetEstado;
+//  end;
 
 implementation
 

@@ -27,6 +27,11 @@ type
   public
     constructor Create; override;
 
+    procedure Start; override;
+    procedure Stop; override;
+
+    function GetTransiciones: IList<ITransicion>; virtual;
+
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
     property Nombre: string read GetNombre write SetNombre;
@@ -60,6 +65,24 @@ begin
   Result := FTipoModelo
 end;
 
+function TdpnModelo.GetTransiciones: IList<ITransicion>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LTransicion: ITransicion;
+begin
+  Result := TCollections.CreateList<ITransicion>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, ITransicion, LTransicion) then
+      Result.Add(LTransicion)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             Result.AddRange(LModelo.GetTransiciones.ToArray);
+         end;
+  end;
+end;
+
 procedure TdpnModelo.SetNombre(const Valor: string);
 begin
   Guard.CheckFalse(Valor.IsEmpty, 'El Nombre no puede ser nulo');
@@ -77,6 +100,28 @@ begin
   begin
     FTipoModelo := Valor;
     //DAVE evento
+  end;
+end;
+
+procedure TdpnModelo.Start;
+var
+  LNodo: INodoPetriNet;
+begin
+  inherited;
+  for LNodo in FElementos do
+  begin
+    LNodo.Start;
+  end;
+end;
+
+procedure TdpnModelo.Stop;
+var
+  LNodo: INodoPetriNet;
+begin
+  inherited;
+  for LNodo in FElementos do
+  begin
+    LNodo.Stop;
   end;
 end;
 

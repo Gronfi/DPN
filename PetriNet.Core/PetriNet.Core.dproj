@@ -160,6 +160,7 @@
         <DCCReference Include="src\DPN.Transicion.TokenByToken.pas"/>
         <DCCReference Include="src\DPN.PetriNet.pas"/>
         <DCCReference Include="src\DPN.Bloqueable.pas"/>
+        <DCCReference Include="src\DPN.Helpers.pas"/>
         <None Include="PetriNet.Core.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

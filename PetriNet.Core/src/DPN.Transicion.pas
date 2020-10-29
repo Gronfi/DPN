@@ -18,6 +18,9 @@ type
     FIsHabilitado: boolean;
     FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
 
+    FTransicionesIntentadas: int64;
+    FTransicionesRealizadas: int64;
+
     FPrioridad: integer;
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
@@ -44,6 +47,9 @@ type
     function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>; virtual;
 
     function GetIsHabilitado: Boolean; virtual;
+
+    function GetTransicionesIntentadas: int64;
+    function GetTransicionesRealizadas: int64;
 
     function GetArcosIn: IReadOnlyList<IArcoIn>; virtual;
     function GetArcosOut: IReadOnlyList<IArcoOut>; virtual;
@@ -95,6 +101,9 @@ type
 
     property Condiciones: IReadOnlyList<ICondicion> read GetCondiciones;
     property Acciones: IReadOnlyList<IAccion> read GetAcciones;
+
+    property TransicionesIntentadas: int64 read GetTransicionesIntentadas;
+    property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
 
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
   end;
@@ -200,6 +209,8 @@ begin
   inherited;
   FPrioridad := 1;
   FIsActivado := false;
+  FTransicionesIntentadas := 0;
+  FTransicionesRealizadas := 0;
   FAlgunaCondicionNoDependeDeTokenDesactivada := False;
   FCondiciones := TCollections.CreateList<ICondicion>;
   FAcciones := TCollections.CreateList<IAccion>;
@@ -214,6 +225,7 @@ end;
 function TdpnTransicion.EjecutarTransicion: Boolean;
 begin
   Result := False;
+  Inc(FTransicionesIntentadas);
   CapturarDependencias; // todas las dependencias son capturadas
   // transicion efectiva
   try
@@ -228,6 +240,8 @@ begin
       Exit;
     // 4) estrategia disparo
     Result := EstrategiaDisparo;
+    if Result then
+      Inc(FTransicionesRealizadas);
   finally
     LiberarDependencias; // liberacion de dependencias
   end;
@@ -365,6 +379,16 @@ end;
 function TdpnTransicion.GetPrioridad: Integer;
 begin
   Result := FPrioridad
+end;
+
+function TdpnTransicion.GetTransicionesIntentadas: int64;
+begin
+  Result := FTransicionesIntentadas
+end;
+
+function TdpnTransicion.GetTransicionesRealizadas: int64;
+begin
+  Result := FTransicionesRealizadas
 end;
 
 procedure TdpnTransicion.LiberarDependencias;
