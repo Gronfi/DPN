@@ -32,7 +32,7 @@ uses
   DPN.MarcadoTokens in '..\PetriNet.Core\src\DPN.MarcadoTokens.pas',
   DPN.Modelo in '..\PetriNet.Core\src\DPN.Modelo.pas',
   DPN.NodoPetriNet in '..\PetriNet.Core\src\DPN.NodoPetriNet.pas',
-  DPN.PetriNet.Coordinador in '..\PetriNet.Core\src\DPN.PetriNet.Coordinador.pas',
+  DPN.PetriNet in '..\PetriNet.Core\src\DPN.PetriNet.pas',
   DPN.Plaza in '..\PetriNet.Core\src\DPN.Plaza.pas',
   DPN.Token in '..\PetriNet.Core\src\DPN.Token.pas',
   DPN.TokenColoreado in '..\PetriNet.Core\src\DPN.TokenColoreado.pas',

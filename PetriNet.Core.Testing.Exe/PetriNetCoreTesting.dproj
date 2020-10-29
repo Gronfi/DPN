@@ -173,7 +173,7 @@
         <DCCReference Include="..\PetriNet.Core\src\DPN.MarcadoTokens.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.Modelo.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.NodoPetriNet.pas"/>
-        <DCCReference Include="..\PetriNet.Core\src\DPN.PetriNet.Coordinador.pas"/>
+        <DCCReference Include="..\PetriNet.Core\src\DPN.PetriNet.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.Plaza.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.Token.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.TokenColoreado.pas"/>

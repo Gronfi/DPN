@@ -50,7 +50,7 @@ contains
   DPN.TokenColoreado in 'src\DPN.TokenColoreado.pas',
   DPN.Modelo in 'src\DPN.Modelo.pas',
   DPN.Transicion.TokenByToken in 'src\DPN.Transicion.TokenByToken.pas',
-  DPN.PetriNet.Coordinador in 'src\DPN.PetriNet.Coordinador.pas',
+  DPN.PetriNet in 'src\DPN.PetriNet.pas',
   DPN.Bloqueable in 'src\DPN.Bloqueable.pas';
 
 end.

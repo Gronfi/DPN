@@ -25,6 +25,13 @@
 * Spring4D
 * DUnitX
 
+## Version de Delphi recomendada
+
+10.4.1 debido a que se han resuelto problemas de las librerías parallel utilizadas aquí
+
+## Estado
+
+El proyecto está en sus primeros pasos
 
 ### Caracteristicas
 * Evolución de tokens coloreados

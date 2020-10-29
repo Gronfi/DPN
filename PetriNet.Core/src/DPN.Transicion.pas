@@ -17,6 +17,7 @@ type
     FIsActivado: boolean;
     FIsHabilitado: boolean;
     FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
+
     FPrioridad: integer;
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
