@@ -158,7 +158,7 @@
         <DCCReference Include="src\DPN.TokenColoreado.pas"/>
         <DCCReference Include="src\DPN.Modelo.pas"/>
         <DCCReference Include="src\DPN.Transicion.TokenByToken.pas"/>
-        <DCCReference Include="src\DPN.PetriNet.Coordinador.pas"/>
+        <DCCReference Include="src\DPN.PetriNet.pas"/>
         <DCCReference Include="src\DPN.Bloqueable.pas"/>
         <None Include="PetriNet.Core.todo"/>
         <BuildConfiguration Include="Release">

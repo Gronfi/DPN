@@ -745,6 +745,11 @@ begin
   else Assert.Fail;
 end;
 
+procedure TPetriNetCoreTesting_Transicion.Test_Transicion_CondicionesNoOK_EventoCambio_1_Estado_Origen_1_Estado_Destino;
+begin
+
+end;
+
 procedure TPetriNetCoreTesting_Transicion.Test_Transicion_CondicionesOK_1_Estado_Origen_1_Estado_Destino;
 var
   LToken: IToken;

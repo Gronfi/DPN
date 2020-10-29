@@ -17,6 +17,7 @@ type
     FIsActivado: boolean;
     FIsHabilitado: boolean;
     FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
+
     FPrioridad: integer;
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
@@ -128,8 +129,8 @@ begin
       if FIsHabilitado then
       begin
         FIsActivado := True;
+        FOnRequiereEvaluacion.Invoke(ID, Self);
       end;
-      //DAVE: evento
     end;
   finally
     FLock.Exit;
@@ -207,6 +208,7 @@ begin
   FEstadosHabilitacion := TCollections.CreateDictionary<integer, boolean>;
   FEstadoCondicionesNoDependenDeToken := TCollections.CreateDictionary<integer, boolean>;
   FDependencias := TCollections.CreateList<IBloqueable>;
+  FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
 end;
 
 function TdpnTransicion.EjecutarTransicion: Boolean;
@@ -355,6 +357,11 @@ begin
   Result := FIsHabilitado
 end;
 
+function TdpnTransicion.GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
+begin
+  Result := FOnRequiereEvaluacion
+end;
+
 function TdpnTransicion.GetPrioridad: Integer;
 begin
   Result := FPrioridad
@@ -386,7 +393,7 @@ begin
   if FIsHabilitado then
   begin
     FIsActivado := True;
-    //DAVE: evento
+    FOnRequiereEvaluacion.Invoke(ID, Self);
   end;
 end;
 

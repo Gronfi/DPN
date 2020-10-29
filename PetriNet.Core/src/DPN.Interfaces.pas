@@ -303,6 +303,20 @@ type
   TListaModelos = IList<IModelo>;
   TArrayModelos = TArray<IModelo>;
 
+  IPetriNet = interface
+    function GetGrafo: IModelo;
+    procedure SetGrafo(AGrafo: IModelo);
+
+    function GetMultipleEnablednessOfTransitions: Boolean;
+    procedure SetMultipleEnablednessOfTransitions(const AValor: Boolean);
+
+    procedure Start;
+    procedure Stop;
+
+    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
+    property Grafo: IModelo read GetGrafo write SetGrafo;
+  end;
+
 implementation
 
 end.
