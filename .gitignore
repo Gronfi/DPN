@@ -1,0 +1,17 @@
+/Bin
+/PetriNet.Core/Win64
+/PetriNet.Core/*.local
+/PetriNet.Core/*.identcache
+/PetriNet.Core/*.res
+/PetriNet.Core/*.todo
+/PetriNet.Core.Testing.Exe/*.local
+/PetriNet.Core.Testing.Exe/*.res
+/*.local
+/PetriNet.Core.Testing.Exe/__history
+/PetriNet.Core.Testing.Exe/src/__history
+/PetriNet.Core/__history
+/PetriNet.Core/src/__history
+/ThirdParty/Spring4D/Packages/Used/*.res
+/ThirdParty/Spring4D/Packages/Used/*.local
+/ThirdParty/Spring4D/Packages/Used/*.identcache
+/ThirdParty/Spring4D/Packages/Used/__history

@@ -1,0 +1,72 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B5CB93B4-C60B-49BE-8548-C1EB6A644ACC}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="ThirdParty\Spring4D\Packages\Used\Spring.Base.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="PetriNet.Core\PetriNet.Core.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Spring_Base">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Base.dproj"/>
+    </Target>
+    <Target Name="Spring_Base:Clean">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Base.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Spring_Base:Make">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Base.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Spring_Core">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj"/>
+    </Target>
+    <Target Name="Spring_Core:Clean">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Spring_Core:Make">
+        <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PetriNet_Core">
+        <MSBuild Projects="PetriNet.Core\PetriNet.Core.dproj"/>
+    </Target>
+    <Target Name="PetriNet_Core:Clean">
+        <MSBuild Projects="PetriNet.Core\PetriNet.Core.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PetriNet_Core:Make">
+        <MSBuild Projects="PetriNet.Core\PetriNet.Core.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PetriNetCoreTesting">
+        <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj"/>
+    </Target>
+    <Target Name="PetriNetCoreTesting:Clean">
+        <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PetriNetCoreTesting:Make">
+        <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Spring_Base;Spring_Core;PetriNet_Core;PetriNetCoreTesting"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Spring_Base:Clean;Spring_Core:Clean;PetriNet_Core:Clean;PetriNetCoreTesting:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Spring_Base:Make;Spring_Core:Make;PetriNet_Core:Make;PetriNetCoreTesting:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

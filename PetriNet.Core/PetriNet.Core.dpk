@@ -1,0 +1,56 @@
+package PetriNet.Core;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  Spring.Base;
+
+contains
+  DPN.Arco in 'src\DPN.Arco.pas',
+  DPN.NodoPetriNet in 'src\DPN.NodoPetriNet.pas',
+  DPN.Interfaces in 'src\DPN.Interfaces.pas',
+  DPN.ArcoIn in 'src\DPN.ArcoIn.pas',
+  DPN.ArcoOut in 'src\DPN.ArcoOut.pas',
+  DPN.Core in 'src\DPN.Core.pas',
+  DPN.ArcoReset in 'src\DPN.ArcoReset.pas',
+  DPN.Plaza in 'src\DPN.Plaza.pas',
+  DPN.Transicion in 'src\DPN.Transicion.pas',
+  DPN.Condicion in 'src\DPN.Condicion.pas',
+  DPN.Accion in 'src\DPN.Accion.pas',
+  DPN.Etiqueta in 'src\DPN.Etiqueta.pas',
+  DPN.MarcadoTokens in 'src\DPN.MarcadoTokens.pas',
+  DPN.Variable in 'src\DPN.Variable.pas',
+  DPN.Token in 'src\DPN.Token.pas',
+  DPN.TokenSistema in 'src\DPN.TokenSistema.pas',
+  DPN.TokenColoreado in 'src\DPN.TokenColoreado.pas',
+  DPN.Modelo in 'src\DPN.Modelo.pas',
+  DPN.Transicion.TokenByToken in 'src\DPN.Transicion.TokenByToken.pas',
+  DPN.PetriNet.Coordinador in 'src\DPN.PetriNet.Coordinador.pas',
+  DPN.Bloqueable in 'src\DPN.Bloqueable.pas';
+
+end.
