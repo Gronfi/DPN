@@ -92,6 +92,8 @@ type
     procedure Start; override;
     procedure Stop; override;
 
+    function DebugLog: string;
+
     property Prioridad: integer read GetPrioridad write SetPrioridad;
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsActivado: Boolean read GetIsActivado;
@@ -222,6 +224,11 @@ begin
   FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
 end;
 
+function TdpnTransicion.DebugLog: string;
+begin
+  Result := '';
+end;
+
 function TdpnTransicion.EjecutarTransicion: Boolean;
 begin
   Result := False;
@@ -241,7 +248,14 @@ begin
     // 4) estrategia disparo
     Result := EstrategiaDisparo;
     if Result then
+    begin
       Inc(FTransicionesRealizadas);
+      if FIsHabilitado then
+      begin
+        FIsActivado := True;
+        FOnRequiereEvaluacion.Invoke(ID, Self);
+      end;
+    end;
   finally
     LiberarDependencias; // liberacion de dependencias
   end;

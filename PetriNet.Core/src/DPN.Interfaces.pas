@@ -233,6 +233,8 @@ type
     procedure AddArcoOut(AArco: IArcoOut);
     procedure EliminarArcoOut(AArco: IArcoOut);
 
+    function DebugLog: string;
+
     property Prioridad: integer read GetPrioridad write SetPrioridad;
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsActivado: Boolean read GetIsActivado;

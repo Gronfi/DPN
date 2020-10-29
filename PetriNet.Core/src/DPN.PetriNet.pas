@@ -35,6 +35,7 @@ type
     procedure LinkarTransicionesAlCoordinador;
     procedure DeslinkarTransicionesAlCoordinador;
 
+    procedure EjecutarTransicionEnTask(ATransicion: ITransicion);
     procedure Execute; override;
   public
     constructor Create;
@@ -104,12 +105,23 @@ begin
   AddTransicionAEvaluar(ATransicion);
 end;
 
+procedure TdpnPetriNetCoordinador.EjecutarTransicionEnTask(ATransicion: ITransicion);
+var
+  LTask: ITask;
+begin
+  LTask := TTask.Create(
+                        procedure
+                        begin
+                          ATransicion.EjecutarTransicion;
+                        end);
+  LTask.Start;
+end;
+
 procedure TdpnPetriNetCoordinador.Execute;
 var
   LSize      : Integer;
   LTransicion: ITransicion;
   LRes       : TWaitResult;
-  LTask      : ITask;
 begin
   while not Terminated do
   begin
@@ -127,12 +139,7 @@ begin
                   end;
                 True:
                   begin
-                    LTask := TTask.Create(
-                                          procedure
-                                          begin
-                                            LTransicion.EjecutarTransicion;
-                                          end);
-                    LTask.Start;
+                    EjecutarTransicionEnTask(LTransicion);
                   end;
               end;
             end
