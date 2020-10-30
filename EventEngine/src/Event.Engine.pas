@@ -32,7 +32,7 @@ type
 
 {$REGION 'TEvent'}
 
-  TEvent = class abstract(TInterfacedObject, IEvent)
+  TEvent = class abstract(TInterfacedObject, IEventEE)
   private
     FCreationDateTime: TDateTime;
     FSender          : TObject;
@@ -56,7 +56,7 @@ type
 {$ENDREGION}
 {$REGION 'TEventListener'}
 
-  TEventListener = class abstract(TInterfacedObject, IEventListener, IObject)
+  TEventListener = class abstract(TInterfacedObject, IEventEEListener, IObject)
   private
     FRegistered                   : Boolean;
     FIsCodeToExecuteInUIMainThread: Boolean;
@@ -90,7 +90,7 @@ type
 
     destructor Destroy; override;
 
-    function GetConditionsMatch(AEvent: IEvent): Boolean; virtual;
+    function GetConditionsMatch(AEvent: IEventEE): Boolean; virtual;
 
     function GetMessajeClass: TClass; virtual; abstract;
 
@@ -99,7 +99,7 @@ type
 
     function GetAsObject: TObject;
 
-    procedure DoOnNewEvent(AEvent: IEvent); virtual;
+    procedure DoOnNewEvent(AEvent: IEventEE); virtual;
 
     property IsCodeToExecuteInUIMainThread: Boolean read GetIsCodeToExecuteInUIMainThread write SetIsCodeToExecuteInUIMainThread;
     property FilterCondition: TListenerFilter read GetListenerFilter write SetListenerFilter;
@@ -108,12 +108,12 @@ type
     property Channel        : String read GetChannel;
   end;
 
-  TEventListener<T: IEvent> = class abstract(TEventListener, IEventListener<T>)
+  TEventListenerBase<T: IEventEE> = class abstract(TEventListener, IEventEEListener<T>, IEventEEListener)
   private
     FOnEvent: IEvent<TNotifyEvent>;
   protected
     function GetOnEvent: IEvent<TNotifyEvent>;
-    procedure DoOnNewEvent(AEvent: IEvent); override; final;
+    procedure DoOnNewEvent(AEvent: IEventEE); override;
   public
     constructor Create(const AChannel: String = ''; const AFilterCondition: TListenerFilter = nil; const ACodeExecutesInMainUIThread: Boolean = False; const ATypeRestriction: EEventTypeRestriction = EEventTypeRestriction.mtrAllowDescendants); overload; override;
     destructor Destroy; override;
@@ -121,6 +121,16 @@ type
     function GetMessajeClass: TClass; override; final;
 
     property OnEvent: IEvent<TNotifyEvent> read GetOnEvent;
+  end;
+
+  TEventListener<T: IEventEE> = class (TEventListenerBase<T>, IEventEEListener<T>, IEventEEListener)
+  private
+    FAction: TListenerAction;
+  protected
+    procedure DoOnNewEvent(AEvent: IEventEE); override; final;
+  public
+    constructor Create(const AAction: TListenerAction; const AFilterCondition: TListenerFilter; const AChannel: String = ''; const ACodeExecutesInMainUIThread: Boolean = False; const ATypeRestriction: EEventTypeRestriction = EEventTypeRestriction.mtrAllowDescendants); overload;
+    destructor Destroy; override;
   end;
 
 {$ENDREGION}
@@ -134,7 +144,7 @@ type
     FSynchronizer: TLightweightMREW;
     FLock        : TSpinLock;
     FEventCount: Int64;
-    FEvents    : TThreadedQueue<IEvent>;
+    FEvents    : TThreadedQueue<IEventEE>;
     FIsBusy      : Boolean;
 
     procedure AdquireWrite;
@@ -142,10 +152,10 @@ type
     procedure AdquireRead;
     procedure ReleaseRead;
 
-    procedure ProcessQueuedEvent(AEvent: IEvent);
+    procedure ProcessQueuedEvent(AEvent: IEventEE);
     procedure ProcessEvents;
 
-    function GetNextEvent(out AQueueSize: Integer; var AEvent: IEvent): TWaitResult;
+    function GetNextEvent(out AQueueSize: Integer; var AEvent: IEventEE): TWaitResult;
   protected
     procedure SetIsBusy(const AValue: Boolean);
     function GetIsBusy: Boolean;
@@ -154,12 +164,12 @@ type
 
     function GetProcessedEventCount: Int64;
 
-    procedure ProcessEvent(AEvent: IEvent); virtual; abstract;
+    procedure ProcessEvent(AEvent: IEventEE); virtual; abstract;
   public
     constructor Create; overload; virtual;
     destructor Destroy; override;
 
-    procedure AddEvent(AEvent: IEvent); virtual;
+    procedure AddEvent(AEvent: IEventEE); virtual;
 
     property ProcessedEventCount: Int64 read GetProcessedEventCount;
     property IsBusy: Boolean read GetIsBusy;
@@ -170,17 +180,17 @@ type
 
   TThreadEventHandler = class(TThreadEventHandlerBase)
   private
-    FListeners            : IList<IEventListener>;
+    FListeners            : IList<IEventEEListener>;
     FSynchronizerListeners: TLightweightMREW;
     FChannel              : TEventChannel;
   protected
-    procedure ProcessEvent(AEvent: IEvent); override;
+    procedure ProcessEvent(AEvent: IEventEE); override;
 
     procedure InitializeListeners; virtual;
     procedure FinalizeListeners; virtual;
 
     function GetListenersCount: Integer;
-    function GetEventRelevant(AEvent: IEvent): Boolean; virtual;
+    function GetEventRelevant(AEvent: IEventEE): Boolean; virtual;
   public
     procedure AfterConstruction; override;
 
@@ -188,8 +198,8 @@ type
     constructor Create(const AChannel: TEventChannel); overload;
     destructor Destroy; override;
 
-    procedure RegisterListener(AEventListener: IEventListener);
-    procedure UnregisterListener(AEventListener: IEventListener);
+    procedure RegisterListener(AEventListener: IEventEEListener);
+    procedure UnregisterListener(AEventListener: IEventEEListener);
 
     property ListenersCount: Integer read GetListenersCount;
 
@@ -224,8 +234,8 @@ type
   protected
     function GetMessajeThreadType: TThreadEventHandlerType; virtual; abstract;
 
-    procedure ProcessEvent(AEvent: IEvent); override;
-    procedure PoolEvent(AEvent: IEvent); virtual;
+    procedure ProcessEvent(AEvent: IEventEE); override;
+    procedure PoolEvent(AEvent: IEventEE); virtual;
   public
     constructor Create(const AName: string; const AThreadCount: Integer); reintroduce;
     destructor Destroy; override;
@@ -235,8 +245,8 @@ type
     //procedure Register;
     //procedure UnRegister;
 
-    procedure RegisterListener(AEventListener: IEventListener);
-    procedure UnregisterListener(AEventListener: IEventListener);
+    procedure RegisterListener(AEventListener: IEventEEListener);
+    procedure UnregisterListener(AEventListener: IEventEEListener);
 
     property ThreadCount: Integer read GetThreadCount;
     property Name: string read GetName;
@@ -270,13 +280,13 @@ type
     class procedure CreateIni; static;
     class procedure DestroyIni; static;
 
-    class procedure QueueInchannels(AEvent: IEvent); static;
+    class procedure QueueInchannels(AEvent: IEventEE); static;
   public
     class procedure RegisterChannel(const AChannelName: String; const AThreadCount: Integer); static;
     class procedure UnregisterChannel(const AChannelName: String); static;
     class function GetChannel(const AChannelName: String; out AChannel: TEventChannel): Boolean; static;
 
-    class procedure QueueEvent(AEvent: IEvent); static;
+    class procedure QueueEvent(AEvent: IEventEE); static;
 
     class property Scheduler: TEventsScheduler read FScheduler;
   end;
@@ -402,7 +412,7 @@ begin
   Result := FChannelName
 end;
 
-function TEventListener.GetConditionsMatch(AEvent: IEvent): Boolean;
+function TEventListener.GetConditionsMatch(AEvent: IEventEE): Boolean;
 begin
   if Assigned(FFilterCondition) then
     Result := FFilterCondition(AEvent)
@@ -435,7 +445,7 @@ begin
   Result := FTypeRestriction;
 end;
 
-procedure TEventListener.DoOnNewEvent(AEvent: IEvent);
+procedure TEventListener.DoOnNewEvent(AEvent: IEventEE);
 begin
   //
 end;
@@ -472,35 +482,35 @@ end;
 {$ENDREGION}
 {$REGION 'TEventListener<T>'}
 
-constructor TEventListener<T>.Create(const AChannel: String; const AFilterCondition: TListenerFilter; const ACodeExecutesInMainUIThread: Boolean; const ATypeRestriction: EEventTypeRestriction);
+constructor TEventListenerBase<T>.Create(const AChannel: String; const AFilterCondition: TListenerFilter; const ACodeExecutesInMainUIThread: Boolean; const ATypeRestriction: EEventTypeRestriction);
 begin
   inherited;
   FOnEvent := Utils.CreateEvent<TNotifyEvent>;
 end;
 
-destructor TEventListener<T>.Destroy;
+destructor TEventListenerBase<T>.Destroy;
 begin
   FOnEvent := nil;
   inherited;
 end;
 
-function TEventListener<T>.GetMessajeClass: TClass;
+function TEventListenerBase<T>.GetMessajeClass: TClass;
 begin
   Result := PTypeInfo(TypeInfo(T))^.TypeData.ClassType;
 end;
 
-function TEventListener<T>.GetOnEvent: IEvent<TNotifyEvent>;
+function TEventListenerBase<T>.GetOnEvent: IEvent<TNotifyEvent>;
 begin
   Result := FOnEvent
 end;
 
-procedure TEventListener<T>.DoOnNewEvent(AEvent: IEvent);
+procedure TEventListenerBase<T>.DoOnNewEvent(AEvent: IEventEE);
 begin
   if FIsCodeToExecuteInUIMainThread then
   begin
     if not Utils.IsMainThreadUI then
-      Utils.DelegateExecution<IEvent>(AEvent,
-        procedure(AAEvent: IEvent)
+      Utils.DelegateExecution<IEventEE>(AEvent,
+        procedure(AAEvent: IEventEE)
         begin
           FOnEvent.Invoke(AAEvent)
         end, EDelegatedExecutionMode.medQueue)
@@ -528,7 +538,7 @@ constructor TThreadEventHandlerBase.Create;
 begin
   inherited Create(False);
   FLock         := TSpinLock.Create(False);
-  FEvents     := TThreadedQueue<IEvent>.Create(CTE_INITIAL_QUEUE_SIZE, CTE_PUSH_TIMEOUT, Cardinal.MaxValue);
+  FEvents     := TThreadedQueue<IEventEE>.Create(CTE_INITIAL_QUEUE_SIZE, CTE_PUSH_TIMEOUT, Cardinal.MaxValue);
   FEventCount := 0;
 end;
 
@@ -556,7 +566,7 @@ begin
   end;
 end;
 
-function TThreadEventHandlerBase.GetNextEvent(out AQueueSize: Integer; var AEvent: IEvent): TWaitResult;
+function TThreadEventHandlerBase.GetNextEvent(out AQueueSize: Integer; var AEvent: IEventEE): TWaitResult;
 begin
   Result := FEvents.PopItem(AQueueSize, AEvent);
 end;
@@ -565,7 +575,7 @@ procedure TThreadEventHandlerBase.ProcessEvents;
 var
   LRes : TWaitResult;
   LSize: Integer;
-  LMsg : IEvent;
+  LMsg : IEventEE;
 begin
   while not(Terminated) do
   begin
@@ -604,12 +614,12 @@ begin
   end;
 end;
 
-procedure TThreadEventHandlerBase.ProcessQueuedEvent(AEvent: IEvent);
+procedure TThreadEventHandlerBase.ProcessQueuedEvent(AEvent: IEventEE);
 begin
   ProcessEvent(AEvent);
 end;
 
-procedure TThreadEventHandlerBase.AddEvent(AEvent: IEvent);
+procedure TThreadEventHandlerBase.AddEvent(AEvent: IEventEE);
 var
   LSize: Integer;
   LRes : TWaitResult;
@@ -665,7 +675,7 @@ constructor TThreadEventHandler.Create;
 begin
   inherited Create;
   FChannel               := nil;
-  FListeners             := TCollections.CreateList<IEventListener>;
+  FListeners             := TCollections.CreateList<IEventEEListener>;
   InitializeListeners;
 end;
 
@@ -686,10 +696,10 @@ end;
 
 procedure TThreadEventHandler.FinalizeListeners;
 var
-  LListener: IEventListener;
-  LList    : IList<IEventListener>;
+  LListener: IEventEEListener;
+  LList    : IList<IEventEEListener>;
 begin
-  LList := TCollections.CreateList<IEventListener>;
+  LList := TCollections.CreateList<IEventEEListener>;
   FSynchronizerListeners.BeginRead;
   try
     LList.AddRange(FListeners.ToArray);
@@ -700,7 +710,7 @@ begin
     LListener.UnRegister;
 end;
 
-function TThreadEventHandler.GetEventRelevant(AEvent: IEvent): Boolean;
+function TThreadEventHandler.GetEventRelevant(AEvent: IEventEE): Boolean;
 begin
   Result := True;
 end;
@@ -720,7 +730,7 @@ begin
   //
 end;
 
-procedure TThreadEventHandler.ProcessEvent(AEvent: IEvent);
+procedure TThreadEventHandler.ProcessEvent(AEvent: IEventEE);
 var
   I: Integer;
 begin
@@ -752,7 +762,7 @@ begin
   FChannel.AddThreadMensajes(Self)
 end;
 
-procedure TThreadEventHandler.RegisterListener(AEventListener: IEventListener);
+procedure TThreadEventHandler.RegisterListener(AEventListener: IEventEEListener);
 begin
   FSynchronizerListeners.BeginWrite;
   try
@@ -768,7 +778,7 @@ begin
   FChannel.RemoveThreadMensajes(Self)
 end;
 
-procedure TThreadEventHandler.UnregisterListener(AEventListener: IEventListener);
+procedure TThreadEventHandler.UnregisterListener(AEventListener: IEventEEListener);
 begin
   FSynchronizerListeners.BeginWrite;
   try
@@ -808,13 +818,13 @@ begin
   Result   := FChannelsByName.TryGetValue(AChannelName, AChannel);
 end;
 
-class procedure EventBus.QueueEvent(AEvent: IEvent);
+class procedure EventBus.QueueEvent(AEvent: IEventEE);
 begin
   Guard.CheckNotNull(AEvent, 'The Event can not be nil');
   QueueInchannels(AEvent);
 end;
 
-class procedure EventBus.QueueInchannels(AEvent: IEvent);
+class procedure EventBus.QueueInchannels(AEvent: IEventEE);
 var
   I: Integer;
 begin
@@ -987,7 +997,7 @@ begin
     Exit(1);
 end;
 
-procedure TEventChannel.PoolEvent(AEvent: IEvent);
+procedure TEventChannel.PoolEvent(AEvent: IEventEE);
 var
   LSelected: TThreadEventHandler;
 begin
@@ -1006,7 +1016,7 @@ begin
   end;
 end;
 
-procedure TEventChannel.ProcessEvent(AEvent: IEvent);
+procedure TEventChannel.ProcessEvent(AEvent: IEventEE);
 begin
   if FThreadsMessajes.Count > 0 then
     PoolEvent(AEvent);
@@ -1019,7 +1029,7 @@ begin
 end;
 *)
 
-procedure TEventChannel.RegisterListener(AEventListener: IEventListener);
+procedure TEventChannel.RegisterListener(AEventListener: IEventEEListener);
 var
   I: Integer;
 begin
@@ -1065,7 +1075,7 @@ begin
 end;
 *)
 
-procedure TEventChannel.UnregisterListener(AEventListener: IEventListener);
+procedure TEventChannel.UnregisterListener(AEventListener: IEventEEListener);
 var
   I: Integer;
 begin
@@ -1087,6 +1097,37 @@ begin
   Result := T;
 end;
 {$ENDREGION}
+
+{ TEventListenerAutonomo<T> }
+
+constructor TEventListener<T>.Create(const AAction: TListenerAction; const AFilterCondition: TListenerFilter; const AChannel: String; const ACodeExecutesInMainUIThread: Boolean; const ATypeRestriction: EEventTypeRestriction);
+begin
+  inherited Create(AChannel, AFilterCondition, ACodeExecutesInMainUIThread, ATypeRestriction);
+  FAction := AAction;
+end;
+
+destructor TEventListener<T>.Destroy;
+begin
+  FAction := nil;
+  inherited;
+end;
+
+procedure TEventListener<T>.DoOnNewEvent(AEvent: IEventEE);
+begin
+  if FIsCodeToExecuteInUIMainThread then
+  begin
+    if not Utils.IsMainThreadUI then
+      Utils.DelegateExecution<IEventEE>(AEvent,
+        procedure(AAEvent: IEventEE)
+        begin
+          FAction(AAEvent)
+        end, EDelegatedExecutionMode.medQueue)
+    else
+      FAction(AEvent);
+  end
+  else
+    FAction(AEvent);
+end;
 
 initialization
 

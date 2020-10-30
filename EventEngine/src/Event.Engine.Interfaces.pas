@@ -18,7 +18,7 @@ type
 {$ENDREGION}
 
 {$REGION 'IEvent'}
-  IEvent = interface(IObject)
+  IEventEE = interface(IObject)
     ['{8C6AE8E2-B18D-41B4-AAED-88CF3B110F1D}']
     function GetCreationDateTime: TDateTime;
     function GetSender: TObject;
@@ -32,15 +32,16 @@ type
   end;
 {$ENDREGION}
 
-  TNotifyEvent = procedure(AEvent: IEvent) of Object;
+  TNotifyEvent = procedure(AEvent: IEventEE) of Object;
 
-  TListenerFilter = reference to function(AEvent: IEvent): Boolean;
+  TListenerFilter = function(AEvent: IEventEE): Boolean of object;
+  TListenerAction = procedure(AEvent: IEventEE) of object;
 
-{$REGION 'IEventListener'}
+{$REGION 'IEventEEListener'}
   EEventTypeRestriction = (mtrAllowDescendants, mtrDefinedTypeOnly);
   EDelegatedExecutionMode = (medQueue, medSynchronize, medNewTask, medNormal);
 
-  IEventListener = interface(IObject)
+  IEventEEListener = interface(IObject)
     ['{ABC992B0-4CB4-470A-BDCE-EBE6651C84DD}']
     function GetIsCodeToExecuteInUIMainThread: Boolean;
     procedure SetIsCodeToExecuteInUIMainThread(const AValue: Boolean);
@@ -58,12 +59,12 @@ type
 
     function GetMessajeClass: TClass;
 
-    function GetConditionsMatch(AEvent: IEvent): Boolean;
+    function GetConditionsMatch(AEvent: IEventEE): Boolean;
 
     procedure Register;
     procedure UnRegister;
 
-    procedure DoOnNewEvent(AEvent: IEvent);
+    procedure DoOnNewEvent(AEvent: IEventEE);
 
     property FilterCondition: TListenerFilter read GetListenerFilter write SetListenerFilter;
     property IsCodeToExecuteInUIMainThread: Boolean read GetIsCodeToExecuteInUIMainThread write SetIsCodeToExecuteInUIMainThread;
@@ -72,8 +73,8 @@ type
     property Channel        : String read GetChannel;
   end;
 {$ENDREGION}
-{$REGION 'IEventListener<T: TEvent>'}
-  IEventListener<T: IEvent> = interface(IEventListener)
+{$REGION 'IEventEEListener<T: TEvent>'}
+  IEventEEListener<T: IEventEE> = interface(IEventEEListener)
     ['{CA3B8245-46E2-4827-B7D4-B3CAA91EE965}']
     function GetOnEvent: IEvent<TNotifyEvent>;
     function GetMessajeClass: TClass;
