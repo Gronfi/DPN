@@ -20,6 +20,7 @@ type
 
     function GetIsRecursiva: Boolean; virtual;
     function GetIsEvaluacionNoDependeDeTokens: Boolean; virtual;
+    function GetIsCondicionQueEsperaEvento: Boolean; virtual;
 
     function GetTransicion: ITransicion; virtual;
     procedure SetTransicion(const Value: ITransicion); virtual;
@@ -36,6 +37,7 @@ type
     property OnContextoCondicionChanged: IEvent<EventoNodoPN> read GetOnContextoCondicionChanged;
     property IsRecursiva: boolean read GetIsRecursiva;
     property IsEvaluacionNoDependeDeTokens: boolean read GetIsEvaluacionNoDependeDeTokens;
+    property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
   end;
 
 implementation
@@ -62,6 +64,11 @@ begin
 end;
 
 function TdpnCondicion.Evaluar(ATokens: IMarcadoTokens): Boolean;
+begin
+  Result := False;
+end;
+
+function TdpnCondicion.GetIsCondicionQueEsperaEvento: Boolean;
 begin
   Result := False;
 end;

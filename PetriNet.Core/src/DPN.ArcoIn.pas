@@ -86,8 +86,6 @@ begin
 end;
 
 function TdpnArcoIn.ObtenerTokensEvaluacion: IMarcadoTokens;
-var
-  LTokens: IList<IToken>;
 begin
   Result := TdpnMarcadoTokens.Create;
   case FIsInhibidor of
@@ -96,14 +94,6 @@ begin
         if (FPlaza.TokenCount > 0) and (PesoEvaluar > 0) then
         begin
           Result.AddTokensPlaza(FPlaza, FPlaza.Tokens.Take(PesoEvaluar));
-(*
-          Result.AddTokensPlaza(FPlaza, FPlaza.Tokens.Where(
-                                                              function (const AToken: IToken): Boolean
-                                                              begin
-                                                                Result := Supports(AToken, ITokenColoreado); // deben ser tokens coloreados, los de sistema no entran en esta categoria por lo que no circulan por la red
-                                                              end
-                                                           ).Take(PesoEvaluar));
-*)
         end;
       end;
   end;

@@ -17,6 +17,10 @@ type
     FIsActivado: boolean;
     FIsHabilitado: boolean;
     FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
+    FIsTransicionDependeDeEvento: Boolean;
+
+    FTransicionesIntentadas: int64;
+    FTransicionesRealizadas: int64;
 
     FPrioridad: integer;
     FCondiciones: IList<ICondicion>;
@@ -42,8 +46,12 @@ type
     procedure SetPrioridad(const Value: integer); virtual;
 
     function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>; virtual;
+    function GetIsTransicionDependeDeEvento: Boolean; virtual;
 
     function GetIsHabilitado: Boolean; virtual;
+
+    function GetTransicionesIntentadas: int64;
+    function GetTransicionesRealizadas: int64;
 
     function GetArcosIn: IReadOnlyList<IArcoIn>; virtual;
     function GetArcosOut: IReadOnlyList<IArcoOut>; virtual;
@@ -86,6 +94,8 @@ type
     procedure Start; override;
     procedure Stop; override;
 
+    function DebugLog: string;
+
     property Prioridad: integer read GetPrioridad write SetPrioridad;
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsActivado: Boolean read GetIsActivado;
@@ -96,7 +106,11 @@ type
     property Condiciones: IReadOnlyList<ICondicion> read GetCondiciones;
     property Acciones: IReadOnlyList<IAccion> read GetAcciones;
 
+    property TransicionesIntentadas: int64 read GetTransicionesIntentadas;
+    property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
+
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
+    property IsTransicionDependeDeEvento: Boolean read GetIsTransicionDependeDeEvento;
   end;
 
 implementation
@@ -116,7 +130,7 @@ var
 begin
   FLock.Enter;
   try
-    FEstadosHabilitacion.AddOrSetValue(AID, AValor);
+    FEstadosHabilitacion[AID] := AValor;
     LNewValue := FEstadosHabilitacion.Values.Any(
                                                    function (const AValue: boolean): boolean
                                                    begin
@@ -139,7 +153,7 @@ end;
 
 procedure TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
 begin
-  FEstadoCondicionesNoDependenDeToken.AddOrSetValue(AID, AValor);
+  FEstadoCondicionesNoDependenDeToken[AID] := AValor;
   FAlgunaCondicionNoDependeDeTokenDesactivada := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
@@ -200,6 +214,9 @@ begin
   inherited;
   FPrioridad := 1;
   FIsActivado := false;
+  FTransicionesIntentadas := 0;
+  FTransicionesRealizadas := 0;
+  FIsTransicionDependeDeEvento := False;
   FAlgunaCondicionNoDependeDeTokenDesactivada := False;
   FCondiciones := TCollections.CreateList<ICondicion>;
   FAcciones := TCollections.CreateList<IAccion>;
@@ -211,9 +228,15 @@ begin
   FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
 end;
 
+function TdpnTransicion.DebugLog: string;
+begin
+  Result := '';
+end;
+
 function TdpnTransicion.EjecutarTransicion: Boolean;
 begin
   Result := False;
+  Inc(FTransicionesIntentadas);
   CapturarDependencias; // todas las dependencias son capturadas
   // transicion efectiva
   try
@@ -228,6 +251,15 @@ begin
       Exit;
     // 4) estrategia disparo
     Result := EstrategiaDisparo;
+    if Result then
+    begin
+      Inc(FTransicionesRealizadas);
+      if FIsHabilitado then
+      begin
+        FIsActivado := True;
+        FOnRequiereEvaluacion.Invoke(ID, Self);
+      end;
+    end;
   finally
     LiberarDependencias; // liberacion de dependencias
   end;
@@ -357,6 +389,11 @@ begin
   Result := FIsHabilitado
 end;
 
+function TdpnTransicion.GetIsTransicionDependeDeEvento: Boolean;
+begin
+  Result := FIsTransicionDependeDeEvento
+end;
+
 function TdpnTransicion.GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
 begin
   Result := FOnRequiereEvaluacion
@@ -365,6 +402,16 @@ end;
 function TdpnTransicion.GetPrioridad: Integer;
 begin
   Result := FPrioridad
+end;
+
+function TdpnTransicion.GetTransicionesIntentadas: int64;
+begin
+  Result := FTransicionesIntentadas
+end;
+
+function TdpnTransicion.GetTransicionesRealizadas: int64;
+begin
+  Result := FTransicionesRealizadas
 end;
 
 procedure TdpnTransicion.LiberarDependencias;
@@ -404,7 +451,6 @@ end;
 
 procedure TdpnTransicion.PreparacionDependencias;
 var
-  LPlaza: IPlaza;
   LArcoIn: IArcoIn;
   LArcoOut: IArcoOut;
   LCondicion: ICondicion;
@@ -442,6 +488,8 @@ begin
 end;
 
 procedure TdpnTransicion.Start;
+var
+  LCount: Integer;
 begin
   FCondicionesPreparadas := FCondiciones.AsReadOnly;
   FAccionesPreparadas    := FAcciones.AsReadOnly;
@@ -452,6 +500,21 @@ begin
   //Dependencias
   PreparacionDependencias;
 
+  //Evento?
+  FIsTransicionDependeDeEvento := FCondiciones.Any(
+                                                     function (const ACondicion: ICondicion): Boolean
+                                                     begin
+                                                       Result := ACondicion.IsCondicionQueEsperaEvento
+                                                     end
+                                                  );
+  LCount := FCondiciones.where(
+                                 function (const ACondicion: ICondicion): Boolean
+                                 begin
+                                   Result := ACondicion.IsCondicionQueEsperaEvento
+                                 end
+                              ).Count;
+  if LCount > 1 then
+    raise ETransicionConMasDeUnaCondicionQueEsperaEvento.Create('Hay ' + LCount.ToString + ' condiciones que esperan de evento en la transición ' + Nombre);
   inherited;
 end;
 

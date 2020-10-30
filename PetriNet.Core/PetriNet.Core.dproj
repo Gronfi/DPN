@@ -139,6 +139,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Spring.Base.dcp"/>
+        <DCCReference Include="EventEngine.dcp"/>
         <DCCReference Include="src\DPN.Arco.pas"/>
         <DCCReference Include="src\DPN.NodoPetriNet.pas"/>
         <DCCReference Include="src\DPN.Interfaces.pas"/>

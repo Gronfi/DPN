@@ -28,7 +28,8 @@ package PetriNet.Core;
 {$IMPLICITBUILD ON}
 
 requires
-  Spring.Base;
+  Spring.Base,
+  EventEngine;
 
 contains
   DPN.Arco in 'src\DPN.Arco.pas',

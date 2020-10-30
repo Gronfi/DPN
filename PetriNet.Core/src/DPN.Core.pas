@@ -69,13 +69,11 @@ var
   LToken: IToken;
   LPlaza: IPlaza;
   LEnum : IEnumerable<IToken>;
-  LGenerado: boolean;
   LGeneradosCount: Integer;
 begin
   Result := TCollections.CreateList<IToken>;
   if (ACount = 0) then Exit;
 
-  LGenerado := False;
   LGeneradosCount := 0;
   for LPlaza in AMarcado.Marcado.Keys do
   begin

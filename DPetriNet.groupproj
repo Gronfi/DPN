@@ -9,6 +9,9 @@
         <Projects Include="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="EventEngine\EventEngine.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="PetriNet.Core\PetriNet.Core.dproj">
             <Dependencies/>
         </Projects>
@@ -41,6 +44,15 @@
     <Target Name="Spring_Core:Make">
         <MSBuild Projects="ThirdParty\Spring4D\Packages\Used\Spring.Core.dproj" Targets="Make"/>
     </Target>
+    <Target Name="EventEngine">
+        <MSBuild Projects="EventEngine\EventEngine.dproj"/>
+    </Target>
+    <Target Name="EventEngine:Clean">
+        <MSBuild Projects="EventEngine\EventEngine.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="EventEngine:Make">
+        <MSBuild Projects="EventEngine\EventEngine.dproj" Targets="Make"/>
+    </Target>
     <Target Name="PetriNet_Core">
         <MSBuild Projects="PetriNet.Core\PetriNet.Core.dproj"/>
     </Target>
@@ -60,13 +72,13 @@
         <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Spring_Base;Spring_Core;PetriNet_Core;PetriNetCoreTesting"/>
+        <CallTarget Targets="Spring_Base;Spring_Core;EventEngine;PetriNet_Core;PetriNetCoreTesting"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Spring_Base:Clean;Spring_Core:Clean;PetriNet_Core:Clean;PetriNetCoreTesting:Clean"/>
+        <CallTarget Targets="Spring_Base:Clean;Spring_Core:Clean;EventEngine:Clean;PetriNet_Core:Clean;PetriNetCoreTesting:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Spring_Base:Make;Spring_Core:Make;PetriNet_Core:Make;PetriNetCoreTesting:Make"/>
+        <CallTarget Targets="Spring_Base:Make;Spring_Core:Make;EventEngine:Make;PetriNet_Core:Make;PetriNetCoreTesting:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
