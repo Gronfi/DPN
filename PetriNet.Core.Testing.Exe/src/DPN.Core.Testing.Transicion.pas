@@ -166,8 +166,6 @@ end;
 
 procedure TPetriNetCoreTesting_Transicion.Test_Deshabilitado_1_Estado_Origen;
 var
-  LToken: IToken;
-  I     : Integer;
   LRes  : Boolean;
 
   FArcoI1    : IArcoIn;
@@ -231,8 +229,6 @@ end;
 
 procedure TPetriNetCoreTesting_Transicion.Test_Deshabilitado_2_Estados_Origen;
 var
-  LToken: IToken;
-  I     : Integer;
   LRes  : Boolean;
 
   FArcoI1    : IArcoIn;
@@ -416,8 +412,6 @@ end;
 
 procedure TPetriNetCoreTesting_Transicion.Test_Habilitado_1_Estado_Origen_Arco_Es_Inhabilitador;
 var
-  LToken: IToken;
-  I     : Integer;
   LRes  : Boolean;
 
   FArcoI1    : IArcoIn;

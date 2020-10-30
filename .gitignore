@@ -15,3 +15,7 @@
 /ThirdParty/Spring4D/Packages/Used/*.local
 /ThirdParty/Spring4D/Packages/Used/*.identcache
 /ThirdParty/Spring4D/Packages/Used/__history
+/EventEngine/*.local
+/EventEngine/*.res
+/EventEngine/__history
+/EventEngine/src/__history

@@ -139,6 +139,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Spring.Base.dcp"/>
+        <DCCReference Include="EventEngine.dcp"/>
         <DCCReference Include="src\DPN.Arco.pas"/>
         <DCCReference Include="src\DPN.NodoPetriNet.pas"/>
         <DCCReference Include="src\DPN.Interfaces.pas"/>
@@ -160,7 +161,6 @@
         <DCCReference Include="src\DPN.Transicion.TokenByToken.pas"/>
         <DCCReference Include="src\DPN.PetriNet.pas"/>
         <DCCReference Include="src\DPN.Bloqueable.pas"/>
-        <DCCReference Include="src\DPN.Helpers.pas"/>
         <None Include="PetriNet.Core.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

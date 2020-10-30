@@ -6,7 +6,7 @@ uses
   System.Classes,
   System.Types,
 
-  DPN.Helpers,
+  Helper.ThreadedQueue,
   DPN.Interfaces;
 
 type

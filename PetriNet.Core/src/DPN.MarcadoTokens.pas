@@ -144,7 +144,6 @@ end;
 procedure TdpnMarcadoTokens.RemoveToken(AToken: IToken);
 var
   LPlaza: IPlaza;
-  LTokensPlaza: IList<IToken>;
 begin
   for LPlaza in FPlazasTokens.Keys do
   begin

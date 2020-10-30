@@ -15,10 +15,36 @@ uses
   DPN.Variable,
   DPN.Plaza,
   DPN.ArcoIn,
+  DPN.Condicion,
   DPN.ArcoOut,
   DPN.Transicion;
 
 type
+  TdpnCondicion_es_mensaje_sga_07 = class(TdpnCondicion)
+  protected
+    FVariable: IVariable;
+    FValor: TValue;
+
+    function GetDependencias: IList<IBloqueable>; override;
+
+    function GetVariable: IVariable;
+    procedure SetVariable(AVariable: IVariable);
+
+    function GetValorToCheck: TValue;
+    procedure SetValorToCheck(const AValue: TValue);
+
+    procedure DoOnVarChanged(const AID: Integer; const AValue: TValue);
+
+    function EvaluarInterno: Boolean;
+
+  public
+    function Evaluar(ATokens: IMarcadoTokens): Boolean; overload; override;
+    function Evaluar(AToken: IToken): Boolean; overload; override;
+
+    property Variable: IVariable read GetVariable write SetVariable;
+    property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
+  end;
+
   [TestFixture]
   TPetriNetCoreTesting_PetriNet = class
   public
@@ -92,7 +118,6 @@ var
   LModelo: IModelo;
   LToken : IToken;
   I      : Integer;
-  LRes   : Boolean;
 
   FArcoI1    : IArcoIn;
   FPlazaI1   : IPlaza;
@@ -157,7 +182,6 @@ var
   LModelo: IModelo;
   LToken : IToken;
   I      : Integer;
-  LRes   : Boolean;
 
   FArcoI1    : IArcoIn;
   FPlazaI1   : IPlaza;
@@ -235,7 +259,6 @@ var
   LModelo: IModelo;
   LToken : IToken;
   I      : Integer;
-  LRes   : Boolean;
 
   FArcoI1    : IArcoIn;
   FPlazaI1   : IPlaza;

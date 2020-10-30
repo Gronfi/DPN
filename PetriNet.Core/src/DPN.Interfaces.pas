@@ -174,6 +174,7 @@ type
 
     function GetIsRecursiva: Boolean;
     function GetIsEvaluacionNoDependeDeTokens: Boolean;
+    function GetIsCondicionQueEsperaEvento: Boolean;
 
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
@@ -187,6 +188,7 @@ type
     property OnContextoCondicionChanged: IEvent<EventoNodoPN> read GetOnContextoCondicionChanged;
     property IsRecursiva: boolean read GetIsRecursiva;
     property IsEvaluacionNoDependeDeTokens: boolean read GetIsEvaluacionNoDependeDeTokens;
+    property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
   end;
 
   IAccion = interface(IDependiente)
@@ -200,12 +202,15 @@ type
 
   EEstrategiaDisparoTransicion = (ArcosMandan, TokenByToken);
 
+  ETransicionConMasDeUnaCondicionQueEsperaEvento = class(Exception);
+
   ITransicion = interface(INodoPetriNet)
   ['{905A0070-02F5-4F86-BC13-72E1398342D4}']
     function GetPrioridad: Integer;
     procedure SetPrioridad(const APrioridad: integer);
 
     function GetIsHabilitado: Boolean;
+    function GetIsTransicionDependeDeEvento: Boolean;
 
     function GetTransicionesIntentadas: int64;
     function GetTransicionesRealizadas: int64;
@@ -249,6 +254,7 @@ type
     property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
 
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
+    property IsTransicionDependeDeEvento: Boolean read GetIsTransicionDependeDeEvento;
   end;
 
   IToken = interface

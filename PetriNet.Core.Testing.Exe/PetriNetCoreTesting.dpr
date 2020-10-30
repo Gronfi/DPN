@@ -41,7 +41,6 @@ uses
   DPN.Transicion.TokenByToken in '..\PetriNet.Core\src\DPN.Transicion.TokenByToken.pas',
   DPN.Variable in '..\PetriNet.Core\src\DPN.Variable.pas',
   DPN.Core.Testing.Transicion in 'src\DPN.Core.Testing.Transicion.pas',
-  DPN.Helpers in '..\PetriNet.Core\src\DPN.Helpers.pas',
   DPN.Core.Testing.PetriNetCoordinador in 'src\DPN.Core.Testing.PetriNetCoordinador.pas';
 
 var
