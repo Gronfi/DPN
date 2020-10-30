@@ -31,7 +31,8 @@
 
 ## Estado
 
-El proyecto está en sus primeros pasos
+* El proyecto está en sus primeros pasos
+* Integrando eventos en condiciones
 
 ### Caracteristicas
 * Evolución de tokens coloreados
@@ -39,6 +40,6 @@ El proyecto está en sus primeros pasos
 * Transiciones condicionadas, hay condiciones a cumplir y acciones a ejecutar en caso de que la transición se dispare
 
 ### Pendiente (mucho)
-* terminar el core: multidisparo
-* terminar unittesting del core
+* terminar unittesting del core: integración eventos
 * ampliar core: logging, debugging, persistencia de configuracion
+* capas posteriores al core

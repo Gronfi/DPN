@@ -22,7 +22,7 @@ type
     FTransicionesIntentadas: int64;
     FTransicionesRealizadas: int64;
 
-    FPrioridad: integer;
+    FPrioridad: integer; //por el momento no se tiene en cuenta
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
     FDependencias: IList<IBloqueable>;
@@ -96,7 +96,7 @@ type
 
     function DebugLog: string;
 
-    property Prioridad: integer read GetPrioridad write SetPrioridad;
+    property Prioridad: integer read GetPrioridad write SetPrioridad; //por el momento no se tiene en cuenta
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsActivado: Boolean read GetIsActivado;
 

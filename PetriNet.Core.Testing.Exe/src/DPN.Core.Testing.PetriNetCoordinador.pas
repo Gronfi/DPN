@@ -9,6 +9,9 @@ uses
   DUnitX.Loggers.Console,
   DUnitX.TestFramework,
 
+  Event.Engine.Interfaces,
+  Event.Engine,
+
   DPN.Interfaces,
   DPN.PetriNet,
   DPN.Modelo,
@@ -20,29 +23,25 @@ uses
   DPN.Transicion;
 
 type
-  TdpnCondicion_es_mensaje_sga_07 = class(TdpnCondicion)
+  TMsg_SGA_42 = class(TEvent)
+
+  end;
+
+  TdpnCondicion_es_mensaje_sga_07 = class(TdpnCondicionBaseEsperaEvento)
   protected
-    FVariable: IVariable;
-    FValor: TValue;
+    FEvento: IEventEE;
+    FListenerEvento: IEventEEListener;
 
     function GetDependencias: IList<IBloqueable>; override;
 
-    function GetVariable: IVariable;
-    procedure SetVariable(AVariable: IVariable);
+    function CrearListenerEvento: IEventEEListener; override;
 
-    function GetValorToCheck: TValue;
-    procedure SetValorToCheck(const AValue: TValue);
-
-    procedure DoOnVarChanged(const AID: Integer; const AValue: TValue);
-
-    function EvaluarInterno: Boolean;
+    function Filtrado (AEvento: IEventEE): Boolean;
+    procedure Ejecutar (AEvento: IEventEE);
 
   public
     function Evaluar(ATokens: IMarcadoTokens): Boolean; overload; override;
     function Evaluar(AToken: IToken): Boolean; overload; override;
-
-    property Variable: IVariable read GetVariable write SetVariable;
-    property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
   end;
 
   [TestFixture]
@@ -341,6 +340,40 @@ begin
 
   LPNet.Destroy;
   Assert.Pass;
+end;
+
+{ TdpnCondicion_es_mensaje_sga_07 }
+
+function TdpnCondicion_es_mensaje_sga_07.CrearListenerEvento: IEventEEListener;
+begin
+  Result := TEventListener<TMsg_SGA_42>.Create(Ejecutar, Filtrado);
+end;
+
+procedure TdpnCondicion_es_mensaje_sga_07.Ejecutar(AEvento: IEventEE);
+begin
+  WriteLn('Ejecutar --> ' + QualifiedClassName);
+  FEvento := AEvento;
+  FEventoOnContextoCondicionChanged.Invoke(ID);
+end;
+
+function TdpnCondicion_es_mensaje_sga_07.Evaluar(AToken: IToken): Boolean;
+begin
+  Result := Assigned(FEvento)
+end;
+
+function TdpnCondicion_es_mensaje_sga_07.Evaluar(ATokens: IMarcadoTokens): Boolean;
+begin
+  Result := Assigned(FEvento)
+end;
+
+function TdpnCondicion_es_mensaje_sga_07.Filtrado(AEvento: IEventEE): Boolean;
+begin
+  Result := True;
+end;
+
+function TdpnCondicion_es_mensaje_sga_07.GetDependencias: IList<IBloqueable>;
+begin
+  Result := inherited;
 end;
 
 initialization

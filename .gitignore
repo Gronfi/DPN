@@ -19,3 +19,4 @@
 /EventEngine/*.res
 /EventEngine/__history
 /EventEngine/src/__history
+/PetriNet.Core.Testing.Exe/*.identcache

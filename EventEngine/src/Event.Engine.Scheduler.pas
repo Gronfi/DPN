@@ -42,8 +42,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure ScheduleEvent(AEvent: IEvent; const AWhenPassedNextMilliseconds: Int64); overload;
-    procedure ScheduleEvent(AEvent: IEvent; const AWhenPassedNextDateTime: TDateTime); overload;
+    procedure ScheduleEvent(AEvent: IEventEE; const AWhenPassedNextMilliseconds: Int64); overload;
+    procedure ScheduleEvent(AEvent: IEventEE; const AWhenPassedNextDateTime: TDateTime); overload;
   end;
 
 implementation
@@ -63,7 +63,7 @@ type
     FTimeStampAwake             : Int64;
     FMilisecondsToAwake         : Int64;
     FIsDone                     : Boolean;
-    FEvent                    : IEvent;
+    FEvent                    : IEventEE;
 
     function GetTaskID: Int64;
     function GetMilisecondsToAwake: Int64;
@@ -71,7 +71,7 @@ type
     procedure CalculateAwakeTime;
     procedure Notify;
   public
-    constructor Create(const ATaskID: Int64; const AEllapsedMilisecondsToExecute: Int64; AEvent: IEvent); overload;
+    constructor Create(const ATaskID: Int64; const AEllapsedMilisecondsToExecute: Int64; AEvent: IEventEE); overload;
     destructor Destroy; override;
 
     function IsDone: Boolean;
@@ -248,7 +248,7 @@ begin
   end;
 end;
 
-procedure TEventsScheduler.ScheduleEvent(AEvent: IEvent; const AWhenPassedNextDateTime: TDateTime);
+procedure TEventsScheduler.ScheduleEvent(AEvent: IEventEE; const AWhenPassedNextDateTime: TDateTime);
 var
   LPassedMiliseconds: Int64;
 begin
@@ -258,7 +258,7 @@ begin
   else ScheduleEvent(AEvent, LPassedMiliseconds);
 end;
 
-procedure TEventsScheduler.ScheduleEvent(AEvent: IEvent; const AWhenPassedNextMilliseconds: Int64);
+procedure TEventsScheduler.ScheduleEvent(AEvent: IEventEE; const AWhenPassedNextMilliseconds: Int64);
 var
   LTask: ISchedulerTask;
   LSize: Integer;
@@ -299,7 +299,7 @@ begin
   end;
 end;
 
-constructor TSchedulerTask.Create(const ATaskID: Int64; const AEllapsedMilisecondsToExecute: Int64; AEvent: IEvent);
+constructor TSchedulerTask.Create(const ATaskID: Int64; const AEllapsedMilisecondsToExecute: Int64; AEvent: IEventEE);
 begin
   inherited Create;
   FTaskID             := ATaskID;

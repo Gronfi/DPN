@@ -176,6 +176,9 @@ type
     function GetIsEvaluacionNoDependeDeTokens: Boolean;
     function GetIsCondicionQueEsperaEvento: Boolean;
 
+    function GetEventoHabilitado: Boolean;
+    procedure SetEventoHabilitado(const AValor: Boolean);
+
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
@@ -189,6 +192,7 @@ type
     property IsRecursiva: boolean read GetIsRecursiva;
     property IsEvaluacionNoDependeDeTokens: boolean read GetIsEvaluacionNoDependeDeTokens;
     property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
+    property ListenerEventoHabilitado: Boolean read GetEventoHabilitado write SetEventoHabilitado;
   end;
 
   IAccion = interface(IDependiente)
