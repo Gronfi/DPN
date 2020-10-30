@@ -40,6 +40,7 @@
 * Transiciones condicionadas, hay condiciones a cumplir y acciones a ejecutar en caso de que la transición se dispare
 
 ### Pendiente (mucho)
+* concepto de disparo por tiempo cuando alguna condicion esta asociada a tiempo
 * terminar unittesting del core: integración eventos
 * ampliar core: logging, debugging, persistencia de configuracion
 * capas posteriores al core

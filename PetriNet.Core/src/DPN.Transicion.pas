@@ -17,7 +17,9 @@ type
     FIsActivado: boolean;
     FIsHabilitado: boolean;
     FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
+
     FIsTransicionDependeDeEvento: Boolean;
+    FCondicionDeEvento: ICondicion;
 
     FTransicionesIntentadas: int64;
     FTransicionesRealizadas: int64;
@@ -74,6 +76,7 @@ type
 
     function EstrategiaDisparo: Boolean; virtual;
 
+    procedure CalcularPosibleCambioContexto(const AID: integer);
     procedure ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
     procedure ActualizarEstadoHabilitacionPorEstadoArco(const AID: integer; const AValor: boolean);
   public
@@ -131,20 +134,29 @@ begin
   FLock.Enter;
   try
     FEstadosHabilitacion[AID] := AValor;
+    //evaluar que todos los arcos estén correctos
     LNewValue := FEstadosHabilitacion.Values.Any(
                                                    function (const AValue: boolean): boolean
                                                    begin
                                                      Result := (AValue = false)
                                                    end
                                                 ) = False;
-    if (LNewValue <> FIsHabilitado) then
+    if (LNewValue <> FIsHabilitado) then //si el estado de habilitacion de la transicion ha cambiado
     begin
       FIsHabilitado := LNewValue;
-      if FIsHabilitado then
+      if FIsHabilitado then //si la transicion pasa a habilitada
       begin
-        FIsActivado := True;
-        FOnRequiereEvaluacion.Invoke(ID, Self);
-      end;
+        if FIsTransicionDependeDeEvento then //si es una transición que espera de evento activamos la recepcion del evento
+          FCondicionDeEvento.ListenerEventoHabilitado := True
+        else begin //si es transicion sin evento, requerimos la evaluacion
+               FIsActivado := True;
+               FOnRequiereEvaluacion.Invoke(ID, Self);
+             end;
+      end
+      else begin //la transicion ha pasado a deshabilitada
+             if FIsTransicionDependeDeEvento then //si es transicion de evento, deshabilitamos evento, aunque llegue no sirve de nada
+               FCondicionDeEvento.ListenerEventoHabilitado := False;
+           end;
     end;
   finally
     FLock.Exit;
@@ -199,6 +211,20 @@ var
 begin
   for LBloqueable in ADependencias do
     AgregarDependencia(LBloqueable);
+end;
+
+procedure TdpnTransicion.CalcularPosibleCambioContexto(const AID: integer);
+begin
+  if FEstadoCondicionesNoDependenDeToken.ContainsKey(AID) then
+  begin
+    FEstadoCondicionesNoDependenDeToken[AID]    := True; //trampeamos para provocar su posible reevaluacion
+    FAlgunaCondicionNoDependeDeTokenDesactivada := FEstadoCondicionesNoDependenDeToken.Values.Any(
+                                                                                                  function (const AValue: boolean): Boolean
+                                                                                                  begin
+                                                                                                    Result := (AValue = false)
+                                                                                                  end
+                                                                                               ) = False;
+  end;
 end;
 
 procedure TdpnTransicion.CapturarDependencias;
@@ -256,8 +282,11 @@ begin
       Inc(FTransicionesRealizadas);
       if FIsHabilitado then
       begin
-        FIsActivado := True;
-        FOnRequiereEvaluacion.Invoke(ID, Self);
+        if not FAlgunaCondicionNoDependeDeTokenDesactivada then
+        begin
+          FIsActivado := True;
+          FOnRequiereEvaluacion.Invoke(ID, Self);
+        end;
       end;
     end;
   finally
@@ -437,7 +466,8 @@ end;
 
 procedure TdpnTransicion.OnCondicionContextChanged(const AID: integer);
 begin
-  if FIsHabilitado then
+  CalcularPosibleCambioContexto(AID);
+  if FIsHabilitado and (not FAlgunaCondicionNoDependeDeTokenDesactivada) then
   begin
     FIsActivado := True;
     FOnRequiereEvaluacion.Invoke(ID, Self);
@@ -507,6 +537,16 @@ begin
                                                        Result := ACondicion.IsCondicionQueEsperaEvento
                                                      end
                                                   );
+  if FIsTransicionDependeDeEvento then
+  begin
+    FCondicionDeEvento := FCondiciones.Where(
+                                               function (const ACondicion: ICondicion): Boolean
+                                               begin
+                                                 Result := ACondicion.IsCondicionQueEsperaEvento
+                                               end
+                                            ).First;
+  end
+  else FCondicionDeEvento := nil;
   LCount := FCondiciones.where(
                                  function (const ACondicion: ICondicion): Boolean
                                  begin
