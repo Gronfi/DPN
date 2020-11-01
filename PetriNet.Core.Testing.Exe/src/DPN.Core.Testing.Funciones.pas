@@ -8,6 +8,7 @@ uses
 
   DUnitX.TestFramework,
 
+  Event.Engine.Interfaces,
   DPN.Interfaces,
   DPN.Condicion,
   DPN.Accion,
@@ -32,8 +33,7 @@ type
     function EvaluarInterno: Boolean;
 
   public
-    function Evaluar(ATokens: IMarcadoTokens): Boolean; overload; override;
-    function Evaluar(AToken: IToken): Boolean; overload; override;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
@@ -69,11 +69,14 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+
+  DPN.Plaza,
+  DPN.MarcadoTokens;
 
 { TdpnCondicion_es_tabla_variables }
 
-function TdpnCondicion_es_tabla_variables.Evaluar(ATokens: IMarcadoTokens): Boolean;
+function TdpnCondicion_es_tabla_variables.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
   Result := EvaluarInterno
 end;
@@ -81,11 +84,6 @@ end;
 procedure TdpnCondicion_es_tabla_variables.DoOnVarChanged(const AID: Integer; const AValue: TValue);
 begin
   OnContextoCondicionChanged.Invoke(ID);
-end;
-
-function TdpnCondicion_es_tabla_variables.Evaluar(AToken: IToken): Boolean;
-begin
-  Result := EvaluarInterno
 end;
 
 function TdpnCondicion_es_tabla_variables.EvaluarInterno: Boolean;
@@ -163,11 +161,16 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_Evaluacion_Y_Cambio_Contexto_Posterior;
 var
   LRes : Boolean;
+  LPlaza: IPlaza;
+  LMarcado: IMarcadoTokens;
   LToken: IToken;
 begin
   FEnabled.Valor := 1;
   TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 1;
-  LRes := FFuncion.Evaluar(LToken);
+  LMarcado := TdpnMarcadoTokens.Create;
+  LPlaza := TdpnPlaza.Create;
+  LMarcado.AddTokenPlaza(LPlaza, LToken);
+  LRes := FFuncion.Evaluar(LMarcado);
   if (LRes = False) then
     Assert.Fail('Funcion ha evaluado mal');
   FContextoCambiado := False;
@@ -183,11 +186,16 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_Valor_Cambiado(const AValue: Integer; const ACheck: Integer; const AResult : Boolean);
 var
   LRes : Boolean;
+  LPlaza: IPlaza;
+  LMarcado: IMarcadoTokens;
   LToken: IToken;
 begin
   FEnabled.Valor := AValue;
   TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := ACheck;
-  LRes := FFuncion.Evaluar(LToken);
+  LMarcado := TdpnMarcadoTokens.Create;
+  LPlaza := TdpnPlaza.Create;
+  LMarcado.AddTokenPlaza(LPlaza, LToken);
+  LRes := FFuncion.Evaluar(LMarcado);
   if (AResult = LRes) then
     Assert.Pass
   else Assert.Fail;

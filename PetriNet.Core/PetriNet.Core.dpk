@@ -52,6 +52,7 @@ contains
   DPN.Modelo in 'src\DPN.Modelo.pas',
   DPN.Transicion.TokenByToken in 'src\DPN.Transicion.TokenByToken.pas',
   DPN.PetriNet in 'src\DPN.PetriNet.pas',
-  DPN.Bloqueable in 'src\DPN.Bloqueable.pas';
+  DPN.Bloqueable in 'src\DPN.Bloqueable.pas',
+  DPN.Plaza.Start in 'src\DPN.Plaza.Start.pas';
 
 end.

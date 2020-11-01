@@ -8,18 +8,20 @@ uses
   DPN.Interfaces;
 
 type
-  TdpnNodoPetriNet = class(TInterfacedObject, INodoPetriNet)
+  TdpnNodoPetriNet = class abstract(TInterfacedObject, INodoPetriNet)
   protected
     FID: integer;
     FNombre: string;
     FIsEnWarning: Boolean;
     FEnabled: Boolean;
     FEvento_OnEnabledChanged:  IEvent<EventoNodoPN_ValorBooleano>;
+    FEvento_OnReseted:  IEvent<EventoNodoPN>;
 
     function GetID: integer; virtual;
     procedure SetID(const Value: integer); virtual;
 
     function GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
+    function GetOnReseted: IEvent<EventoNodoPN>;
     function GetIsEnWarning: Boolean; virtual;
     function GetEnabled: Boolean; virtual;
 
@@ -28,6 +30,7 @@ type
 
     procedure Stop; virtual;
     procedure Start; virtual;
+    procedure Reset; virtual;
   public
     constructor Create; virtual;
     destructor Destroy; override;
@@ -35,7 +38,8 @@ type
     property ID: integer read GetID write SetID;
     property Nombre: string read GetNombre write SetNombre;
     property Enabled: boolean read GetEnabled;
-    property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnenabledChanged;
+    property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
+    property OnReseted: IEvent<EventoNodoPN> read GetOnReseted;
     property IsEnWarning: boolean read GetIsEnWarning;
   end;
 
@@ -86,6 +90,16 @@ end;
 function TdpnNodoPetriNet.GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
 begin
   Result := FEvento_OnEnabledChanged
+end;
+
+function TdpnNodoPetriNet.GetOnReseted: IEvent<EventoNodoPN>;
+begin
+  Result := FEvento_OnReseted;
+end;
+
+procedure TdpnNodoPetriNet.Reset;
+begin
+  ;
 end;
 
 procedure TdpnNodoPetriNet.SetID(const Value: integer);

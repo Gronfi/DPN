@@ -5,6 +5,8 @@ interface
 uses
   System.SysUtils,
 
+  Event.Engine.Interfaces,
+
   Spring,
   Spring.Collections;
 
@@ -52,6 +54,7 @@ type
 
     procedure Stop;
     procedure Start;
+    procedure Reset;
 
     property ID: integer read GetID write SetID;
     property Enabled: boolean read GetEnabled;
@@ -126,6 +129,9 @@ type
     function GetGenerarTokensDeSistema: Boolean;
     procedure SetGenerarTokensDeSistema(const Value: Boolean);
 
+    function GetPreCondicionesPlaza: IList<ICondicion>;
+
+    property PreCondicionesPlaza: IList<ICondicion> read GetPreCondicionesPlaza;
     property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
@@ -140,6 +146,7 @@ type
     function GetTokenCount: Integer;
 
     function GetPreCondiciones: IList<ICondicion>;
+    function GetAceptaArcosIN: Boolean;
 
     function GetCapacidad: Integer;
     procedure SetCapacidad(const Value: integer);
@@ -161,6 +168,7 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload;
 
+    property AceptaArcosIN: boolean read GetAceptaArcosIN;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
     property Capacidad: Integer read GetCapacidad write SetCapacidad;
@@ -173,33 +181,39 @@ type
     function GetOnContextoCondicionChanged: IEvent<EventoNodoPN>;
 
     function GetIsRecursiva: Boolean;
-    function GetIsEvaluacionNoDependeDeTokens: Boolean;
+    function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
     function GetIsCondicionQueEsperaEvento: Boolean;
 
     function GetEventoHabilitado: Boolean;
     procedure SetEventoHabilitado(const AValor: Boolean);
 
+    function GetEventosCount: integer;
+    procedure ClearEventos;
+    procedure RemovePrimerEvento;
+    function GetPrimerEvento: IEventEE;
+
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
-    function Evaluar(AToken: IToken): Boolean; overload;
-    function Evaluar(ATokens: IMarcadoTokens): Boolean; overload;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
 
     procedure DoNotificarOncontextoCondicionChanged;
 
     property Transicion: ITransicion read GetTransicion write SetTransicion;
     property OnContextoCondicionChanged: IEvent<EventoNodoPN> read GetOnContextoCondicionChanged;
     property IsRecursiva: boolean read GetIsRecursiva;
-    property IsEvaluacionNoDependeDeTokens: boolean read GetIsEvaluacionNoDependeDeTokens;
+    property IsEvaluacionNoDependeDeTokensOEvento: boolean read GetIsEvaluacionNoDependeDeTokensOEvento;
+
     property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
     property ListenerEventoHabilitado: Boolean read GetEventoHabilitado write SetEventoHabilitado;
+    property EventosCount: integer read GetEventosCount;
   end;
 
   IAccion = interface(IDependiente)
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
-    procedure Execute(ATokens: IMarcadoTokens); overload;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); overload;
 
     property Transicion: ITransicion read GetTransicion write SetTransicion;
   end;
@@ -229,7 +243,8 @@ type
 
     function GetIsActivado: Boolean;
 
-    function EstrategiaDisparo: Boolean;
+    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean;
+
     function EjecutarTransicion: Boolean;
 
     procedure AddCondicion(ACondicion: ICondicion);
