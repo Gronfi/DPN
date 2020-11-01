@@ -8,6 +8,8 @@ uses
   Spring,
   Spring.Collections,
 
+  Event.Engine.Interfaces,
+
   DPN.Interfaces,
   DPN.NodoPetriNet;
 
@@ -16,7 +18,7 @@ type
   protected
     FIsActivado: boolean;
     FIsHabilitado: boolean;
-    FAlgunaCondicionNoDependeDeTokenDesactivada: Boolean;
+    FHayAlgunaCondicionDesactivadaQueNoDependeDeToken: Boolean;
 
     FIsTransicionDependeDeEvento: Boolean;
     FCondicionDeEvento: ICondicion;
@@ -25,9 +27,12 @@ type
     FTransicionesRealizadas: int64;
 
     FPrioridad: integer; //por el momento no se tiene en cuenta
+
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
     FDependencias: IList<IBloqueable>;
+
+    FPreCondicionesAgregadas: IList<ICondicion>;
 
     FLock: TSpinLock;
     FEstadosHabilitacion: IDictionary<integer, boolean>;
@@ -66,6 +71,8 @@ type
     procedure OnCondicionContextChanged(const AID: integer); virtual;
     procedure OnHabilitacionChanged(const AID: integer; const AValue: boolean); virtual;
 
+    procedure PrepararPreCondicionesSiguientesEstados;
+
     procedure AgregarDependencia(ADependencia: IBloqueable);
     procedure AgregarDependencias(ADependencias: IList<IBloqueable>);
     procedure PreparacionDependencias;
@@ -74,7 +81,11 @@ type
 
     function ObtenerMarcadoTokens: IMarcadotokens;
 
-    function EstrategiaDisparo: Boolean; virtual;
+    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean; virtual;
+
+    procedure EliminarEventosPendientesTransicionSiNecesario;
+    function HayEventosPendientesEnTransicion: boolean;
+    procedure QueHacerTrasDisparo(const AResultadoDisparo: Boolean);
 
     procedure CalcularPosibleCambioContexto(const AID: integer);
     procedure ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
@@ -96,6 +107,7 @@ type
 
     procedure Start; override;
     procedure Stop; override;
+    procedure Reset; override;
 
     function DebugLog: string;
 
@@ -166,7 +178,7 @@ end;
 procedure TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
 begin
   FEstadoCondicionesNoDependenDeToken[AID] := AValor;
-  FAlgunaCondicionNoDependeDeTokenDesactivada := FEstadoCondicionesNoDependenDeToken.Values.Any(
+  FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
                                                                                                     Result := (AValue = false)
@@ -218,7 +230,7 @@ begin
   if FEstadoCondicionesNoDependenDeToken.ContainsKey(AID) then
   begin
     FEstadoCondicionesNoDependenDeToken[AID]    := True; //trampeamos para provocar su posible reevaluacion
-    FAlgunaCondicionNoDependeDeTokenDesactivada := FEstadoCondicionesNoDependenDeToken.Values.Any(
+    FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
                                                                                                     Result := (AValue = false)
@@ -243,7 +255,8 @@ begin
   FTransicionesIntentadas := 0;
   FTransicionesRealizadas := 0;
   FIsTransicionDependeDeEvento := False;
-  FAlgunaCondicionNoDependeDeTokenDesactivada := False;
+  FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := False;
+  FPreCondicionesAgregadas := TCollections.CreateList<ICondicion>;
   FCondiciones := TCollections.CreateList<ICondicion>;
   FAcciones := TCollections.CreateList<IAccion>;
   FArcosIn := TCollections.CreateList<IArcoIn>;
@@ -260,6 +273,8 @@ begin
 end;
 
 function TdpnTransicion.EjecutarTransicion: Boolean;
+var
+  LEvento: IEventEE;
 begin
   Result := False;
   Inc(FTransicionesIntentadas);
@@ -273,22 +288,32 @@ begin
     if not(FIsHabilitado) then
       Exit;
     // 3) si alguna condicion que no depende de token esta desactivada y no ha habido variacion en la misma no se pasa a evaluar
-    if FAlgunaCondicionNoDependeDeTokenDesactivada then
+    if FHayAlgunaCondicionDesactivadaQueNoDependeDeToken then
       Exit;
     // 4) estrategia disparo
-    Result := EstrategiaDisparo;
-    if Result then
-    begin
-      Inc(FTransicionesRealizadas);
-      if FIsHabilitado then
-      begin
-        if not FAlgunaCondicionNoDependeDeTokenDesactivada then
+    case FIsTransicionDependeDeEvento of
+      False:
         begin
-          FIsActivado := True;
-          FOnRequiereEvaluacion.Invoke(ID, Self);
+          Result := EstrategiaDisparo;
         end;
-      end;
+      True:
+        begin
+          if FCondicionDeEvento.EventosCount > 0 then
+          begin
+            LEvento := FCondicionDeEvento.GetPrimerEvento;
+            try
+              Result := EstrategiaDisparo(LEvento);
+            finally
+              FCondicionDeEvento.RemovePrimerEvento;
+            end;
+          end
+          else begin
+                 //DAVE: log
+                 Exit;
+               end;
+        end;
     end;
+    QueHacerTrasDisparo(Result);
   finally
     LiberarDependencias; // liberacion de dependencias
   end;
@@ -318,7 +343,13 @@ begin
   FCondiciones.Remove(ACondicion)
 end;
 
-function TdpnTransicion.EstrategiaDisparo: boolean;
+procedure TdpnTransicion.EliminarEventosPendientesTransicionSiNecesario;
+begin
+  if FIsTransicionDependeDeEvento then
+    FCondicionDeEvento.ClearEventos;
+end;
+
+function TdpnTransicion.EstrategiaDisparo(AEvento: IEventEE = nil): boolean;
 var
   LTokens: IMarcadoTokens;
   LTokensOut: IList<IToken>;
@@ -337,8 +368,8 @@ begin
   for LCondicion in FCondiciones do
   begin
     try
-      LResult := LCondicion.Evaluar(LTokens);
-      if LCondicion.IsEvaluacionNoDependeDeTokens then
+      LResult := LCondicion.Evaluar(LTokens, AEvento);
+      if LCondicion.IsEvaluacionNoDependeDeTokensOEvento then
       begin
         ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(LCondicion.ID, LResult);
       end;
@@ -357,7 +388,7 @@ begin
   for LAccion in FAcciones do
   begin
     try
-      LAccion.Execute(LTokens);
+      LAccion.Execute(LTokens, AEvento);
     except
       on E:Exception do
       begin
@@ -443,6 +474,11 @@ begin
   Result := FTransicionesRealizadas
 end;
 
+function TdpnTransicion.HayEventosPendientesEnTransicion: boolean;
+begin
+  Result := (FCondicionDeEvento.EventosCount <> 0)
+end;
+
 procedure TdpnTransicion.LiberarDependencias;
 var
   LBloqueable: IBloqueable;
@@ -467,7 +503,7 @@ end;
 procedure TdpnTransicion.OnCondicionContextChanged(const AID: integer);
 begin
   CalcularPosibleCambioContexto(AID);
-  if FIsHabilitado and (not FAlgunaCondicionNoDependeDeTokenDesactivada) then
+  if FIsHabilitado and (not FHayAlgunaCondicionDesactivadaQueNoDependeDeToken) then
   begin
     FIsActivado := True;
     FOnRequiereEvaluacion.Invoke(ID, Self);
@@ -511,6 +547,107 @@ begin
                      end);
 end;
 
+procedure TdpnTransicion.PrepararPreCondicionesSiguientesEstados;
+var
+  LCondicion: ICondicion;
+  LArcoOut: IArcoOut;
+begin
+  for LCondicion in FPreCondicionesAgregadas do
+  begin
+    EliminarCondicion(LCondicion);
+  end;
+  FPreCondicionesAgregadas.Clear;
+  for LArcoOut in FArcosOut do
+  begin
+    FPreCondicionesAgregadas.AddRange(LArcoOut.PreCondicionesPlaza.ToArray);
+  end;
+  FCondiciones.AddRange(FPreCondicionesAgregadas.ToArray);
+end;
+
+procedure TdpnTransicion.QueHacerTrasDisparo(const AResultadoDisparo: Boolean);
+begin
+  if AResultadoDisparo then //ha habido un disparo
+  begin
+    Inc(FTransicionesRealizadas);
+    if FIsHabilitado then //la transicion sigue habilitada
+    begin
+      if (not FHayAlgunaCondicionDesactivadaQueNoDependeDeToken) then //no hay ninguna condicion general que falla
+      begin
+        //segun es una transicion que espera de evento o no
+        case IsTransicionDependeDeEvento of
+           True:
+             begin
+               //si la condicion tiene aún un evento
+               if HayEventosPendientesEnTransicion then
+               begin
+                 //se reintenta el disparo
+                 FIsActivado := True;
+                 FOnRequiereEvaluacion.Invoke(ID, Self);
+               end;
+             end;
+           False:
+             begin
+               //se reintenta el disparo
+               FIsActivado := True;
+               FOnRequiereEvaluacion.Invoke(ID, Self);
+             end;
+         end;
+      end
+      else begin //a dormir infinito hasta que haya un cambio de contexto
+             //si hay eventos pendientes se eliminan
+             EliminarEventosPendientesTransicionSiNecesario;
+           end;
+    end
+    else begin //a esperar hasta que haya un cambio en una plaza
+           //si hay eventos pendientes se eliminan
+           EliminarEventosPendientesTransicionSiNecesario;
+         end;
+  end
+  else begin //no ha habido disparo
+         if FIsHabilitado then //la transicion sigue habilitada, luego problema de condiciones
+         begin
+           if not FHayAlgunaCondicionDesactivadaQueNoDependeDeToken then //no hay ninguna condicion general que falla
+           begin
+             //segun es una transicion que espera de evento o no
+             case IsTransicionDependeDeEvento of
+               True:
+                 begin
+                   //si la condicion tiene aún un evento
+                   //se reintenta el disparo
+                   if HayEventosPendientesEnTransicion then
+                   begin
+                     //se reintenta el disparo
+                     FIsActivado := True;
+                     FOnRequiereEvaluacion.Invoke(ID, Self);
+                   end
+                   else begin
+                          //DAVE
+                        end;
+                 end;
+               False:
+                 begin
+                   //esperamos el tiempo de la transición dormidos
+
+                 end;
+             end;
+           end
+           else begin
+
+                end;
+         end
+         else begin //a esperar hasta que haya un cambio en una plaza
+                //si hay eventos pendientes se eliminan
+                EliminarEventosPendientesTransicionSiNecesario;
+              end;
+       end;
+end;
+
+procedure TdpnTransicion.Reset;
+begin
+  FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := false;
+  FEstadoCondicionesNoDependenDeToken.Clear;
+end;
+
 procedure TdpnTransicion.SetPrioridad(const Value: integer);
 begin
   Guard.CheckTrue(Value > 0, 'La prioridad debe ser >= 0');
@@ -521,6 +658,9 @@ procedure TdpnTransicion.Start;
 var
   LCount: Integer;
 begin
+  //precondiciones
+  PrepararPreCondicionesSiguientesEstados;
+  //calculados
   FCondicionesPreparadas := FCondiciones.AsReadOnly;
   FAccionesPreparadas    := FAcciones.AsReadOnly;
 

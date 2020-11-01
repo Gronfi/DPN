@@ -40,8 +40,7 @@ type
     procedure Ejecutar (AEvento: IEventEE);
 
   public
-    function Evaluar(ATokens: IMarcadoTokens): Boolean; overload; override;
-    function Evaluar(AToken: IToken): Boolean; overload; override;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
   end;
 
   [TestFixture]
@@ -356,12 +355,7 @@ begin
   FEventoOnContextoCondicionChanged.Invoke(ID);
 end;
 
-function TdpnCondicion_es_mensaje_sga_07.Evaluar(AToken: IToken): Boolean;
-begin
-  Result := Assigned(FEvento)
-end;
-
-function TdpnCondicion_es_mensaje_sga_07.Evaluar(ATokens: IMarcadoTokens): Boolean;
+function TdpnCondicion_es_mensaje_sga_07.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
   Result := Assigned(FEvento)
 end;

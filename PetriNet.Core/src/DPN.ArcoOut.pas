@@ -3,6 +3,8 @@ unit DPN.ArcoOut;
 interface
 
 uses
+  Spring.Collections,
+
   DPN.Interfaces,
   DPN.Arco;
 
@@ -13,6 +15,8 @@ type
     function GetGenerarTokensDeSistema: Boolean;
     procedure SetGenerarTokensDeSistema(const Value: Boolean);
 
+    function GetPreCondicionesPlaza: IList<ICondicion>; virtual;
+
     procedure SetPeso(const Value: Integer); override;
   public
     constructor Create; override;
@@ -21,6 +25,7 @@ type
     procedure DoOnTransicionando(ATokens: TListaTokens); overload; override;
     procedure DoOnTransicionando(ATokens: TArrayTokens); overload; override;
 
+    property PreCondicionesPlaza: IList<ICondicion> read GetPreCondicionesPlaza;
     property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
@@ -40,6 +45,12 @@ end;
 function TdpnArcoOut.GetGenerarTokensDeSistema: Boolean;
 begin
   Result := FGenerarTokensDeSistema
+end;
+
+function TdpnArcoOut.GetPreCondicionesPlaza: IList<ICondicion>;
+begin
+  Guard.CheckTrue(FPlaza <> nil, 'La plaza debe estar asignada');
+  Result := FPlaza.PreCondiciones;
 end;
 
 procedure TdpnArcoOut.SetGenerarTokensDeSistema(const Value: Boolean);

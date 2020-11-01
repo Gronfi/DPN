@@ -19,7 +19,7 @@ type
 
     function GetOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 
-    function GetPreCondiciones: IList<ICondicion>; virtual;
+    function GetAceptaArcosIN: Boolean; virtual;
 
     function GetTokens: IReadOnlyList<IToken>; virtual;
     function GetTokenCount: Integer; virtual;
@@ -29,23 +29,28 @@ type
   public
     constructor Create; override;
 
-    procedure AddToken(AToken: IToken);
-    procedure AddTokens(ATokens: TListaTokens); overload;
-    procedure AddTokens(ATokens: TArrayTokens); overload;
+    function GetPreCondiciones: IList<ICondicion>; virtual;
 
-    procedure EliminarToken(AToken: IToken);
-    procedure EliminarTokens(ATokens: TListaTokens); overload;
-    procedure EliminarTokens(ATokens: TArrayTokens); overload;
-    procedure EliminarTokens(const ACount: integer); overload;
-    procedure EliminarTodosTokens;
+    procedure Reset; override;
 
-    procedure AddPreCondicion(ACondicion: ICondicion);
-    procedure AddPreCondiciones(ACondiciones: TCondiciones); overload;
-    procedure AddPreCondiciones(ACondiciones: TArrayCondiciones); overload;
-    procedure EliminarPreCondicion(ACondicion: ICondicion);
-    procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload;
-    procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload;
+    procedure AddToken(AToken: IToken); virtual;
+    procedure AddTokens(ATokens: TListaTokens); overload; virtual;
+    procedure AddTokens(ATokens: TArrayTokens); overload; virtual;
 
+    procedure EliminarToken(AToken: IToken); virtual;
+    procedure EliminarTokens(ATokens: TListaTokens); overload; virtual;
+    procedure EliminarTokens(ATokens: TArrayTokens); overload; virtual;
+    procedure EliminarTokens(const ACount: integer); overload; virtual;
+    procedure EliminarTodosTokens; virtual;
+
+    procedure AddPreCondicion(ACondicion: ICondicion); virtual;
+    procedure AddPreCondiciones(ACondiciones: TCondiciones); overload; virtual;
+    procedure AddPreCondiciones(ACondiciones: TArrayCondiciones); overload; virtual;
+    procedure EliminarPreCondicion(ACondicion: ICondicion); virtual;
+    procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; virtual;
+    procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; virtual;
+
+    property AceptaArcosIN: boolean read GetAceptaArcosIN;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
     property Capacidad: Integer read GetCapacidad write SetCapacidad;
@@ -148,6 +153,11 @@ begin
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
+function TdpnPlaza.GetAceptaArcosIN: Boolean;
+begin
+  Result := True;
+end;
+
 function TdpnPlaza.GetCapacidad: Integer;
 begin
   Result := FCapacidad
@@ -160,7 +170,7 @@ end;
 
 function TdpnPlaza.GetPreCondiciones: IList<ICondicion>;
 begin
-
+  Result := FPreCondiciones
 end;
 
 function TdpnPlaza.GetTokenCount: Integer;
@@ -171,6 +181,12 @@ end;
 function TdpnPlaza.GetTokens: IReadOnlyList<IToken>;
 begin
   Result := FTokens.AsReadOnly
+end;
+
+procedure TdpnPlaza.Reset;
+begin
+  FTokens.Clear;
+  FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
 procedure TdpnPlaza.SetCapacidad(const Value: integer);

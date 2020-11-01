@@ -6,6 +6,7 @@ uses
   Spring,
   Spring.Collections,
 
+  Event.Engine.Interfaces,
   DPN.Interfaces,
   DPN.NodoPetriNet;
 
@@ -21,7 +22,7 @@ type
   public
     constructor Create; override;
 
-    procedure Execute(ATokens: IMarcadoTokens); overload; virtual;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); virtual;
 
     property Dependencias: IList<IBloqueable> read GetDependencias;
     property Transicion: ITransicion read GetTransicion write SetTransicion;
@@ -39,7 +40,7 @@ begin
   inherited;
 end;
 
-procedure TdpnAccion.Execute(ATokens: IMarcadoTokens);
+procedure TdpnAccion.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil);
 begin
   ;
 end;

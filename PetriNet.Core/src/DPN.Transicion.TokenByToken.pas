@@ -3,13 +3,15 @@ unit DPN.Transicion.TokenByToken;
 interface
 
 uses
+  Event.Engine.Interfaces,
+
   DPN.Transicion,
   DPN.MarcadoTokens;
 
 type
   TdpnTransicion_TokenByToken = class(TdpnTransicion)
   protected
-    function EstrategiaDisparo: Boolean; override;
+    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean; override;
   end;
 
 implementation
@@ -24,7 +26,7 @@ uses
 
 
 { TdpnTransicion_TokenByToken }
-function TdpnTransicion_TokenByToken.EstrategiaDisparo: Boolean;
+function TdpnTransicion_TokenByToken.EstrategiaDisparo(AEvento: IEventEE = nil): Boolean;
 var
   LTokens: IMarcadoTokens;
   LTokenSeleccionado: IMarcadoTokens;
@@ -56,8 +58,8 @@ begin
       for LCondicion in FCondiciones do
       begin
         try
-          LResult := LCondicion.Evaluar(LTokenEvaluar);
-          if LCondicion.IsEvaluacionNoDependeDeTokens then
+          LResult := LCondicion.Evaluar(LTokenEvaluar, AEvento);
+          if LCondicion.IsEvaluacionNoDependeDeTokensOEvento then
           begin
             ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(LCondicion.ID, LResult);
           end;
@@ -83,7 +85,7 @@ begin
   for LAccion in FAcciones do
   begin
     try
-      LAccion.Execute(LTokenSeleccionado);
+      LAccion.Execute(LTokenSeleccionado, AEvento);
     except
       on E:Exception do
       begin
