@@ -41,7 +41,9 @@ uses
   DPN.Transicion.TokenByToken in '..\PetriNet.Core\src\DPN.Transicion.TokenByToken.pas',
   DPN.Variable in '..\PetriNet.Core\src\DPN.Variable.pas',
   DPN.Core.Testing.Transicion in 'src\DPN.Core.Testing.Transicion.pas',
-  DPN.Core.Testing.PetriNetCoordinador in 'src\DPN.Core.Testing.PetriNetCoordinador.pas';
+  DPN.Core.Testing.PetriNetCoordinador in 'src\DPN.Core.Testing.PetriNetCoordinador.pas',
+  DPN.Plaza.Start in '..\PetriNet.Core\src\DPN.Plaza.Start.pas',
+  DPN.Core.Testing.Plazas in 'src\DPN.Core.Testing.Plazas.pas';
 
 var
   runner: ITestRunner;

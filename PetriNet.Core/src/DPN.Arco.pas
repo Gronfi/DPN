@@ -28,9 +28,9 @@ type
     function GetPeso: Integer; virtual;
     procedure SetPeso(const Value: Integer); virtual;
     function GetPlaza: IPlaza; virtual;
-    procedure SetPlaza(const Value: IPlaza); virtual;
+    procedure SetPlaza(Value: IPlaza); virtual;
     function GetTransicion: ITransicion; virtual;
-    procedure SetTransicion(const Value: ITransicion); virtual;
+    procedure SetTransicion(Value: ITransicion); virtual;
 
     procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer); virtual;
     procedure DoOnPlazaEnabledChanged(const AID: integer; const AEnabled: boolean); virtual;
@@ -101,7 +101,7 @@ var
 begin
   LOldValue := GetIsHabilitado;
   LNewValue := Evaluar(ACount);
-  if (LOldValue <> LNewValue) then // and FTransicionIsEnabled
+  if (LOldValue <> LNewValue) then
     FEventoOnHabilitacionChanged.Invoke(ID, LNewValue);
 end;
 
@@ -164,7 +164,7 @@ begin
     Evaluar(FPlaza.TokenCount);
 end;
 
-procedure TdpnArco.SetPlaza(const Value: IPlaza);
+procedure TdpnArco.SetPlaza(Value: IPlaza);
 begin
   if Assigned(FPlaza) then
   begin
@@ -177,10 +177,12 @@ begin
     FPlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
     FPlaza.OnEnabledChanged.Add(DoOnPlazaEnabledChanged);
     Evaluar(FPlaza.TokenCount);
+    if FPlaza.TokenCount <> 0 then
+      FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
   end;
 end;
 
-procedure TdpnArco.SetTransicion(const Value: ITransicion);
+procedure TdpnArco.SetTransicion(Value: ITransicion);
 begin
   if Assigned(FTransicion) then
   begin

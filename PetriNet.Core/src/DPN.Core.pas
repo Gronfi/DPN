@@ -12,6 +12,10 @@ uses
 
 type
   DPNCore = class
+    const
+      CHANNEL_SINGLE_THREADED = 'DPN.SingleThreaded';
+      CHANNEL_MULTI_THREADED  = 'DPN.MultiThreaded';
+      MAX_MULTITHREADING_POOL = 10;
     private
       class var FID: integer;
       class var FTokenID: int64;
@@ -32,6 +36,7 @@ implementation
 uses
   System.SysUtils,
 
+  Event.Engine,
   DPN.MarcadoTokens;
 
 { DPN }
@@ -47,6 +52,8 @@ class constructor DPNCore.CreateC;
 begin
   FID := 0;
   FTokenID := 0;
+  EventBus.RegisterChannel(CHANNEL_SINGLE_THREADED, 1);
+  EventBus.RegisterChannel(CHANNEL_MULTI_THREADED, MAX_MULTITHREADING_POOL);
 end;
 
 class function DPNCore.GenerarNTokensSistema(const ACount: Integer): IList<IToken>;

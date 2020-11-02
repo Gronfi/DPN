@@ -19,7 +19,7 @@ type
 
     function GetOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 
-    function GetAceptaArcosIN: Boolean; virtual;
+    function GetAceptaArcosOUT: Boolean; virtual;
 
     function GetTokens: IReadOnlyList<IToken>; virtual;
     function GetTokenCount: Integer; virtual;
@@ -50,7 +50,7 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; virtual;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; virtual;
 
-    property AceptaArcosIN: boolean read GetAceptaArcosIN;
+    property AceptaArcosOUT: boolean read GetAceptaArcosOUT;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
     property Capacidad: Integer read GetCapacidad write SetCapacidad;
@@ -153,7 +153,7 @@ begin
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
-function TdpnPlaza.GetAceptaArcosIN: Boolean;
+function TdpnPlaza.GetAceptaArcosOUT: Boolean;
 begin
   Result := True;
 end;

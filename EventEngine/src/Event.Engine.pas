@@ -789,7 +789,7 @@ begin
   end;
 end;
 {$ENDREGION}
-{$REGION 'Events' }
+{$REGION 'EventBus' }
 
 class procedure EventBus.CreateIni;
 begin
