@@ -145,5 +145,5 @@ begin
 end;
 
 initialization
-  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
+  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
 end.

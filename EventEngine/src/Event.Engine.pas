@@ -23,16 +23,16 @@ const
 
 type
   { Forward Declarations }
-  TEvent                  = class;
+  TEventEE                  = class;
   TThreadEventHandlerBase = class;
   TThreadEventHandler     = class;
   TEventChannel           = class;
   TChannel                  = class;
   TThreadEventHandlerType = class of TThreadEventHandler;
 
-{$REGION 'TEvent'}
+{$REGION 'TEventEE'}
 
-  TEvent = class abstract(TInterfacedObject, IEventEE)
+  TEventEE = class abstract(TInterfacedObject, IEventEE)
   private
     FCreationDateTime: TDateTime;
     FSender          : TObject;
@@ -293,7 +293,7 @@ type
 {$ENDREGION}
 {$REGION 'TEvent_Generic'}
 
-  TEvent_Generic<T> = class(TEvent)
+  TEvent_Generic<T> = class(TEventEE)
   public
     Data: T;
   end;
@@ -308,50 +308,50 @@ uses
 
 {$REGION 'TEvent'}
 
-constructor TEvent.Create;
+constructor TEventEE.Create;
 begin
   inherited Create;
   FCreationDateTime := Now;
   FSender           := nil;
 end;
 
-constructor TEvent.Create(ASender: TObject);
+constructor TEventEE.Create(ASender: TObject);
 begin
   Create;
   FSender := ASender;
 end;
 
-destructor TEvent.Destroy;
+destructor TEventEE.Destroy;
 begin
   inherited Destroy;
 end;
 
-function TEvent.GetAsObject: TObject;
+function TEventEE.GetAsObject: TObject;
 begin
   Result := Self;
 end;
 
-function TEvent.GetCreationDateTime: TDateTime;
+function TEventEE.GetCreationDateTime: TDateTime;
 begin
   Result := FCreationDateTime;
 end;
 
-function TEvent.GetSender: TObject;
+function TEventEE.GetSender: TObject;
 begin
   Result := FSender;
 end;
 
-procedure TEvent.Post;
+procedure TEventEE.Post;
 begin
   EventBus.QueueEvent(Self)
 end;
 
-procedure TEvent.Schedule(const ADateTimeWhenExecute: TDateTime);
+procedure TEventEE.Schedule(const ADateTimeWhenExecute: TDateTime);
 begin
   EventBus.Scheduler.ScheduleEvent(Self, ADateTimeWhenExecute);
 end;
 
-procedure TEvent.Schedule(const AMilisecondsToExecute: Int64);
+procedure TEventEE.Schedule(const AMilisecondsToExecute: Int64);
 begin
   EventBus.Scheduler.ScheduleEvent(Self, AMilisecondsToExecute);
 end;

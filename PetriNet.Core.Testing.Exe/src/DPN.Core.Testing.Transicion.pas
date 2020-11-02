@@ -8,6 +8,9 @@ uses
 
   DUnitX.TestFramework,
 
+  Event.Engine.Interfaces,
+  Event.Engine,
+
   DPN.Interfaces,
   DPN.Variable,
   DPN.Plaza,
@@ -49,7 +52,7 @@ type
     procedure Test_Transicion_CondicionesNoOK_1_Estado_Origen_1_Estado_Destino;
 
     [Test]
-    procedure Test_Transicion_CondicionesNoOK_EventoCambio_1_Estado_Origen_1_Estado_Destino;
+    procedure Test_Transicion_CondicionesOK_Evento_1_Estado_Origen_1_Estado_Destino;
   end;
 
 implementation
@@ -621,9 +624,102 @@ begin
   else Assert.Fail;
 end;
 
-procedure TPetriNetCoreTesting_Transicion.Test_Transicion_CondicionesNoOK_EventoCambio_1_Estado_Origen_1_Estado_Destino;
-begin
+procedure TPetriNetCoreTesting_Transicion.Test_Transicion_CondicionesOK_Evento_1_Estado_Origen_1_Estado_Destino;
+var
+  LToken: IToken;
+  I     : Integer;
+  LRes  : Boolean;
 
+  FArcoI1    : IArcoIn;
+  FPlazaI1   : IPlaza;
+
+  FArcoO1    : IArcoOut;
+  FPlazaO1   : IPlaza;
+
+  FTransicion: ITransicion;
+
+  FFuncion : ICondicion;
+  FEnabled : IVariable;
+  FFuncionE: ICondicion;
+
+  LEvento  : IEventEE;
+  LEventoR : IEventEE;
+
+  LPlaza   : IPlaza;
+  LMarcado : IMarcadoTokens;
+begin
+  FEnabled := TdpnVariable.Create;
+  FEnabled.Nombre := 'Enabled';
+  FEnabled.Valor  := 0;
+
+  FFuncionE := TdpnCondicion_Evento_Prueba.Create;
+  TdpnCondicion_Evento_Prueba(FFuncionE).Numero := 5;
+
+  FFuncion := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(FFuncion).Variable     := FEnabled;
+  TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 5;
+
+  FPlazaI1   := TdpnPlaza.Create;
+  FPlazaI1.Nombre    := 'I1';
+  FPlazaI1.Capacidad := 1;
+
+  FArcoI1                        := TdpnArcoIn.Create;
+  FArcoI1.Plaza                  := FPlazaI1;
+  FArcoI1.Peso                   := 1;
+  FArcoI1.PesoEvaluar            := 1;
+
+  FPlazaO1   := TdpnPlaza.Create;
+  FPlazaO1.Nombre    := 'O1';
+  FPlazaO1.Capacidad := 1;
+
+  FArcoO1                        := TdpnArcoOut.Create;
+  FArcoO1.Plaza                  := FPlazaO1;
+  FArcoO1.Peso                   := 1;
+
+  FTransicion := TdpnTransicion.Create;
+
+  FTransicion.AddArcoIn(FArcoI1);
+  FTransicion.AddArcoOut(FArcoO1);
+  FTransicion.AddCondicion(FFuncion);
+  FTransicion.AddCondicion(FFuncionE);
+
+  FTransicion.Start;
+
+  LRes := FTransicion.IsHabilitado;
+  if LRes then
+    Assert.Fail('Habilitado, y no debiera');
+
+  for I := 1 to 1 do
+  begin
+    LToken := TdpnTokenColoreado.Create;
+    FPlazaI1.AddToken(LToken);
+  end;
+
+  LRes := FTransicion.IsHabilitado;
+  if not LRes then
+    Assert.Fail('No Habilitado, y debiera');
+
+  LRes := FTransicion.EjecutarTransicion;
+  if LRes then
+    Assert.Fail('No debiera!');
+
+  FEnabled.Valor  := 5;
+
+  LEvento := TEventoPrueba.Create;
+  TEventoPrueba(LEvento).Numero := 5;
+  TEventoPrueba(LEvento).Texto  := 'Hola';
+  LEvento.Post;
+  Sleep(50);
+
+  LRes := FTransicion.IsHabilitado;
+  if not LRes then
+    Assert.Fail('No habilitado, y debiera');
+
+  LRes := FTransicion.EjecutarTransicion;
+
+  if LRes then
+    Assert.Pass
+  else Assert.Fail;
 end;
 
 procedure TPetriNetCoreTesting_Transicion.Test_Transicion_CondicionesOK_1_Estado_Origen_1_Estado_Destino;
@@ -699,6 +795,6 @@ begin
 end;
 
 initialization
-  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Transicion);
+  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Transicion);
 
 end.

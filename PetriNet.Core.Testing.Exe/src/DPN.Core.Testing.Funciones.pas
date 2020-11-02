@@ -9,6 +9,10 @@ uses
   DUnitX.TestFramework,
 
   Event.Engine.Interfaces,
+  Event.Engine,
+
+  DPN.TokenSistema,
+  DPN.Core,
   DPN.Interfaces,
   DPN.Condicion,
   DPN.Accion,
@@ -39,6 +43,26 @@ type
     property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
   end;
 
+  TEventoPrueba = class(TEventEE)
+  protected
+    FNumero: integer;
+    FTexto : string;
+  public
+    property Numero: integer read FNumero write FNumero;
+    property Texto: string read FTexto write FTexto;
+  end;
+
+  TdpnCondicion_Evento_Prueba = class(TdpnCondicionBaseEsperaEvento)
+  protected
+    FNumero: integer;
+  public
+    function DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean; override;
+    function CrearListenerEvento: IEventEEListener; override;
+
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
+    property Numero: integer read FNumero write FNumero;
+  end;
+
   //[TestFixture]
   TPetriNetCoreTesting_Funciones = class
   private
@@ -64,6 +88,14 @@ type
     procedure Test_Valor_Cambiado(const AValue : Integer; const ACheck: Integer; const AResult : Boolean);
     [Test]
     procedure Test_Evaluacion_Y_Cambio_Contexto_Posterior;
+    [Test]
+    procedure Test_1_Evento_OK;
+    [Test]
+    procedure Test_1_Evento_NoOK;
+    [Test]
+    procedure Test_1_Evento_NoAceptado;
+    [Test]
+    procedure Test_2_Eventos_1_OK_2_NoOK;
   end;
 
 implementation
@@ -122,7 +154,6 @@ begin
     FVariable := AVariable;
     FVariable.OnValueChanged.Add(DoOnVarChanged);
   end;
-
 end;
 
 { TPetriNetCoreTesting_Funciones }
@@ -148,6 +179,9 @@ begin
   FFuncion := TdpnCondicion_es_tabla_variables.Create;
   TdpnCondicion_es_tabla_variables(FFuncion).Variable := FEnabled;
   FFuncion.OnContextoCondicionChanged.Add(DoOnContextoChanged);
+
+  FID              := 0;
+  FContextoCambiado:= False;
 end;
 
 procedure TPetriNetCoreTesting_Funciones.TearDown;
@@ -156,6 +190,151 @@ begin
 
   FEnabled.OnValueChanged.Remove(DoOnVarChanged);
   FEnabled := nil;
+end;
+
+procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_NoAceptado;
+var
+  LFuncion : ICondicion;
+  LEvento  : IEventEE;
+begin
+  LFuncion := TdpnCondicion_Evento_Prueba.Create;
+  try
+    TdpnCondicion_Evento_Prueba(LFuncion).Numero := 5;
+    LFuncion.OnContextoCondicionChanged.Add(DoOnContextoChanged);
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 7;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+    Sleep(50);
+    if not FContextoCambiado then
+      Assert.Pass
+    else Assert.Fail;
+  finally
+    LFuncion := nil;
+  end;
+end;
+
+procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_NoOK;
+var
+  LFuncion : ICondicion;
+  LEvento  : IEventEE;
+  LRes     : boolean;
+  LPlaza   : IPlaza;
+  LMarcado : IMarcadoTokens;
+  LToken   : IToken;
+  LEventoR : IEventEE;
+begin
+  LFuncion := TdpnCondicion_Evento_Prueba.Create;
+  try
+    TdpnCondicion_Evento_Prueba(LFuncion).Numero := 5;
+    LFuncion.OnContextoCondicionChanged.Add(DoOnContextoChanged);
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Pepe';
+    LEvento.Post;
+    Sleep(50);
+    if FID <> LFuncion.ID then
+      Assert.Fail('ID: ' + FID.ToString);
+    if not FContextoCambiado then
+      Assert.Fail('Contexto');
+    LEventoR := LFuncion.GetPrimerEvento;
+    LMarcado := TdpnMarcadoTokens.Create;
+    LPlaza := TdpnPlaza.Create;
+    LToken := TdpnTokenSistema.Create;
+    LMarcado.AddTokenPlaza(LPlaza, LToken);
+    LRes := LFuncion.Evaluar(LMarcado, LEventoR);
+    if not LRes then
+      Assert.Pass
+    else Assert.Fail;
+  finally
+    LFuncion := nil;
+  end;
+end;
+
+procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_OK;
+var
+  LFuncion : ICondicion;
+  LEvento  : IEventEE;
+  LRes     : boolean;
+  LPlaza   : IPlaza;
+  LMarcado : IMarcadoTokens;
+  LToken   : IToken;
+  LEventoR : IEventEE;
+begin
+  LFuncion := TdpnCondicion_Evento_Prueba.Create;
+  try
+    TdpnCondicion_Evento_Prueba(LFuncion).Numero := 5;
+    LFuncion.OnContextoCondicionChanged.Add(DoOnContextoChanged);
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+    Sleep(50);
+    if FID <> LFuncion.ID then
+      Assert.Fail('ID: ' + FID.ToString);
+    if not FContextoCambiado then
+      Assert.Fail('Contexto');
+    LEventoR := LFuncion.GetPrimerEvento;
+    LMarcado := TdpnMarcadoTokens.Create;
+    LPlaza := TdpnPlaza.Create;
+    LToken := TdpnTokenSistema.Create;
+    LMarcado.AddTokenPlaza(LPlaza, LToken);
+    LRes := LFuncion.Evaluar(LMarcado, LEventoR);
+    if LRes then
+      Assert.Pass
+    else Assert.Fail;
+  finally
+    LFuncion := nil;
+  end;
+end;
+
+procedure TPetriNetCoreTesting_Funciones.Test_2_Eventos_1_OK_2_NoOK;
+var
+  LFuncion : ICondicion;
+  LEvento  : IEventEE;
+  LRes     : boolean;
+  LPlaza   : IPlaza;
+  LMarcado : IMarcadoTokens;
+  LToken   : IToken;
+  LEventoR : IEventEE;
+begin
+  LFuncion := TdpnCondicion_Evento_Prueba.Create;
+  try
+    TdpnCondicion_Evento_Prueba(LFuncion).Numero := 5;
+    LFuncion.OnContextoCondicionChanged.Add(DoOnContextoChanged);
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Koko';
+    LEvento.Post;
+    Sleep(50);
+    if FID <> LFuncion.ID then
+      Assert.Fail('ID: ' + FID.ToString);
+    if not FContextoCambiado then
+      Assert.Fail('Contexto');
+    if LFuncion.EventosCount <> 2 then
+      Assert.Fail('No eventos');
+    LEventoR := LFuncion.GetPrimerEvento;
+    LMarcado := TdpnMarcadoTokens.Create;
+    LPlaza := TdpnPlaza.Create;
+    LToken := TdpnTokenSistema.Create;
+    LMarcado.AddTokenPlaza(LPlaza, LToken);
+    LRes := LFuncion.Evaluar(LMarcado, LEventoR);
+    if not LRes then
+      Assert.Fail;
+    LFuncion.RemovePrimerEvento;
+    LEventoR := LFuncion.GetPrimerEvento;
+    LMarcado.AddTokenPlaza(LPlaza, LToken);
+    LRes := LFuncion.Evaluar(LMarcado, LEventoR);
+    if not LRes then
+      Assert.Pass
+    else Assert.Fail;
+  finally
+    LFuncion := nil;
+  end;
 end;
 
 procedure TPetriNetCoreTesting_Funciones.Test_Evaluacion_Y_Cambio_Contexto_Posterior;
@@ -199,6 +378,23 @@ begin
   if (AResult = LRes) then
     Assert.Pass
   else Assert.Fail;
+end;
+
+{ TdpnCondicion_Evento_Prueba }
+
+function TdpnCondicion_Evento_Prueba.CrearListenerEvento: IEventEEListener;
+begin
+  Result := TEventListener<TEventoPrueba>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_MULTI_THREADED);
+end;
+
+function TdpnCondicion_Evento_Prueba.DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean;
+begin
+  Result := TEventoPrueba(AEvento).Numero = FNumero
+end;
+
+function TdpnCondicion_Evento_Prueba.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
+begin
+  Result := TEventoPrueba(AEvento).Texto = 'Hola';
 end;
 
 initialization

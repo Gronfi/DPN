@@ -72,6 +72,7 @@ type
     function GetIsCondicionQueEsperaEvento: Boolean; override;
   public
     constructor Create; override;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -174,6 +175,14 @@ begin
   inherited;
   FListenerEvento        := CrearListenerEvento;
   FListaEventosRecibidos := TCollections.CreateList<IEventEE>;
+end;
+
+destructor TdpnCondicionBaseEsperaEvento.Destroy;
+begin
+  FListenerEvento.Unregister;
+  FListenerEvento := nil;
+  FListaEventosRecibidos := nil;
+  inherited;
 end;
 
 procedure TdpnCondicionBaseEsperaEvento.DoOnEventoRecibido(AEvento: IEventEE);
