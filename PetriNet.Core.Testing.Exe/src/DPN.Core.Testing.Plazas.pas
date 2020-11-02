@@ -14,7 +14,7 @@ uses
   DPN.ArcoIn;
 
 type
-  [TestFixture]
+  //[TestFixture]
   TPetriNetCoreTesting_Plazas = class
   private
     FID      : Integer;

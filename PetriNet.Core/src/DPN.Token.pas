@@ -9,7 +9,12 @@ type
   TdpnToken = class(TInterfacedObject, IToken)
   protected
     FID: int64;
+    FPlaza: IPlaza;
+
     function GetID: int64;
+
+    function GetPlaza: IPlaza;
+    procedure SetPlaza(APlaza: IPlaza);
   public
     constructor Create;
     destructor Destroy; override;
@@ -17,6 +22,7 @@ type
     function Clon: IToken;
 
     property ID: int64 read GetID;
+    property Plaza: IPlaza read GetPlaza write SetPlaza;
   end;
 
 implementation
@@ -46,6 +52,16 @@ end;
 function TdpnToken.GetID: int64;
 begin
   Result := FID
+end;
+
+function TdpnToken.GetPlaza: IPlaza;
+begin
+  Result := FPlaza;
+end;
+
+procedure TdpnToken.SetPlaza(APlaza: IPlaza);
+begin
+  FPlaza := APlaza;
 end;
 
 end.

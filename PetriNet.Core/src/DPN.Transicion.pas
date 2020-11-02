@@ -289,7 +289,9 @@ begin
       Exit;
     // 3) si alguna condicion que no depende de token esta desactivada y no ha habido variacion en la misma no se pasa a evaluar
     if FHayAlgunaCondicionDesactivadaQueNoDependeDeToken then
+    begin
       Exit;
+    end;
     // 4) estrategia disparo
     case FIsTransicionDependeDeEvento of
       False:

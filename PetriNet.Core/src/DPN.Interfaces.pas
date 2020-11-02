@@ -146,6 +146,8 @@ type
     function GetTokenCount: Integer;
 
     function GetPreCondiciones: IList<ICondicion>;
+
+    function GetAceptaArcosIN: Boolean;
     function GetAceptaArcosOUT: Boolean;
 
     function GetCapacidad: Integer;
@@ -168,6 +170,7 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload;
 
+    property AceptaArcosIN: boolean read GetAceptaArcosIN;
     property AceptaArcosOUT: boolean read GetAceptaArcosOUT;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
@@ -281,8 +284,12 @@ type
     function GetID: int64;
 
     function Clon: IToken;
+    function GetPlaza: IPlaza;
+    procedure SetPlaza(APlaza: IPlaza);
 
     property ID: int64 read GetID;
+    property Plaza: IPlaza read GetPlaza write SetPlaza;
+    //timestamp cambio estado
   end;
 
   ITokenSistema = interface(IToken)

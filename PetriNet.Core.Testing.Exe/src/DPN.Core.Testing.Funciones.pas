@@ -29,6 +29,8 @@ type
     function GetVariable: IVariable;
     procedure SetVariable(AVariable: IVariable);
 
+    function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
+
     function GetValorToCheck: TValue;
     procedure SetValorToCheck(const AValue: TValue);
 
@@ -126,6 +128,11 @@ end;
 function TdpnCondicion_es_tabla_variables.GetDependencias: IList<IBloqueable>;
 begin
   Result := TCollections.CreateList<IBloqueable>;
+end;
+
+function TdpnCondicion_es_tabla_variables.GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
+begin
+
 end;
 
 function TdpnCondicion_es_tabla_variables.GetValorToCheck: TValue;
@@ -384,7 +391,7 @@ end;
 
 function TdpnCondicion_Evento_Prueba.CrearListenerEvento: IEventEEListener;
 begin
-  Result := TEventListener<TEventoPrueba>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_MULTI_THREADED);
+  Result := TEventListener<TEventoPrueba>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_SINGLE_THREADED);
 end;
 
 function TdpnCondicion_Evento_Prueba.DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean;
