@@ -86,8 +86,8 @@ type
     procedure SetPeso(const Value: Integer);
     function GetPlaza: IPlaza;
     function GetTransicion: ITransicion;
-    procedure SetPlaza(const Value: IPlaza);
-    procedure SetTransicion(const Value: ITransicion);
+    procedure SetPlaza(Value: IPlaza);
+    procedure SetTransicion(Value: ITransicion);
 
     function GetIsForzado: Boolean;
     procedure SetIsForzado(const Value: Boolean);
@@ -146,7 +146,7 @@ type
     function GetTokenCount: Integer;
 
     function GetPreCondiciones: IList<ICondicion>;
-    function GetAceptaArcosIN: Boolean;
+    function GetAceptaArcosOUT: Boolean;
 
     function GetCapacidad: Integer;
     procedure SetCapacidad(const Value: integer);
@@ -168,7 +168,7 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload;
 
-    property AceptaArcosIN: boolean read GetAceptaArcosIN;
+    property AceptaArcosOUT: boolean read GetAceptaArcosOUT;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
     property Capacidad: Integer read GetCapacidad write SetCapacidad;
