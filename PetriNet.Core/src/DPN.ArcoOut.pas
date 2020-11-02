@@ -18,7 +18,7 @@ type
     function GetPreCondicionesPlaza: IList<ICondicion>; virtual;
 
     procedure SetPeso(const Value: Integer); override;
-    procedure SetPlaza(APlaza: IPlaza);
+    procedure SetPlaza(APlaza: IPlaza); override;
   public
     constructor Create; override;
     function Evaluar(const ATokenCount: Integer): Boolean; override;
@@ -69,7 +69,7 @@ procedure TdpnArcoOut.SetPlaza(APlaza: IPlaza);
 begin
   if Assigned(APlaza) then
   begin
-    Guard.CheckTrue(APlaza.AceptaArcosOUT, 'La plaza no acepta arcos IN');
+    Guard.CheckTrue(APlaza.AceptaArcosOUT, 'La plaza no acepta arcos OUT');
   end;
   inherited;
 end;

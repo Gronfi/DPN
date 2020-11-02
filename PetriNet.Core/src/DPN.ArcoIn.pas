@@ -17,6 +17,7 @@ type
 
     function GetPesoEvaluar: Integer; virtual;
     procedure SetPesoEvaluar(const Value: Integer); virtual;
+    procedure SetPlaza(APlaza: IPlaza); override;
   public
     constructor Create; override;
 
@@ -112,6 +113,15 @@ begin
   FPesoEvaluar := Value;
   if Assigned(FPlaza) then
     Evaluar(FPlaza.TokenCount);
+end;
+
+procedure TdpnArcoIn.SetPlaza(APlaza: IPlaza);
+begin
+  if Assigned(APlaza) then
+  begin
+    Guard.CheckTrue(APlaza.AceptaArcosIN, 'La plaza no acepta arcos IN');
+  end;
+  inherited;
 end;
 
 end.

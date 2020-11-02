@@ -53,6 +53,7 @@ contains
   DPN.Transicion.TokenByToken in 'src\DPN.Transicion.TokenByToken.pas',
   DPN.PetriNet in 'src\DPN.PetriNet.pas',
   DPN.Bloqueable in 'src\DPN.Bloqueable.pas',
-  DPN.Plaza.Start in 'src\DPN.Plaza.Start.pas';
+  DPN.Plaza.Start in 'src\DPN.Plaza.Start.pas',
+  DPN.Plaza.Super in 'src\DPN.Plaza.Super.pas';
 
 end.

@@ -23,7 +23,7 @@ uses
   DPN.Transicion;
 
 type
-  TMsg_SGA_42 = class(TEvent)
+  TMsg_SGA_42 = class(TEventEE)
 
   end;
 
@@ -46,16 +46,19 @@ type
   [TestFixture]
   TPetriNetCoreTesting_PetriNet = class
   public
-    [Test]
+    //[Test]
     procedure Test_PetriNet_Arranca_Para_OK;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_Start;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_1_destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos_Varios_Tokens;
+
+    [Test]
+    procedure Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
   end;
 
 implementation
@@ -336,6 +339,104 @@ begin
 
   if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 4) and (FPlazaO2.TokenCount = 4)) then
     Assert.Fail('no ha transicionado (2)');
+
+  LPNet.Destroy;
+  Assert.Pass;
+end;
+
+procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
+var
+  LPNet: TdpnPetriNetCoordinador;
+
+  LRes: boolean;
+
+  LModelo: IModelo;
+  LToken : IToken;
+  I      : Integer;
+
+  FArcoI1    : IArcoIn;
+  FPlazaI1   : IPlaza;
+
+  FArcoO1    : IArcoOut;
+  FPlazaO1   : IPlaza;
+
+  FFuncion : ICondicion;
+  FEnabled : IVariable;
+  FFuncionE: ICondicion;
+
+  LEvento  : IEventEE;
+  LEventoR : IEventEE;
+
+  FTransicion: ITransicion;
+begin
+  FEnabled := TdpnVariable.Create;
+  FEnabled.Nombre := 'Enabled';
+  FEnabled.Valor  := 0;
+
+  FFuncionE := TdpnCondicion_Evento_Prueba.Create;
+  TdpnCondicion_Evento_Prueba(FFuncionE).Numero := 5;
+
+  FFuncion := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(FFuncion).Variable     := FEnabled;
+  TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 5;
+
+  LModelo := TdpnModelo.Create;
+
+  FPlazaI1           := TdpnPlaza.Create;
+  FPlazaI1.Nombre    := 'I1';
+  FPlazaI1.Capacidad := 2;
+
+  FArcoI1                        := TdpnArcoIn.Create;
+  FArcoI1.Plaza                  := FPlazaI1;
+  FArcoI1.Peso                   := 1;
+  FArcoI1.PesoEvaluar            := 1;
+
+  FPlazaO1           := TdpnPlaza.Create;
+  FPlazaO1.Nombre    := 'O1';
+  FPlazaO1.Capacidad := 1;
+
+  FArcoO1                        := TdpnArcoOut.Create;
+  FArcoO1.Plaza                  := FPlazaO1;
+  FArcoO1.Peso                   := 1;
+
+  FTransicion := TdpnTransicion.Create;
+  FTransicion.AddArcoIn(FArcoI1);
+  FTransicion.AddArcoOut(FArcoO1);
+  FTransicion.AddCondicion(FFuncion);
+  FTransicion.AddCondicion(FFuncionE);
+
+  LModelo.Elementos.Add(FTransicion);
+
+  LPNet       := TdpnPetriNetCoordinador.Create;
+  LPNet.Grafo := LModelo;
+  LPNet.Start;
+
+  for I := 1 to 2 do
+  begin
+    LToken := TdpnTokenColoreado.Create;
+    FPlazaI1.AddToken(LToken);
+  end;
+
+  LEvento := TEventoPrueba.Create;
+  TEventoPrueba(LEvento).Numero := 5;
+  TEventoPrueba(LEvento).Texto  := 'Hola';
+  LEvento.Post;
+
+  LEvento := TEventoPrueba.Create;
+  TEventoPrueba(LEvento).Numero := 5;
+  TEventoPrueba(LEvento).Texto  := 'Hola';
+  LEvento.Post;
+
+  Sleep(100);
+
+  Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+  Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+  if not(FPlazaI1.TokenCount = 2) and (FPlazaO1.TokenCount = 0) then
+    Assert.Fail('no ha transicionado bien');
+
+  if FFuncionE.EventosCount <> 0 then
+    Assert.Fail('no debiera tener ningun evento guardado');
 
   LPNet.Destroy;
   Assert.Pass;

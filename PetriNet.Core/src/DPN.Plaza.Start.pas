@@ -14,12 +14,23 @@ type
   protected
     FEjecutado: Boolean;
 
-    function GetAceptaArcosOUT: Boolean; override;
+    function GetAceptaArcosIN: Boolean; override;
     procedure CrearToken;
   public
     constructor Create; override;
 
     procedure Reset; override;
+
+    procedure AddToken(AToken: IToken); override;
+    procedure AddTokens(ATokens: TListaTokens); overload; override;
+    procedure AddTokens(ATokens: TArrayTokens); overload; override;
+
+    procedure AddPreCondicion(ACondicion: ICondicion); override;
+    procedure AddPreCondiciones(ACondiciones: TCondiciones); overload; override;
+    procedure AddPreCondiciones(ACondiciones: TArrayCondiciones); overload; override;
+    procedure EliminarPreCondicion(ACondicion: ICondicion); override;
+    procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; override;
+    procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; override;
   end;
 
 implementation
@@ -28,6 +39,36 @@ uses
   DPN.TokenSistema;
 
 { TdpnPlazaStart }
+
+procedure TdpnPlazaStart.AddPreCondicion(ACondicion: ICondicion);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.AddPreCondiciones(ACondiciones: TArrayCondiciones);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.AddPreCondiciones(ACondiciones: TCondiciones);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.AddToken(AToken: IToken);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.AddTokens(ATokens: TListaTokens);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.AddTokens(ATokens: TArrayTokens);
+begin
+  ;
+end;
 
 procedure TdpnPlazaStart.CrearToken;
 var
@@ -48,7 +89,22 @@ begin
   CrearToken;
 end;
 
-function TdpnPlazaStart.GetAceptaArcosOUT: Boolean;
+procedure TdpnPlazaStart.EliminarPreCondicion(ACondicion: ICondicion);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.EliminarPreCondiciones(ACondiciones: TCondiciones);
+begin
+  ;
+end;
+
+procedure TdpnPlazaStart.EliminarPreCondiciones(ACondiciones: TArrayCondiciones);
+begin
+  ;
+end;
+
+function TdpnPlazaStart.GetAceptaArcosIN: Boolean;
 begin
   Result := False;
 end;
