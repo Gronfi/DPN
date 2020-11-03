@@ -177,13 +177,16 @@ end;
 
 procedure TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
 begin
+  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> I: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
   FEstadoCondicionesNoDependenDeToken[AID] := AValor;
+  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> ID: ' + AID.ToString + '= ' + FEstadoCondicionesNoDependenDeToken[AID].ToString);
   FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
                                                                                                     Result := (AValue = false)
                                                                                                   end
-                                                                                               ) = False;
+                                                                                               );
+  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> F: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
 end;
 
 procedure TdpnTransicion.AddAccion(AAccion: IAccion);
@@ -227,16 +230,20 @@ end;
 
 procedure TdpnTransicion.CalcularPosibleCambioContexto(const AID: integer);
 begin
+  //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> I: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
   if FEstadoCondicionesNoDependenDeToken.ContainsKey(AID) then
   begin
+    //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> 1');
     FEstadoCondicionesNoDependenDeToken[AID]    := True; //trampeamos para provocar su posible reevaluacion
+    //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> ID: ' + AID.ToString + '= ' + FEstadoCondicionesNoDependenDeToken[AID].ToString);
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
                                                                                                     Result := (AValue = false)
                                                                                                   end
-                                                                                               ) = False;
+                                                                                               );
   end;
+  //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> F: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
 end;
 
 procedure TdpnTransicion.CapturarDependencias;
@@ -276,40 +283,56 @@ function TdpnTransicion.EjecutarTransicion: Boolean;
 var
   LEvento: IEventEE;
 begin
+  //writeln('<TdpnTransicion.EjecutarTransicion>');
   Result := False;
   Inc(FTransicionesIntentadas);
+  //writeln('<TdpnTransicion.EjecutarTransicion> Cnt: ' + FTransicionesIntentadas.ToString);
   CapturarDependencias; // todas las dependencias son capturadas
+  //writeln('<TdpnTransicion.EjecutarTransicion> Tras dependencias');
   // transicion efectiva
   try
     // 1) chequeo de integridad, debe estar habilitada la transicion (enabled)
     if not FEnabled then
+    begin
+      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-Enabled');
       Exit;
+    end;
     // 2) chequeo de integridad, debe estar habilitada la transicion (estados in y out cumplen sus restricciones)
     if not(FIsHabilitado) then
+    begin
+      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-habilitado');
       Exit;
+    end;
     // 3) si alguna condicion que no depende de token esta desactivada y no ha habido variacion en la misma no se pasa a evaluar
     if FHayAlgunaCondicionDesactivadaQueNoDependeDeToken then
     begin
+      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-depende de token');
       Exit;
     end;
+    //writeln('<TdpnTransicion.EjecutarTransicion> Filtros superados');
     // 4) estrategia disparo
     case FIsTransicionDependeDeEvento of
       False:
         begin
+          //writeln('<TdpnTransicion.EjecutarTransicion> Transicion de tipo No-Evento');
           Result := EstrategiaDisparo;
+          //writeln('<TdpnTransicion.EjecutarTransicion> Result: ' + Result.ToString);
         end;
       True:
         begin
+          //writeln('<TdpnTransicion.EjecutarTransicion> Transicion de tipo Evento');
           if FCondicionDeEvento.EventosCount > 0 then
           begin
             LEvento := FCondicionDeEvento.GetPrimerEvento;
             try
               Result := EstrategiaDisparo(LEvento);
+              //writeln('<TdpnTransicion.EjecutarTransicion> * Result: ' + Result.ToString);
             finally
               FCondicionDeEvento.RemovePrimerEvento;
             end;
           end
           else begin
+                 //writeln('<TdpnTransicion.EjecutarTransicion> No hay eventos?');
                  //DAVE: log
                  Exit;
                end;
@@ -361,6 +384,7 @@ var
   LArcoIn: IArcoIn;
   LArcoOut: IArcoOut;
 begin
+  //writeln('<TdpnTransicion.EstrategiaDisparo>');
   Result := False;
   // Pasos:
   // 1) obtenemos los jetones implicados por estado
@@ -373,10 +397,14 @@ begin
       LResult := LCondicion.Evaluar(LTokens, AEvento);
       if LCondicion.IsEvaluacionNoDependeDeTokensOEvento then
       begin
+        //writeln('<TdpnTransicion.EstrategiaDisparo> --> ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens');
         ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(LCondicion.ID, LResult);
       end;
       if not LResult then
+      begin
+        //writeln('<TdpnTransicion.EstrategiaDisparo> No se han cumplido las condiciones');
         Exit;
+      end;
     except
       on E:Exception do
       begin
@@ -385,6 +413,7 @@ begin
       end;
     end;
   end;
+  //writeln('<TdpnTransicion.EstrategiaDisparo> Condiciones OK!');
   Result := True;
   // 3) ejecucion de acciones
   for LAccion in FAcciones do

@@ -59,6 +59,8 @@ type
     function GetEventoHabilitado: Boolean; override;
     procedure SetEventoHabilitado(const AValor: Boolean); override;
 
+    function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
+
     function GetEventosCount: integer; override;
     procedure ClearEventos; override;
     procedure RemovePrimerEvento; override;
@@ -204,6 +206,11 @@ end;
 function TdpnCondicionBaseEsperaEvento.GetIsCondicionQueEsperaEvento: Boolean;
 begin
   Result := True
+end;
+
+function TdpnCondicionBaseEsperaEvento.GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
+begin
+  Result := False;
 end;
 
 function TdpnCondicionBaseEsperaEvento.GetPrimerEvento: IEventEE;

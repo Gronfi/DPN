@@ -46,19 +46,23 @@ type
   [TestFixture]
   TPetriNetCoreTesting_PetriNet = class
   public
-    //[Test]
+    [Test]
     procedure Test_PetriNet_Arranca_Para_OK;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_Start;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_1_destino;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos_Varios_Tokens;
 
     [Test]
     procedure Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
+    [Test]
+    procedure Test_PetriNet_CondicionesOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
+    [Test]
+    procedure Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
   end;
 
 implementation
@@ -77,12 +81,14 @@ var
   LEstado: EEstadoPetriNet;
 begin
   LPNet := TdpnPetriNetCoordinador.Create;
-  LEstado := LPNet.Estado;
+  try
+    LEstado := LPNet.Estado;
 
-  if not (LEstado = EEstadoPetriNet.GrafoNoASignado) then
-    Assert.Fail('Tras inicio');
-
-  LPNet.Destroy;
+    if not (LEstado = EEstadoPetriNet.GrafoNoASignado) then
+      Assert.Fail('Tras inicio');
+  finally
+    LPNet.Destroy;
+  end;
   Assert.Pass
 end;
 
@@ -94,22 +100,24 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPNet := TdpnPetriNetCoordinador.Create;
+  try
+    if not (LPNet.Estado = EEstadoPetriNet.GrafoNoASignado) then
+      Assert.Fail('Tras inicio');
 
-  if not (LPNet.Estado = EEstadoPetriNet.GrafoNoASignado) then
-    Assert.Fail('Tras inicio');
+    LPNet.Grafo := LModelo;
 
-  LPNet.Grafo := LModelo;
+    if not (LPNet.Estado = EEstadoPetriNet.Detenida) then
+      Assert.Fail('Tras asignar');
 
-  if not (LPNet.Estado = EEstadoPetriNet.Detenida) then
-    Assert.Fail('Tras asignar');
+    LPNet.Start;
 
-  LPNet.Start;
-
-  if not (LPNet.Estado = EEstadoPetriNet.Iniciada) then
-    Assert.Fail('Tras start');
-
-  LPNet.Destroy;
-  Assert.Pass
+    if not (LPNet.Estado = EEstadoPetriNet.Iniciada) then
+      Assert.Fail('Tras start');
+    Assert.Pass
+  finally
+    LModelo := nil;
+    LPNet.Destroy;
+  end;
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_1_destino;
@@ -154,26 +162,35 @@ begin
   LModelo.Elementos.Add(FTransicion);
 
   LPNet       := TdpnPetriNetCoordinador.Create;
-  LPNet.Grafo := LModelo;
-  LPNet.Start;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
 
 
-  for I := 1 to 1 do
-  begin
-    LToken := TdpnTokenColoreado.Create;
-    FPlazaI1.AddToken(LToken);
+    for I := 1 to 1 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(100);
+
+    if not(FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) then
+      Assert.Fail('no ha transicionado');
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+    Assert.Pass;
+  finally
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+
+    LPNet.Destroy;
   end;
-
-  Sleep(100);
-
-  if not(FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) then
-    Assert.Fail('no ha transicionado');
-
-  Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-  Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-
-  LPNet.Destroy;
-  Assert.Pass;
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos;
@@ -223,34 +240,42 @@ begin
   FArcoO2.Peso                   := 1;
 
   FTransicion := TdpnTransicion.Create;
-  FTransicion.AddArcoIn(FArcoI1);
-  FTransicion.AddArcoOut(FArcoO1);
-  FTransicion.AddArcoOut(FArcoO2);
+  try
+    FTransicion.AddArcoIn(FArcoI1);
+    FTransicion.AddArcoOut(FArcoO1);
+    FTransicion.AddArcoOut(FArcoO2);
 
-  LModelo.Elementos.Add(FTransicion);
+    LModelo.Elementos.Add(FTransicion);
 
-  LPNet       := TdpnPetriNetCoordinador.Create;
-  //LPNet.MultipleEnablednessOfTransitions := False;
-  LPNet.Grafo := LModelo;
-  LPNet.Start;
+    LPNet       := TdpnPetriNetCoordinador.Create;
+    //LPNet.MultipleEnablednessOfTransitions := False;
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
 
 
-  for I := 1 to 1 do
-  begin
-    LToken := TdpnTokenColoreado.Create;
-    FPlazaI1.AddToken(LToken);
+    for I := 1 to 1 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(500);
+
+    if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) and (FPlazaO2.TokenCount = 1)) then
+      Assert.Fail('no ha transicionado');
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+    Assert.Pass;
+  finally
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+    LPNet.Destroy;
   end;
-
-  Sleep(100);
-
-  if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) and (FPlazaO2.TokenCount = 1)) then
-    Assert.Fail('no ha transicionado');
-
-  Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
-  Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-
-  LPNet.Destroy;
-  Assert.Pass;
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos_Varios_Tokens;
@@ -307,41 +332,48 @@ begin
   LModelo.Elementos.Add(FTransicion);
 
   LPNet       := TdpnPetriNetCoordinador.Create;
-  //LPNet.MultipleEnablednessOfTransitions := False;
-  LPNet.Grafo := LModelo;
-  LPNet.Start;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
 
 
-  for I := 1 to 1 do
-  begin
-    LToken := TdpnTokenColoreado.Create;
-    FPlazaI1.AddToken(LToken);
+    for I := 1 to 1 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(100);
+
+    Writeln('Step1 -- > I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
+    Writeln('Step1 -- > Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+    if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) and (FPlazaO2.TokenCount = 1)) then
+      Assert.Fail('no ha transicionado (1)');
+
+    for I := 1 to 3 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(100);
+
+    Writeln('Step2 -- > I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
+    Writeln('Step2 -- > Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+    if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 4) and (FPlazaO2.TokenCount = 4)) then
+      Assert.Fail('no ha transicionado (2)');
+    Assert.Pass;
+  finally
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+    LPNet.Destroy;
   end;
-
-  Sleep(100);
-
-  Writeln('Step1 -- > I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
-  Writeln('Step1 -- > Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-
-  if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) and (FPlazaO2.TokenCount = 1)) then
-    Assert.Fail('no ha transicionado (1)');
-
-  for I := 1 to 3 do
-  begin
-    LToken := TdpnTokenColoreado.Create;
-    FPlazaI1.AddToken(LToken);
-  end;
-
-  Sleep(100);
-
-  Writeln('Step2 -- > I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString + ' - O2: ' + FPlazaO2.TokenCount.ToString);
-  Writeln('Step2 -- > Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-
-  if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 4) and (FPlazaO2.TokenCount = 4)) then
-    Assert.Fail('no ha transicionado (2)');
-
-  LPNet.Destroy;
-  Assert.Pass;
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
@@ -408,38 +440,278 @@ begin
   LModelo.Elementos.Add(FTransicion);
 
   LPNet       := TdpnPetriNetCoordinador.Create;
-  LPNet.Grafo := LModelo;
-  LPNet.Start;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
 
-  for I := 1 to 2 do
-  begin
-    LToken := TdpnTokenColoreado.Create;
-    FPlazaI1.AddToken(LToken);
+    for I := 1 to 2 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    Sleep(1000);
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+    if not((FPlazaI1.TokenCount = 2) and (FPlazaO1.TokenCount = 0)) then
+      Assert.Fail('no ha transicionado bien');
+
+    if FFuncionE.EventosCount <> 0 then
+      Assert.Fail('no debiera tener ningun evento guardado');
+    Assert.Pass;
+  finally
+    FEnabled := nil;
+    FFuncionE := nil;
+    FFuncion := nil;
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+    LPNet.Destroy;
   end;
+end;
 
-  LEvento := TEventoPrueba.Create;
-  TEventoPrueba(LEvento).Numero := 5;
-  TEventoPrueba(LEvento).Texto  := 'Hola';
-  LEvento.Post;
+procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_CondicionesOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
+var
+  LPNet: TdpnPetriNetCoordinador;
 
-  LEvento := TEventoPrueba.Create;
-  TEventoPrueba(LEvento).Numero := 5;
-  TEventoPrueba(LEvento).Texto  := 'Hola';
-  LEvento.Post;
+  LRes: boolean;
 
-  Sleep(100);
+  LModelo: IModelo;
+  LToken : IToken;
+  I      : Integer;
 
-  Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-  Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+  FArcoI1    : IArcoIn;
+  FPlazaI1   : IPlaza;
 
-  if not(FPlazaI1.TokenCount = 2) and (FPlazaO1.TokenCount = 0) then
-    Assert.Fail('no ha transicionado bien');
+  FArcoO1    : IArcoOut;
+  FPlazaO1   : IPlaza;
 
-  if FFuncionE.EventosCount <> 0 then
-    Assert.Fail('no debiera tener ningun evento guardado');
+  FFuncion : ICondicion;
+  FEnabled : IVariable;
+  FFuncionE: ICondicion;
 
-  LPNet.Destroy;
-  Assert.Pass;
+  LEvento  : IEventEE;
+  LEventoR : IEventEE;
+
+  FTransicion: ITransicion;
+begin
+  FEnabled := TdpnVariable.Create;
+  FEnabled.Nombre := 'Enabled';
+  FEnabled.Valor  := 0;
+
+  FFuncionE := TdpnCondicion_Evento_Prueba.Create;
+  TdpnCondicion_Evento_Prueba(FFuncionE).Numero := 5;
+
+  FFuncion := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(FFuncion).Variable     := FEnabled;
+  TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 5;
+
+  LModelo := TdpnModelo.Create;
+
+  FPlazaI1           := TdpnPlaza.Create;
+  FPlazaI1.Nombre    := 'I1';
+  FPlazaI1.Capacidad := 2;
+
+  FArcoI1                        := TdpnArcoIn.Create;
+  FArcoI1.Plaza                  := FPlazaI1;
+  FArcoI1.Peso                   := 1;
+  FArcoI1.PesoEvaluar            := 1;
+
+  FPlazaO1           := TdpnPlaza.Create;
+  FPlazaO1.Nombre    := 'O1';
+  FPlazaO1.Capacidad := 2;
+
+  FArcoO1                        := TdpnArcoOut.Create;
+  FArcoO1.Plaza                  := FPlazaO1;
+  FArcoO1.Peso                   := 1;
+
+  FTransicion := TdpnTransicion.Create;
+  FTransicion.AddArcoIn(FArcoI1);
+  FTransicion.AddArcoOut(FArcoO1);
+  FTransicion.AddCondicion(FFuncion);
+  FTransicion.AddCondicion(FFuncionE);
+
+  LModelo.Elementos.Add(FTransicion);
+
+  LPNet       := TdpnPetriNetCoordinador.Create;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
+
+    for I := 1 to 2 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    FEnabled.Valor  := 5;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    Sleep(1000);
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+    if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 2)) then
+      Assert.Fail('no ha transicionado bien');
+
+    if FFuncionE.EventosCount <> 0 then
+      Assert.Fail('no debiera tener ningun evento guardado');
+    Assert.Pass;
+  finally
+    FEnabled := nil;
+    FFuncionE := nil;
+    FFuncion := nil;
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+    LPNet.Destroy;
+  end;
+end;
+
+procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
+var
+  LPNet: TdpnPetriNetCoordinador;
+
+  LRes: boolean;
+
+  LModelo: IModelo;
+  LToken : IToken;
+  I      : Integer;
+
+  FArcoI1    : IArcoIn;
+  FPlazaI1   : IPlaza;
+
+  FArcoO1    : IArcoOut;
+  FPlazaO1   : IPlaza;
+
+  FFuncion : ICondicion;
+  FEnabled : IVariable;
+  FFuncionE: ICondicion;
+  FAccion  : IAccion;
+
+  LEvento  : IEventEE;
+  LEventoR : IEventEE;
+
+  FTransicion: ITransicion;
+begin
+  FEnabled := TdpnVariable.Create;
+  FEnabled.Nombre := 'Enabled';
+  FEnabled.Valor  := 0;
+
+  FAccion := TdpnAccion_tabla_variables.Create;
+  TdpnAccion_tabla_variables(FAccion).Variable   := FEnabled;
+  TdpnAccion_tabla_variables(FAccion).ValorToSet := 3;
+
+  FFuncionE := TdpnCondicion_Evento_Prueba.Create;
+  TdpnCondicion_Evento_Prueba(FFuncionE).Numero := 5;
+
+  FFuncion := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(FFuncion).Variable     := FEnabled;
+  TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 5;
+
+  LModelo := TdpnModelo.Create;
+
+  FPlazaI1           := TdpnPlaza.Create;
+  FPlazaI1.Nombre    := 'I1';
+  FPlazaI1.Capacidad := 2;
+
+  FArcoI1                        := TdpnArcoIn.Create;
+  FArcoI1.Plaza                  := FPlazaI1;
+  FArcoI1.Peso                   := 1;
+  FArcoI1.PesoEvaluar            := 1;
+
+  FPlazaO1           := TdpnPlaza.Create;
+  FPlazaO1.Nombre    := 'O1';
+  FPlazaO1.Capacidad := 2;
+
+  FArcoO1                        := TdpnArcoOut.Create;
+  FArcoO1.Plaza                  := FPlazaO1;
+  FArcoO1.Peso                   := 1;
+
+  FTransicion := TdpnTransicion.Create;
+  FTransicion.AddArcoIn(FArcoI1);
+  FTransicion.AddArcoOut(FArcoO1);
+  FTransicion.AddCondicion(FFuncion);
+  FTransicion.AddCondicion(FFuncionE);
+  FTransicion.AddAccion(FAccion);
+
+  LModelo.Elementos.Add(FTransicion);
+
+  LPNet       := TdpnPetriNetCoordinador.Create;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
+
+    for I := 1 to 2 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    FEnabled.Valor  := 5;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    LEvento := TEventoPrueba.Create;
+    TEventoPrueba(LEvento).Numero := 5;
+    TEventoPrueba(LEvento).Texto  := 'Hola';
+    LEvento.Post;
+
+    Sleep(1000);
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+
+    if not((FPlazaI1.TokenCount = 1) and (FPlazaO1.TokenCount = 1)) then
+      Assert.Fail('no ha transicionado bien');
+
+    if FFuncionE.EventosCount <> 0 then
+      Assert.Fail('no debiera tener ningun evento guardado');
+    Assert.Pass;
+  finally
+    FEnabled := nil;
+    FFuncionE := nil;
+    FAccion := nil;
+    FFuncion := nil;
+    LModelo := nil;
+    FPlazaI1           := nil;
+    FArcoI1                        := nil;
+    FPlazaO1           := nil;
+    FArcoO1                        := nil;
+    FTransicion := nil;
+    LPNet.Destroy;
+  end;
 end;
 
 { TdpnCondicion_es_mensaje_sga_07 }

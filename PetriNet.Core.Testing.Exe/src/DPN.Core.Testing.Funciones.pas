@@ -19,6 +19,26 @@ uses
   DPN.Variable;
 
 type
+  TdpnAccion_tabla_variables = class(TdpnAccion)
+  protected
+    FVariable: IVariable;
+    FValor: TValue;
+
+    function GetDependencias: IList<IBloqueable>; override;
+
+    function GetVariable: IVariable;
+    procedure SetVariable(AVariable: IVariable);
+
+    function GetValorToSet: TValue;
+    procedure SetValorToSet(const AValue: TValue);
+
+  public
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); override;
+
+    property Variable: IVariable read GetVariable write SetVariable;
+    property ValorToSet: TValue read GetValorToSet write SetValorToSet;
+  end;
+
   TdpnCondicion_es_tabla_variables = class(TdpnCondicion)
   protected
     FVariable: IVariable;
@@ -39,7 +59,7 @@ type
     function EvaluarInterno: Boolean;
 
   public
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
@@ -112,6 +132,7 @@ uses
 
 function TdpnCondicion_es_tabla_variables.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
+  //WriteLn('<TdpnCondicion_es_tabla_variables.Evaluar>');
   Result := EvaluarInterno
 end;
 
@@ -128,6 +149,8 @@ end;
 function TdpnCondicion_es_tabla_variables.GetDependencias: IList<IBloqueable>;
 begin
   Result := TCollections.CreateList<IBloqueable>;
+  if Assigned(FVariable) then
+    Result.Add(FVariable);
 end;
 
 function TdpnCondicion_es_tabla_variables.GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
@@ -401,7 +424,45 @@ end;
 
 function TdpnCondicion_Evento_Prueba.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
+  //WriteLn('<TdpnCondicion_Evento_Prueba.Evaluar>');
   Result := TEventoPrueba(AEvento).Texto = 'Hola';
+end;
+
+{ TdpnAccion_tabla_variables }
+
+procedure TdpnAccion_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE);
+begin
+  FVariable.Valor:= FValor;
+end;
+
+function TdpnAccion_tabla_variables.GetDependencias: IList<IBloqueable>;
+begin
+  Result := TCollections.CreateList<IBloqueable>;
+  if Assigned(FVariable) then
+    Result.Add(FVariable);
+end;
+
+function TdpnAccion_tabla_variables.GetValorToSet: TValue;
+begin
+  Result := FValor;
+end;
+
+function TdpnAccion_tabla_variables.GetVariable: IVariable;
+begin
+  Result := FVariable;
+end;
+
+procedure TdpnAccion_tabla_variables.SetValorToSet(const AValue: TValue);
+begin
+  FValor := AValue;
+end;
+
+procedure TdpnAccion_tabla_variables.SetVariable(AVariable: IVariable);
+begin
+  if FVariable <> AVariable then
+  begin
+    FVariable := AVariable;
+  end;
 end;
 
 initialization
