@@ -15,10 +15,12 @@ type
     FCapacidadAcumulada: Integer;
     FListaPlazas: IList<IPlaza>;
 
-    function GetAceptaArcosIN: Boolean; override;
+    function GetAceptaArcosOUT: Boolean; override;
 
     function GetTokens: IReadOnlyList<IToken>; override;
     function GetTokenCount: Integer; override;
+
+    procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer); virtual;
 
     function GetCapacidad: Integer; override;
 
@@ -26,6 +28,9 @@ type
     constructor Create; override;
 
     procedure Start; override;
+
+    procedure AddPlaza(APlaza: IPlaza); virtual;
+    procedure RemovePlaza(APlaza: IPlaza); virtual;
 
     procedure AddToken(AToken: IToken); override;
     procedure AddTokens(ATokens: TListaTokens); overload; override;
@@ -51,6 +56,15 @@ uses
   DPN.TokenSistema;
 
 { TdpnPlazaSuper }
+
+procedure TdpnPlazaSuper.AddPlaza(APlaza: IPlaza);
+begin
+  if not FListaPlazas.Contains(APlaza) then
+  begin
+    FListaPlazas.Add(APlaza);
+    APlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+  end;
+end;
 
 procedure TdpnPlazaSuper.AddPreCondicion(ACondicion: ICondicion);
 begin
@@ -86,6 +100,11 @@ constructor TdpnPlazaSuper.Create;
 begin
   inherited;
   FListaPlazas := TCollections.CreateList<IPlaza>;
+end;
+
+procedure TdpnPlazaSuper.DoOnTokenCountChanged(const AID, ACount: Integer);
+begin
+  FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
 procedure TdpnPlazaSuper.EliminarPreCondicion(ACondicion: ICondicion);
@@ -171,7 +190,7 @@ begin
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
-function TdpnPlazaSuper.GetAceptaArcosIN: Boolean;
+function TdpnPlazaSuper.GetAceptaArcosOUT: Boolean;
 begin
   Result := False;
 end;
@@ -204,6 +223,13 @@ begin
                            FTokens.AddRange(APlaza.Tokens.ToArray);
                          end
                        );
+  Result := FTokens.AsReadOnly
+end;
+
+procedure TdpnPlazaSuper.RemovePlaza(APlaza: IPlaza);
+begin
+  if FListaPlazas.Contains(APlaza) then
+    FListaPlazas.Remove(APlaza);
 end;
 
 procedure TdpnPlazaSuper.Start;

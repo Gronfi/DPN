@@ -27,20 +27,22 @@
 
 ## Version de Delphi recomendada
 
-10.4.1 debido a que se han resuelto problemas de las librerías parallel utilizadas aquí
+10.4.1 debido a que se han resuelto problemas de las librerías parallel utilizadas en el proyecto
 
 ## Estado
 
-* El proyecto está en sus primeros pasos
-* Integrando eventos en condiciones
+* El proyecto está en sus comienzos
+* Testeando las partes básicas
 
 ### Caracteristicas
-* Evolución de tokens coloreados
+* Evolución de tokens coloreados y de sistema
 * Multiples disparos de transiciones concurrentes
 * Transiciones condicionadas, hay condiciones a cumplir y acciones a ejecutar en caso de que la transición se dispare
+* Arcos inhibidores y arcos de reset
+* Superplazas: plazas que contienen a otras plazas y provocan una herencia de comportamientos
 
 ### Pendiente (mucho)
-* concepto de disparo por tiempo cuando alguna condicion esta asociada a tiempo
+* Pendiente: disparo temporizado tras que transcurre el tiempo de reevaluación de una transición
 * terminar unittesting del core: integración eventos
 * ampliar core: logging, debugging, persistencia de configuracion
 * capas posteriores al core
