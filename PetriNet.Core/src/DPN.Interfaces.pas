@@ -216,7 +216,7 @@ type
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
-    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); overload;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil);
 
     property Transicion: ITransicion read GetTransicion write SetTransicion;
   end;
