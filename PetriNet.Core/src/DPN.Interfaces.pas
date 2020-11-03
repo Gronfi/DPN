@@ -227,9 +227,6 @@ type
 
   ITransicion = interface(INodoPetriNet)
   ['{905A0070-02F5-4F86-BC13-72E1398342D4}']
-    function GetPrioridad: Integer;
-    procedure SetPrioridad(const APrioridad: integer);
-
     function GetIsHabilitado: Boolean;
     function GetIsTransicionDependeDeEvento: Boolean;
 
@@ -243,8 +240,6 @@ type
 
     function GetCondiciones: IReadOnlyList<ICondicion>;
     function GetAcciones: IReadOnlyList<IAccion>;
-
-    function GetIsActivado: Boolean;
 
     function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean;
 
@@ -262,9 +257,7 @@ type
 
     function DebugLog: string;
 
-    property Prioridad: integer read GetPrioridad write SetPrioridad;
     property IsHabilitado: Boolean read GetIsHabilitado;
-    property IsActivado: Boolean read GetIsActivado;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
     property ArcosOut: IReadOnlyList<IArcoOut> read GetArcosOut;

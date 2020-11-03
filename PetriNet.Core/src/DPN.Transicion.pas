@@ -16,7 +16,6 @@ uses
 type
   TdpnTransicion = class (TdpnNodoPetriNet, ITransicion)
   protected
-    FIsActivado: boolean;
     FIsHabilitado: boolean;
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken: Boolean;
 
@@ -25,8 +24,6 @@ type
 
     FTransicionesIntentadas: int64;
     FTransicionesRealizadas: int64;
-
-    FPrioridad: integer; //por el momento no se tiene en cuenta
 
     FCondiciones: IList<ICondicion>;
     FAcciones: IList<IAccion>;
@@ -49,9 +46,6 @@ type
 
     FOnRequiereEvaluacion: IEvent<EventoNodoPN_Transicion>;
 
-    function GetPrioridad: Integer; virtual;
-    procedure SetPrioridad(const Value: integer); virtual;
-
     function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>; virtual;
     function GetIsTransicionDependeDeEvento: Boolean; virtual;
 
@@ -65,8 +59,6 @@ type
 
     function GetCondiciones: IReadOnlyList<ICondicion>; virtual;
     function GetAcciones: IReadOnlyList<IAccion>; virtual;
-
-    function GetIsActivado: Boolean; virtual;
 
     procedure OnCondicionContextChanged(const AID: integer); virtual;
     procedure OnHabilitacionChanged(const AID: integer; const AValue: boolean); virtual;
@@ -111,9 +103,7 @@ type
 
     function DebugLog: string;
 
-    property Prioridad: integer read GetPrioridad write SetPrioridad; //por el momento no se tiene en cuenta
     property IsHabilitado: Boolean read GetIsHabilitado;
-    property IsActivado: Boolean read GetIsActivado;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
     property ArcosOut: IReadOnlyList<IArcoout> read GetArcosOut;
@@ -161,7 +151,6 @@ begin
         if FIsTransicionDependeDeEvento then //si es una transición que espera de evento activamos la recepcion del evento
           FCondicionDeEvento.ListenerEventoHabilitado := True
         else begin //si es transicion sin evento, requerimos la evaluacion
-               FIsActivado := True;
                FOnRequiereEvaluacion.Invoke(ID, Self);
              end;
       end
@@ -257,8 +246,6 @@ end;
 constructor TdpnTransicion.Create;
 begin
   inherited;
-  FPrioridad := 1;
-  FIsActivado := false;
   FTransicionesIntentadas := 0;
   FTransicionesRealizadas := 0;
   FIsTransicionDependeDeEvento := False;
@@ -283,13 +270,13 @@ function TdpnTransicion.EjecutarTransicion: Boolean;
 var
   LEvento: IEventEE;
 begin
-  //writeln('<TdpnTransicion.EjecutarTransicion>');
+  //writeln('<TdpnTransicion.EjecutarTransicion> ID: ' + ID.ToString);
   Result := False;
-  Inc(FTransicionesIntentadas);
-  //writeln('<TdpnTransicion.EjecutarTransicion> Cnt: ' + FTransicionesIntentadas.ToString);
   CapturarDependencias; // todas las dependencias son capturadas
   //writeln('<TdpnTransicion.EjecutarTransicion> Tras dependencias');
   // transicion efectiva
+  Inc(FTransicionesIntentadas);
+  //writeln('<TdpnTransicion.EjecutarTransicion> Cnt: ' + FTransicionesIntentadas.ToString);
   try
     // 1) chequeo de integridad, debe estar habilitada la transicion (enabled)
     if not FEnabled then
@@ -333,7 +320,6 @@ begin
           end
           else begin
                  //writeln('<TdpnTransicion.EjecutarTransicion> No hay eventos?');
-                 //DAVE: log
                  Exit;
                end;
         end;
@@ -470,11 +456,6 @@ begin
   Result := FCondicionesPreparadas
 end;
 
-function TdpnTransicion.GetIsActivado: Boolean;
-begin
-  Result := FIsActivado
-end;
-
 function TdpnTransicion.GetIsHabilitado: Boolean;
 begin
   Result := FIsHabilitado
@@ -488,11 +469,6 @@ end;
 function TdpnTransicion.GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
 begin
   Result := FOnRequiereEvaluacion
-end;
-
-function TdpnTransicion.GetPrioridad: Integer;
-begin
-  Result := FPrioridad
 end;
 
 function TdpnTransicion.GetTransicionesIntentadas: int64;
@@ -536,7 +512,6 @@ begin
   CalcularPosibleCambioContexto(AID);
   if FIsHabilitado and (not FHayAlgunaCondicionDesactivadaQueNoDependeDeToken) then
   begin
-    FIsActivado := True;
     FOnRequiereEvaluacion.Invoke(ID, Self);
   end;
 end;
@@ -612,14 +587,12 @@ begin
                if HayEventosPendientesEnTransicion then
                begin
                  //se reintenta el disparo
-                 FIsActivado := True;
                  FOnRequiereEvaluacion.Invoke(ID, Self);
                end;
              end;
            False:
              begin
                //se reintenta el disparo
-               FIsActivado := True;
                FOnRequiereEvaluacion.Invoke(ID, Self);
              end;
          end;
@@ -648,7 +621,6 @@ begin
                    if HayEventosPendientesEnTransicion then
                    begin
                      //se reintenta el disparo
-                     FIsActivado := True;
                      FOnRequiereEvaluacion.Invoke(ID, Self);
                    end
                    else begin
@@ -677,12 +649,6 @@ procedure TdpnTransicion.Reset;
 begin
   FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := false;
   FEstadoCondicionesNoDependenDeToken.Clear;
-end;
-
-procedure TdpnTransicion.SetPrioridad(const Value: integer);
-begin
-  Guard.CheckTrue(Value > 0, 'La prioridad debe ser >= 0');
-  FPrioridad := Value;
 end;
 
 procedure TdpnTransicion.Start;
