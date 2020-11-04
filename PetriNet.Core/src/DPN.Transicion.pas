@@ -36,6 +36,7 @@ type
     FDependencias: IList<IBloqueable>;
 
     FPreCondicionesAgregadas: IList<ICondicion>;
+    FPreAccionesAgregadas: IList<IAccion>;
 
     FLock: TSpinLock;
     FLockTimer: TSpinLock;
@@ -98,6 +99,7 @@ type
     procedure ActualizarEstadoHabilitacionPorEstadoArco(const AID: integer; const AValor: boolean);
   public
     constructor Create; override;
+    destructor Destroy; override;
 
     function EjecutarTransicion: Boolean; virtual;
 
@@ -266,6 +268,7 @@ begin
   FIsTransicionDependeDeEvento := False;
   FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := False;
   FPreCondicionesAgregadas := TCollections.CreateList<ICondicion>;
+  FPreAccionesAgregadas := TCollections.CreateList<IAccion>;
   FCondiciones := TCollections.CreateList<ICondicion>;
   FAcciones := TCollections.CreateList<IAccion>;
   FArcosIn := TCollections.CreateList<IArcoIn>;
@@ -281,6 +284,12 @@ end;
 function TdpnTransicion.DebugLog: string;
 begin
   Result := '';
+end;
+
+destructor TdpnTransicion.Destroy;
+begin
+  DetenerTimerReEvaluacion;
+  inherited;
 end;
 
 procedure TdpnTransicion.DetenerTimerReEvaluacion;
@@ -621,6 +630,7 @@ end;
 procedure TdpnTransicion.PrepararPreCondicionesSiguientesEstados;
 var
   LCondicion: ICondicion;
+  LAccion: IAccion;
   LArcoOut: IArcoOut;
 begin
   for LCondicion in FPreCondicionesAgregadas do
@@ -628,11 +638,19 @@ begin
     EliminarCondicion(LCondicion);
   end;
   FPreCondicionesAgregadas.Clear;
+  for LAccion in FPreAccionesAgregadas do
+  begin
+    EliminarAccion(LAccion);
+  end;
+  FPreCondicionesAgregadas.Clear;
+  FPreAccionesAgregadas.Clear;
   for LArcoOut in FArcosOut do
   begin
     FPreCondicionesAgregadas.AddRange(LArcoOut.PreCondicionesPlaza.ToArray);
+    FPreAccionesAgregadas.AddRange(LArcoOut.PreAccionesPlaza.ToArray);
   end;
   FCondiciones.AddRange(FPreCondicionesAgregadas.ToArray);
+  FAcciones.AddRange(FPreAccionesAgregadas.ToArray);
 end;
 
 procedure TdpnTransicion.QueHacerTrasDisparo(const AResultadoDisparo: Boolean);

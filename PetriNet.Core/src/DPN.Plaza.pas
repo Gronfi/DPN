@@ -14,6 +14,7 @@ type
   protected
     FTokens: IList<IToken>;
     FPreCondiciones: IList<ICondicion>;
+    FPreAcciones: IList<IAccion>;
     FCapacidad: Integer;
     FEventoOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 
@@ -31,6 +32,7 @@ type
     constructor Create; override;
 
     function GetPreCondiciones: IList<ICondicion>; virtual;
+    function GetPreAcciones: IList<IAccion>; virtual;
 
     procedure Reset; override;
 
@@ -51,6 +53,13 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; virtual;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; virtual;
 
+    procedure AddPreAccion(AAccion: IAccion); virtual;
+    procedure AddPreAcciones(AAcciones: TAcciones); overload; virtual;
+    procedure AddPreAcciones(AAcciones: TArrayAcciones); overload; virtual;
+    procedure EliminarPreAccion(AAccion: IAccion); virtual;
+    procedure EliminarPreAcciones(AAcciones: TAcciones); overload; virtual;
+    procedure EliminarPreAcciones(AAcciones: TArrayAcciones); overload; virtual;
+
     property AceptaArcosIN: boolean read GetAceptaArcosIN;
     property AceptaArcosOUT: boolean read GetAceptaArcosIN;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
@@ -68,6 +77,21 @@ uses
   DPN.Core;
 
 { TdpnPlaza }
+
+procedure TdpnPlaza.AddPreAccion(AAccion: IAccion);
+begin
+  FPreAcciones.Add(AAccion);
+end;
+
+procedure TdpnPlaza.AddPreAcciones(AAcciones: TArrayAcciones);
+begin
+  FPreAcciones.AddRange(AAcciones)
+end;
+
+procedure TdpnPlaza.AddPreAcciones(AAcciones: TAcciones);
+begin
+  FPreAcciones.AddRange(AAcciones.ToArray)
+end;
 
 procedure TdpnPlaza.AddPreCondicion(ACondicion: ICondicion);
 begin
@@ -107,7 +131,23 @@ begin
   inherited;
   FTokens         := TCollections.CreateList<IToken>;
   FPreCondiciones := TCollections.CreateList<ICondicion>;
+  FPreAcciones    := TCollections.CreateList<IAccion>;
   FEventoOnTokenCountChanged := DPNCore.CrearEvento<EventoNodoPN_ValorInteger>;
+end;
+
+procedure TdpnPlaza.EliminarPreAccion(AAccion: IAccion);
+begin
+  FPreAcciones.Remove(AAccion)
+end;
+
+procedure TdpnPlaza.EliminarPreAcciones(AAcciones: TArrayAcciones);
+begin
+  FPreAcciones.RemoveRange(AAcciones)
+end;
+
+procedure TdpnPlaza.EliminarPreAcciones(AAcciones: TAcciones);
+begin
+  EliminarPreAcciones(AAcciones.ToArray)
 end;
 
 procedure TdpnPlaza.EliminarPreCondicion(ACondicion: ICondicion);
@@ -173,6 +213,11 @@ end;
 function TdpnPlaza.GetOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 begin
   Result := FEventoOnTokenCountChanged
+end;
+
+function TdpnPlaza.GetPreAcciones: IList<IAccion>;
+begin
+
 end;
 
 function TdpnPlaza.GetPreCondiciones: IList<ICondicion>;

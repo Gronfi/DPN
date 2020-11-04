@@ -25,7 +25,7 @@ uses
   DPN.Transicion;
 
 type
-  //[TestFixture]
+  [TestFixture]
   TPetriNetCoreTesting_PetriNet = class
   public
     // [Test]
@@ -45,10 +45,12 @@ type
     procedure Test_PetriNet_CondicionesOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
     // [Test]
     procedure Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_SuperPlaza_Extrae_Token;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ArcoReset;
+    [Test]
+    procedure Test_PetriNet_Nombres;
   end;
 
 implementation
@@ -650,6 +652,39 @@ begin
   end;
 end;
 
+procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_Nombres;
+const
+  NOMBRE_MODELO = 'Modelo.1';
+  NOMBRE_PLAZA = 'Plaza.I1';
+var
+  LModelo: IModelo;
+  LPlazaI1: IPlaza;
+begin
+  LModelo := TdpnModelo.Create;
+  LModelo.Nombre := NOMBRE_MODELO;
+
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := NOMBRE_PLAZA;
+  LPlazaI1.Modelo    := LModelo;
+
+  try
+    Writeln('Plaza(1): ' + LPlazaI1.Nombre);
+    if not(LPlazaI1.Nombre = NOMBRE_MODELO + SEPARADOR_NOMBRES + NOMBRE_PLAZA) then
+      Assert.Fail('mal el nombre (1)');
+
+    LPlazaI1.Modelo := nil;
+
+    Writeln('Plaza(2): ' + LPlazaI1.Nombre);
+    if not(LPlazaI1.Nombre = NOMBRE_PLAZA) then
+      Assert.Fail('mal el nombre (2)');
+
+    Assert.Pass;
+  finally
+    LModelo     := nil;
+    LPlazaI1    := nil;
+  end;
+end;
+
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
 var
   LPNet: TdpnPetriNetCoordinador;
@@ -923,6 +958,6 @@ end;
 
 initialization
 
-//TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
+TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
 
 end.

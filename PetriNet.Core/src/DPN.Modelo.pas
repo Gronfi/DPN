@@ -29,6 +29,10 @@ type
 
     function GetPlazas: IReadOnlyList<IPlaza>; virtual;
     function GetTransiciones: IReadOnlyList<ITransicion>; virtual;
+    function GetModelos: IReadOnlyList<IModelo>; virtual;
+    function GetArcos: IReadOnlyList<IArco>; virtual;
+    function GetTokens: IReadOnlyList<IToken>; virtual;
+    function GetVariables: IReadOnlyList<IVariable>; virtual;
 
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
@@ -47,9 +51,48 @@ begin
   FElementos := TCollections.CreateList<INodoPetriNet>;
 end;
 
+function TdpnModelo.GetArcos: IReadOnlyList<IArco>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LArco: IArco;
+  LResult : IList<IArco>;
+begin
+  LResult := TCollections.CreateList<IArco>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IArco, LArco) then
+      LResult.Add(LArco)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetArcos.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
 function TdpnModelo.GetElementos: IList<INodoPetriNet>;
 begin
   Result := FElementos
+end;
+
+function TdpnModelo.GetModelos: IReadOnlyList<IModelo>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LPlaza: IPlaza;
+  LResult : IList<IModelo>;
+begin
+  LResult := TCollections.CreateList<IModelo>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IModelo, LModelo) then
+    begin
+      LResult.Add(LModelo);
+      LResult.AddRange(LModelo.GetModelos);
+    end
+  end;
+  Result := LResult.AsReadOnly;
 end;
 
 function TdpnModelo.GetPlazas: IReadOnlyList<IPlaza>;
@@ -77,6 +120,26 @@ begin
   Result := FTipoModelo
 end;
 
+function TdpnModelo.GetTokens: IReadOnlyList<IToken>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LPlaza: IPlaza;
+  LResult : IList<IToken>;
+begin
+  LResult := TCollections.CreateList<IToken>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IPlaza, LPlaza) then
+      LResult.AddRange(LPlaza.Tokens.ToArray)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetTokens.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
 function TdpnModelo.GetTransiciones: IReadOnlyList<ITransicion>;
 var
   LNodo: INodoPetriNet;
@@ -92,6 +155,26 @@ begin
     else begin
            if Supports(LNodo, IModelo, LModelo) then
              LResult.AddRange(LModelo.GetTransiciones.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
+function TdpnModelo.GetVariables: IReadOnlyList<IVariable>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LVariable: IVariable;
+  LResult : IList<IVariable>;
+begin
+  LResult := TCollections.CreateList<IVariable>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IVariable, LVariable) then
+      LResult.Add(LVariable)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetVariables.ToArray);
          end;
   end;
   Result := LResult.AsReadOnly;
