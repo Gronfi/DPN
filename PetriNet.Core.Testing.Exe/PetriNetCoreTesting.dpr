@@ -44,7 +44,9 @@ uses
   DPN.Core.Testing.PetriNetCoordinador in 'src\DPN.Core.Testing.PetriNetCoordinador.pas',
   DPN.Plaza.Start in '..\PetriNet.Core\src\DPN.Plaza.Start.pas',
   DPN.Core.Testing.Plazas in 'src\DPN.Core.Testing.Plazas.pas',
-  DPN.Plaza.Super in '..\PetriNet.Core\src\DPN.Plaza.Super.pas';
+  DPN.Plaza.Super in '..\PetriNet.Core\src\DPN.Plaza.Super.pas',
+  DPN.Core.Testing.Scheduler in 'src\DPN.Core.Testing.Scheduler.pas',
+  DPN.Core.Scheduler in '..\PetriNet.Core\src\DPN.Core.Scheduler.pas';
 
 var
   runner: ITestRunner;

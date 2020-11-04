@@ -27,7 +27,8 @@ type
     procedure Start; override;
     procedure Stop; override;
 
-    function GetTransiciones: IList<ITransicion>; virtual;
+    function GetPlazas: IReadOnlyList<IPlaza>; virtual;
+    function GetTransiciones: IReadOnlyList<ITransicion>; virtual;
 
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
@@ -51,27 +52,49 @@ begin
   Result := FElementos
 end;
 
+function TdpnModelo.GetPlazas: IReadOnlyList<IPlaza>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LPlaza: IPlaza;
+  LResult : IList<IPlaza>;
+begin
+  LResult := TCollections.CreateList<IPlaza>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IPlaza, LPlaza) then
+      LResult.Add(LPlaza)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetPlazas.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
 function TdpnModelo.GetTipoModelo: string;
 begin
   Result := FTipoModelo
 end;
 
-function TdpnModelo.GetTransiciones: IList<ITransicion>;
+function TdpnModelo.GetTransiciones: IReadOnlyList<ITransicion>;
 var
   LNodo: INodoPetriNet;
   LModelo: IModelo;
   LTransicion: ITransicion;
+  LResult : IList<ITransicion>;
 begin
-  Result := TCollections.CreateList<ITransicion>;
+  LResult := TCollections.CreateList<ITransicion>;
   for LNodo in FElementos do
   begin
     if Supports(LNodo, ITransicion, LTransicion) then
-      Result.Add(LTransicion)
+      LResult.Add(LTransicion)
     else begin
            if Supports(LNodo, IModelo, LModelo) then
-             Result.AddRange(LModelo.GetTransiciones.ToArray);
+             LResult.AddRange(LModelo.GetTransiciones.ToArray);
          end;
   end;
+  Result := LResult.AsReadOnly;
 end;
 
 procedure TdpnModelo.SetTipoModelo(const Valor: string);

@@ -9,12 +9,10 @@ uses
 
   Spring.Collections,
 
-  Helper.ThreadedQueue,
-  Event.Engine.Interfaces;
+  DPN.Interfaces,
+  Helper.ThreadedQueue;
 
 type
-  TCallBackTimer = reference to procedure;
-
   TEventsScheduler = class sealed(TThread)
   const
     CTE_INITIAL_QUEUE_SIZE = 10;
@@ -22,12 +20,11 @@ type
   private
     FIndex              : Int64;
     FSC                 : TSpinLock;
-    FTaskQueue          : TThreadedQueue<ISchedulerTask>;
-    FColaOrdenesEliminar: TThreadedQueue<Int64>;
-    FTaskList           : IList<ISchedulerTask>;
-    FComparer           : IComparer<ISchedulerTask>;
+    FTaskQueue          : TThreadedQueue<IdpnSchedulerBase>;
+    FTaskList           : IList<IdpnSchedulerTask>;
+    FComparer           : IComparer<IdpnSchedulerTask>;
 
-    FTaskListToRemove: IList<ISchedulerTask>;
+    FTaskListToRemove: IList<IdpnSchedulerTask>;
 
     procedure Execute; override;
 
@@ -37,9 +34,10 @@ type
 
     procedure DoScheduling;
 
-    function GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask): TWaitResult; overload;
-    function GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask; const ATimeOut: Cardinal): TWaitResult; overload;
+    function TaskComparer(const ALeft, ARight: IdpnSchedulerTask): Integer;
 
+    function GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase): TWaitResult; overload;
+    function GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase; const ATimeOut: Cardinal): TWaitResult; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -58,16 +56,26 @@ uses
   Event.Engine.Utils;
 type
 
-  TSchedulerTask = class sealed(TInterfacedObject, ISchedulerTask)
+  TSchedulerBase = class(TInterfacedObject, IdpnSchedulerBase)
   private
-    FTaskID                     : Int64;
+    FTaskID: Int64;
+  protected
+    function GetTaskID: Int64;
+  public
+    constructor Create(const ATaskID: Int64);
+    destructor Destroy; override;
+
+    property TaskID: Int64 read GetTaskID;
+  end;
+
+  TSchedulerTask = class sealed(TSchedulerBase, IdpnSchedulerTask)
+  private
     FTimeStampCreation          : Int64;
     FTimeStampAwake             : Int64;
     FMilisecondsToAwake         : Int64;
     FIsDone                     : Boolean;
     FCallBack                   : TCallBackTimer;
 
-    function GetTaskID: Int64;
     function GetMilisecondsToAwake: Int64;
 
     procedure CalculateAwakeTime;
@@ -79,15 +87,17 @@ type
     function IsDone: Boolean;
     function CheckAndNotify: Boolean;
 
-    property TaskID: Int64 read GetTaskID;
     property MilisecondsToAwake: Int64 read GetMilisecondsToAwake;
+  end;
+
+  TSchedulerRemoveTask = class sealed(TSchedulerBase, IdpnSchedulerRemoveTask)
   end;
 
 { TEventsScheduler }
 
 function TEventsScheduler.Checks: Boolean;
 var
-  LTask: ISchedulerTask;
+  LTask: IdpnSchedulerTask;
 begin
   Result := False;
   if FTaskList.Count <> 0 then
@@ -124,11 +134,9 @@ constructor TEventsScheduler.Create;
 begin
   inherited Create(False);
   FIndex                    := 0;
-  FTaskQueue                := TThreadedQueue<ISchedulerTask>.Create(CTE_INITIAL_QUEUE_SIZE, CTE_PUSH_TIMEOUT, INFINITE);
-  FTaskList                 := TCollections.CreateList<ISchedulerTask>;
-  FColaOrdenesEliminar
-  FTaskListToRemove         := TCollections.CreateList<ISchedulerTask>;
-  FComparer                 := TComparerSchedulerTask.Create;
+  FTaskQueue                := TThreadedQueue<IdpnSchedulerBase>.Create(CTE_INITIAL_QUEUE_SIZE, CTE_PUSH_TIMEOUT, INFINITE);
+  FTaskList                 := TCollections.CreateList<IdpnSchedulerTask>;
+  FTaskListToRemove         := TCollections.CreateList<IdpnSchedulerTask>;
 end;
 
 destructor TEventsScheduler.Destroy;
@@ -159,22 +167,24 @@ begin
   end;
 end;
 
-function TEventsScheduler.GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask): TWaitResult;
+function TEventsScheduler.GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase): TWaitResult;
 begin
   Result := FTaskQueue.PopItem(AQueueSize, ATask);
 end;
 
-function TEventsScheduler.GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask; const ATimeOut: Cardinal): TWaitResult;
+function TEventsScheduler.GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase; const ATimeOut: Cardinal): TWaitResult;
 begin
   Result := FTaskQueue.PopItem(AQueueSize, ATask, ATimeOut);
 end;
 
 procedure TEventsScheduler.DoScheduling;
 var
-  LTarea               : ISchedulerTask;
+  LAccion              : IdpnSchedulerBase;
   LNoTarea             : Int64;
   LTimeToSleep         : Int64;
-  LWaitingTask         : ISchedulerTask;
+  LTask                : IdpnSchedulerTask;
+  LRemoveTask          : IdpnSchedulerRemoveTask;
+  LWaitingTask         : IdpnSchedulerTask;
   LRes                 : TWaitResult;
   LSize                : Integer;
   LRecalcChecks        : Boolean;
@@ -186,7 +196,7 @@ begin
       case FTaskList.Count of
         0:
           begin
-            LRes := GetNewTask(LSize, LTarea);
+            LRes := GetNewTask(LSize, LAccion);
           end
       else
         begin
@@ -203,7 +213,7 @@ begin
           end
           else begin
                  LRecalcChecks := True;
-                 LRes := GetNewTask(LSize, LTarea, LTimeToSleep);
+                 LRes := GetNewTask(LSize, LAccion, LTimeToSleep);
                end;
         end;
       end;
@@ -212,10 +222,26 @@ begin
           begin
             if (not Terminated) then
             begin
-              FTaskList.Add(LTarea);
-              RecalcScheduling;
-              LRecalcChecks := True;
-              LTarea        := nil;
+              if Supports(LAccion, IdpnSchedulerTask, LTask) then
+              begin
+                FTaskList.Add(LTask);
+                RecalcScheduling;
+                LRecalcChecks := True;
+                LAccion        := nil;
+              end
+              else begin // remove task
+                     if Supports(LAccion, IdpnSchedulerRemoveTask, LRemoveTask) then
+                     begin
+                       FTaskList.RemoveAll(
+                         function(const ADato: IdpnSchedulerTask): Boolean
+                         begin
+                           Result := ADato.TaskID = LRemoveTask.TaskID;
+                         end);
+                       RecalcScheduling;
+                       LRecalcChecks := True;
+                       LAccion       := nil;
+                     end;
+                   end;
             end
             else
             begin
@@ -240,22 +266,22 @@ begin
 end;
 
 procedure TEventsScheduler.RecalcScheduling;
-var
-  LComparison: TComparison<ISchedulerTask>;
 begin
   if (FTaskList.Count > 1) then
   begin
-    FTaskList.Sort(FComparer);
+    FTaskList.Sort(TaskComparer);
   end;
 end;
 
 function TEventsScheduler.RemoveTimer(const ATimerID: Int64): Boolean;
 var
-  LSize: Integer;
-  LRes : TWaitResult;
+  LTareaRemove: IdpnSchedulerBase;
+  LSize       : Integer;
+  LRes        : TWaitResult;
 begin
+  LTareaRemove := TSchedulerRemoveTask.Create(ATimerID);
   repeat
-    LRes := FTaskQueue.PushItem(ATimerID, LSize);
+    LRes := FTaskQueue.PushItem(LTareaRemove, LSize);
     case LRes of
       wrTimeout:
         begin
@@ -268,7 +294,7 @@ end;
 
 function TEventsScheduler.SetTimer(const AAvisarCuandoPasenMilisegundos: Int64; const ACallBack: TCallBackTimer): Int64;
 var
-  LTarea: ISchedulerTask;
+  LTarea: IdpnSchedulerBase;
   LSize : Integer;
   LRes  : TWaitResult;
 begin
@@ -284,6 +310,17 @@ begin
         end;
     end;
   until LRes = TWaitResult.wrSignaled;
+end;
+
+function TEventsScheduler.TaskComparer(const ALeft, ARight: IdpnSchedulerTask): Integer;
+begin
+  Result := 0;
+  if (ALeft = ARight) then
+    Exit;
+  if ALeft.MilisecondsToAwake < ARight.MilisecondsToAwake then
+    Result := -1
+  else
+    Result := 1;
 end;
 
 { TSchedulerTask }
@@ -310,8 +347,7 @@ end;
 
 constructor TSchedulerTask.Create(const ATaskID: Int64; const AEllapsedMilisecondsToExecute: Int64; const ACallBack: TCallBackTimer);
 begin
-  inherited Create;
-  FTaskID             := ATaskID;
+  Create(ATaskID);
   FTimeStampCreation  := Utils.ElapsedMiliseconds;
   FMilisecondsToAwake := AEllapsedMilisecondsToExecute;
   FCallBack           := ACallBack;
@@ -323,11 +359,6 @@ destructor TSchedulerTask.Destroy;
 begin
   FCallBack := nil;
   inherited;
-end;
-
-function TSchedulerTask.GetTaskID: Int64;
-begin
-  Result := FTaskID;
 end;
 
 function TSchedulerTask.GetMilisecondsToAwake: Int64;
@@ -343,7 +374,25 @@ end;
 
 procedure TSchedulerTask.Notify;
 begin
-  FCallBack();
+  FCallBack(FTaskID);
+end;
+
+{ TSchedulerBase }
+
+constructor TSchedulerBase.Create(const ATaskID: Int64);
+begin
+  inherited Create;
+  FTaskID := ATaskID;
+end;
+
+destructor TSchedulerBase.Destroy;
+begin
+  inherited;
+end;
+
+function TSchedulerBase.GetTaskID: Int64;
+begin
+  Result := FTaskID;
 end;
 
 end.

@@ -49,8 +49,6 @@ type
     function GetVariable: IVariable;
     procedure SetVariable(AVariable: IVariable);
 
-    function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
-
     function GetValorToCheck: TValue;
     procedure SetValorToCheck(const AValue: TValue);
 
@@ -63,6 +61,11 @@ type
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
+  end;
+
+  TdpnCondicion_es_tabla_variables_trucada = class(TdpnCondicion_es_tabla_variables)
+  protected
+    function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
   end;
 
   TEventoPrueba = class(TEventEE)
@@ -151,11 +154,6 @@ begin
   Result := TCollections.CreateList<IBloqueable>;
   if Assigned(FVariable) then
     Result.Add(FVariable);
-end;
-
-function TdpnCondicion_es_tabla_variables.GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
-begin
-
 end;
 
 function TdpnCondicion_es_tabla_variables.GetValorToCheck: TValue;
@@ -463,6 +461,13 @@ begin
   begin
     FVariable := AVariable;
   end;
+end;
+
+{ TdpnCondicion_es_tabla_variables_trucada }
+
+function TdpnCondicion_es_tabla_variables_trucada.GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
+begin
+  Result := False;
 end;
 
 initialization

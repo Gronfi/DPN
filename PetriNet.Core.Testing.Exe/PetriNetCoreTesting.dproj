@@ -186,6 +186,8 @@
         <DCCReference Include="..\PetriNet.Core\src\DPN.Plaza.Start.pas"/>
         <DCCReference Include="src\DPN.Core.Testing.Plazas.pas"/>
         <DCCReference Include="..\PetriNet.Core\src\DPN.Plaza.Super.pas"/>
+        <DCCReference Include="src\DPN.Core.Testing.Scheduler.pas"/>
+        <DCCReference Include="..\PetriNet.Core\src\DPN.Core.Scheduler.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

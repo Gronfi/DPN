@@ -12,7 +12,7 @@ uses
   DPN.ArcoIn;
 
 type
-  [TestFixture]
+  //[TestFixture]
   TPetriNetCoreTesting_ArcoIn = class
   private
     FID      : Integer;
@@ -142,6 +142,6 @@ begin
 end;
 
 initialization
-  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_ArcoIn);
+  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_ArcoIn);
 
 end.
