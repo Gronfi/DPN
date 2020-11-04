@@ -270,6 +270,7 @@ type
   ITransicion = interface(INodoPetriNet)
   ['{905A0070-02F5-4F86-BC13-72E1398342D4}']
     function GetIsHabilitado: Boolean;
+    function GetIsHabilitadoParcialmente: Boolean;
     function GetIsTransicionDependeDeEvento: Boolean;
 
     function GetTiempoEvaluacion: integer;
@@ -303,6 +304,7 @@ type
     function DebugLog: string;
 
     property IsHabilitado: Boolean read GetIsHabilitado;
+    property IsHabilitadoParcialmente: Boolean read GetIsHabilitadoParcialmente;
     property TiempoEvaluacion: integer read GetTiempoEvaluacion write SetTiempoEvaluacion;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
@@ -395,25 +397,9 @@ type
 
   EEstadoPetriNet = (Iniciada, Detenida, GrafoNoAsignado);
 
-//  IPetriNet = interface
-//    function GetGrafo: IModelo;
-//    procedure SetGrafo(AGrafo: IModelo);
-//
-//    function GetEstado: EEstadoPetriNet;
-//    procedure SetEstado(const AValor: EEstadoPetriNet);
-//
-//    function GetMultipleEnablednessOfTransitions: Boolean;
-//    procedure SetMultipleEnablednessOfTransitions(const AValor: Boolean);
-//
-//    procedure Start;
-//    procedure Stop;
-//
-//    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
-//    property Grafo: IModelo read GetGrafo write SetGrafo;
-//    property Estado: EEstadoPetriNet read GetEstado write SetEstado;
-//  end;
+  EventoEstadoPN = procedure(const AEstado: EEstadoPetriNet) of object;
 
-{$REGION 'TIMERS'}
+{$REGION 'Scheduling'}
   TCallBackTimer = reference to procedure(const ATaskID: int64);
 
   IdpnSchedulerBase = interface

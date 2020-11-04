@@ -59,6 +59,7 @@ type
     function GetIsTransicionDependeDeEvento: Boolean; virtual;
 
     function GetIsHabilitado: Boolean; virtual;
+    function GetIsHabilitadoParcialmente: Boolean; virtual;
 
     function GetTiempoEvaluacion: integer;
     procedure SetTiempoEvaluacion(const AValor: integer);
@@ -120,6 +121,7 @@ type
     function DebugLog: string;
 
     property IsHabilitado: Boolean read GetIsHabilitado;
+    property IsHabilitadoParcialmente: Boolean read GetIsHabilitadoParcialmente;
     property TiempoEvaluacion: integer read GetTiempoEvaluacion write SetTiempoEvaluacion;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
@@ -501,6 +503,17 @@ end;
 function TdpnTransicion.GetIsHabilitado: Boolean;
 begin
   Result := FIsHabilitado
+end;
+
+function TdpnTransicion.GetIsHabilitadoParcialmente: Boolean;
+begin
+  if FIsHabilitado then Exit(False);
+  Result := FEstadosHabilitacion.Values.Any(
+                                              function (const AValor: boolean): Boolean
+                                              begin
+                                                Result := (AValor = True)
+                                              end
+                                           );
 end;
 
 function TdpnTransicion.GetIsTransicionDependeDeEvento: Boolean;

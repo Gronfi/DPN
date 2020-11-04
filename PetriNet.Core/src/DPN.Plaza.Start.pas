@@ -14,7 +14,7 @@ type
   protected
     FEjecutado: Boolean;
 
-    function GetAceptaArcosOut: Boolean; override;
+    function GetAceptaArcosOUT: Boolean; override;
     procedure CrearToken;
   public
     constructor Create; override;

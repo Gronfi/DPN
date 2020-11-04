@@ -26,6 +26,7 @@ type
 
     procedure Start; override;
     procedure Stop; override;
+    procedure Reset; override;
 
     function GetPlazas: IReadOnlyList<IPlaza>; virtual;
     function GetTransiciones: IReadOnlyList<ITransicion>; virtual;
@@ -80,7 +81,6 @@ function TdpnModelo.GetModelos: IReadOnlyList<IModelo>;
 var
   LNodo: INodoPetriNet;
   LModelo: IModelo;
-  LPlaza: IPlaza;
   LResult : IList<IModelo>;
 begin
   LResult := TCollections.CreateList<IModelo>;
@@ -180,13 +180,23 @@ begin
   Result := LResult.AsReadOnly;
 end;
 
+procedure TdpnModelo.Reset;
+var
+  LNodo: INodoPetriNet;
+begin
+  inherited;
+  for LNodo in FElementos do
+  begin
+    LNodo.Reset;
+  end;
+end;
+
 procedure TdpnModelo.SetTipoModelo(const Valor: string);
 begin
   Guard.CheckFalse(Valor.IsEmpty, 'El TipoModelo no puede ser nulo');
   if FTipoModelo <> Valor then
   begin
     FTipoModelo := Valor;
-    //DAVE evento
   end;
 end;
 
