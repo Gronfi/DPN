@@ -16,6 +16,7 @@ type
     procedure SetGenerarTokensDeSistema(const Value: Boolean);
 
     function GetPreCondicionesPlaza: IList<ICondicion>; virtual;
+    function GetPreAccionesPlaza: IList<IAccion>; virtual;
 
     procedure SetPeso(const Value: Integer); override;
     procedure SetPlaza(APlaza: IPlaza); override;
@@ -27,6 +28,7 @@ type
     procedure DoOnTransicionando(ATokens: TArrayTokens); overload; override;
 
     property PreCondicionesPlaza: IList<ICondicion> read GetPreCondicionesPlaza;
+    property PreAccionesPlaza: IList<IAccion> read GetPreAccionesPlaza;
     property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
@@ -46,6 +48,12 @@ end;
 function TdpnArcoOut.GetGenerarTokensDeSistema: Boolean;
 begin
   Result := FGenerarTokensDeSistema
+end;
+
+function TdpnArcoOut.GetPreAccionesPlaza: IList<IAccion>;
+begin
+  Guard.CheckTrue(FPlaza <> nil, 'La plaza debe estar asignada');
+  Result := FPlaza.PreAcciones;
 end;
 
 function TdpnArcoOut.GetPreCondicionesPlaza: IList<ICondicion>;

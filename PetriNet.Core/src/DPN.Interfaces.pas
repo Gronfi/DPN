@@ -10,6 +10,9 @@ uses
   Spring,
   Spring.Collections;
 
+const
+  SEPARADOR_NOMBRES = '.';
+
 type
   IPlaza = interface;
   TListaPlazas = IList<IPlaza>;
@@ -23,6 +26,10 @@ type
   IAccion = interface;
   TCondiciones = IList<ICondicion>;
   TArrayCondiciones = TArray<ICondicion>;
+  TAcciones = IList<IAccion>;
+  TArrayAcciones = TArray<IAccion>;
+
+  IModelo = interface;
 
   IToken = interface;
   TListaTokens = IList<IToken>;
@@ -33,20 +40,36 @@ type
   EventoNodoPN = procedure(const AID: Integer) of object;
   EventoNodoPN_ValorBooleano = procedure(const AID: Integer; const AValue: Boolean) of object;
   EventoNodoPN_ValorInteger = procedure(const AID: Integer; const AValue: Integer) of object;
+  EventoNodoPN_ValorString = procedure(const AID: Integer; const AValue: String) of object;
   EventoNodoPN_ValorTValue = procedure(const AID: Integer; const AValue: TValue) of object;
   EventoNodoPN_Transicion = procedure(const AID: Integer; ATransicion: ITransicion) of object;
 
-  INombrado = interface
-    function GetNombre: string;
-    procedure SetNombre(const Valor: string);
-
-    property Nombre: string read GetNombre write SetNombre;
-  end;
-
-  INodoPetriNet = interface(INombrado)
+  IIdentificado = interface
+  ['{67839BCB-0819-419C-A78F-CA92566D3491}']
     function GetID: integer;
     procedure SetID(const Value: integer);
 
+    property ID: integer read GetID write SetID;
+  end;
+
+
+  INombrado = interface(IIdentificado)
+  ['{73DF6D15-DAB3-459A-9A58-F5D3CD2CA4A5}']
+    function GetNombre: string;
+    procedure SetNombre(const Valor: string);
+
+    function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>;
+
+    function GetModelo: IModelo;
+    procedure SetModelo(AModelo: IModelo);
+
+    property Nombre: string read GetNombre write SetNombre;
+    property Modelo: IModelo read GetModelo write SetModelo;
+    property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
+  end;
+
+  INodoPetriNet = interface(INombrado)
+  ['{B713E58D-4060-49D0-B377-AA929E274A8D}']
     function GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
 
     function GetIsEnWarning: Boolean;
@@ -56,24 +79,26 @@ type
     procedure Start;
     procedure Reset;
 
-    property ID: integer read GetID write SetID;
     property Enabled: boolean read GetEnabled;
-    property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnenabledChanged;
+    property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
     property IsEnWarning: boolean read GetIsEnWarning;
   end;
 
   IBloqueable = interface(INodoPetriNet)
+  ['{8860986D-0002-45A0-A8DD-351B48F131DD}']
     procedure AdquireLock;
     procedure ReleaseLock;
   end;
 
   IDependiente = interface(INodoPetriNet)
+  ['{3665AB45-F7EB-416E-994F-DEC3A877F8A2}']
     function GetDependencias: IList<IBloqueable>;
 
     property Dependencias: IList<IBloqueable> read GetDependencias;
   end;
 
   IEtiqueta = interface(INodoPetriNet)
+  ['{52F9BEFC-531B-4E33-8BBB-881DD659F5DD}']
     function GetTexto: string;
     procedure SetTexto(const Value: string);
 
@@ -81,6 +106,7 @@ type
   end;
 
   IArco = interface(INodoPetriNet)
+  ['{0D8B1482-8EC9-4447-8931-E29295654C79}']
     function GetIsHabilitado: Boolean;
     function GetPeso: Integer;
     procedure SetPeso(const Value: Integer);
@@ -113,6 +139,7 @@ type
   end;
 
   IArcoIn = interface(IArco)
+  ['{EA23BC58-D5EE-460A-8811-B83344419876}']
     function GetIsInhibidor: Boolean;
     procedure SetIsInhibidor(const Value: Boolean);
 
@@ -126,16 +153,20 @@ type
   end;
 
   IArcoOut = interface(IArco)
+  ['{64B50153-AF32-45C1-88F7-FBFCC427220E}']
     function GetGenerarTokensDeSistema: Boolean;
     procedure SetGenerarTokensDeSistema(const Value: Boolean);
 
     function GetPreCondicionesPlaza: IList<ICondicion>;
+    function GetPreAccionesPlaza: IList<IAccion>;
 
     property PreCondicionesPlaza: IList<ICondicion> read GetPreCondicionesPlaza;
+    property PreAccionesPlaza: IList<IAccion> read GetPreAccionesPlaza;
     property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
   IArcoReset = interface(IArcoOut)
+  ['{2346CC59-AA41-4524-988B-73B6926759CA}']
   end;
 
   IPlaza = interface(IBloqueable)
@@ -146,6 +177,7 @@ type
     function GetTokenCount: Integer;
 
     function GetPreCondiciones: IList<ICondicion>;
+    function GetPreAcciones: IList<IAccion>;
 
     function GetAceptaArcosIN: Boolean;
     function GetAceptaArcosOUT: Boolean;
@@ -170,17 +202,26 @@ type
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload;
 
+    procedure AddPreAccion(AAccion: IAccion);
+    procedure AddPreAcciones(AAcciones: TAcciones); overload;
+    procedure AddPreAcciones(AAcciones: TArrayAcciones); overload;
+    procedure EliminarPreAccion(AAccion: IAccion);
+    procedure EliminarPreAcciones(AAcciones: TAcciones); overload;
+    procedure EliminarPreAcciones(AAcciones: TArrayAcciones); overload;
+
     property AceptaArcosIN: boolean read GetAceptaArcosIN;
     property AceptaArcosOUT: boolean read GetAceptaArcosOUT;
     property Tokens: IReadOnlyList<IToken> read GetTokens;
     property TokenCount: Integer read GetTokenCount;
     property Capacidad: Integer read GetCapacidad write SetCapacidad;
     property PreCondiciones: IList<ICondicion> read GetPreCondiciones;
+    property PreAcciones: IList<IAccion> read GetPreAcciones;
 
     property OnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger> read GetOnTokenCountChanged;
   end;
 
   ICondicion = interface(IDependiente)
+  ['{BF0FB22B-DA9D-4C95-B62A-286E2A0E79FD}']
     function GetOnContextoCondicionChanged: IEvent<EventoNodoPN>;
 
     function GetIsRecursiva: Boolean;
@@ -213,6 +254,7 @@ type
   end;
 
   IAccion = interface(IDependiente)
+  ['{E3B434CC-D13C-46DD-81B1-B4DB26BB62F7}']
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
@@ -319,6 +361,7 @@ type
   end;
 
   IVariable = interface(IBloqueable)
+  ['{E6597521-24D3-4475-9247-80CF55E8AD90}']
     function GetValor: TValue;
     procedure SetValor(const Value: TValue);
 
@@ -336,8 +379,12 @@ type
     function GetTipoModelo: string;
     procedure SetTipoModelo(const Valor: string);
 
+    function GetModelos: IReadOnlyList<IModelo>;
+    function GetArcos: IReadOnlyList<IArco>;
     function GetPlazas: IReadOnlyList<IPlaza>;
     function GetTransiciones: IReadOnlyList<ITransicion>;
+    function GetTokens: IReadOnlyList<IToken>;
+    function GetVariables: IReadOnlyList<IVariable>;
 
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
