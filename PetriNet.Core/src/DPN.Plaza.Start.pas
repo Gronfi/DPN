@@ -14,7 +14,7 @@ type
   protected
     FEjecutado: Boolean;
 
-    function GetAceptaArcosIN: Boolean; override;
+    function GetAceptaArcosOut: Boolean; override;
     procedure CrearToken;
   public
     constructor Create; override;
@@ -104,7 +104,7 @@ begin
   ;
 end;
 
-function TdpnPlazaStart.GetAceptaArcosIN: Boolean;
+function TdpnPlazaStart.GetAceptaArcosOut: Boolean;
 begin
   Result := False;
 end;

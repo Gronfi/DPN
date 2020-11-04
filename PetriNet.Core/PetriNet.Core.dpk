@@ -55,6 +55,7 @@ contains
   DPN.Bloqueable in 'src\DPN.Bloqueable.pas',
   DPN.Plaza.Start in 'src\DPN.Plaza.Start.pas',
   DPN.Plaza.Super in 'src\DPN.Plaza.Super.pas',
-  DPN.Core.Scheduler in 'src\DPN.Core.Scheduler.pas';
+  DPN.Core.Scheduler in 'src\DPN.Core.Scheduler.pas',
+  DPN.Plaza.Finish in 'src\DPN.Plaza.Finish.pas';
 
 end.
