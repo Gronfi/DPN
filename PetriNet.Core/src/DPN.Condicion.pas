@@ -62,9 +62,6 @@ type
     function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
 
     function GetEventosCount: integer; override;
-    procedure ClearEventos; override;
-    procedure RemovePrimerEvento; override;
-    function GetPrimerEvento: IEventEE; override;
 
     function DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean; virtual; abstract;
     procedure DoOnEventoRecibido(AEvento: IEventEE); virtual;
@@ -75,6 +72,10 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
+
+    procedure ClearEventos; override;
+    procedure RemovePrimerEvento; override;
+    function GetPrimerEvento: IEventEE; override;
   end;
 
 implementation

@@ -41,6 +41,8 @@ implementation
 uses
   System.SysUtils,
 
+  DPN.TokenColoreado,
+  DPN.TokenSistema,
   Event.Engine,
   DPN.MarcadoTokens;
 
@@ -75,7 +77,7 @@ begin
   Result := TCollections.CreateList<IToken>;
   for I := 1 to ACount do
   begin
-    //LToken := ...  DAVE
+    LToken := TdpnTokenSistema.Create;
     Result.Add(LToken);
   end;
 end;
@@ -130,7 +132,7 @@ begin
     else begin
            for I := 0 to ACount - 1 do
            begin
-             //LToken := //DAVE...no queda otra que generar de sistema???
+             LToken := TdpnTokenColoreado.Create;
              Result.Add(LToken);
            end;
          end;

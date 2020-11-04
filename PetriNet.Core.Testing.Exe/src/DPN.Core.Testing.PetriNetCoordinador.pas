@@ -51,6 +51,8 @@ type
     procedure Test_PetriNet_ArcoReset;
     [Test]
     procedure Test_PetriNet_Nombres;
+    [Test]
+    procedure Test_Maps_vs_Diccionarios;
   end;
 
 implementation
@@ -58,10 +60,83 @@ implementation
 uses
   System.SysUtils,
 
+  Event.Engine.Utils,
   DPN.Core.Testing.Funciones,
   DPN.TokenColoreado;
 
 { TPetriNetCoreTesting_PetriNet }
+
+procedure TPetriNetCoreTesting_PetriNet.Test_Maps_vs_Diccionarios;
+var
+  LMapa: IMultimap<integer, integer>;
+  LDiccionario: IDictionary<integer, integer>;
+  I: integer;
+  LI1, LF1, LI2, LF2: int64;
+  LMI1, LMF1, LMI2, LMF2: int64;
+  LCol: IReadOnlyCollection<integer>;
+  LVal: integer;
+begin
+  LMapa := TCollections.CreateMultiMap<integer, integer>;
+  LDiccionario := TCollections.CreateDictionary<integer, integer>;
+  LI1 := Utils.ElapsedTicks;
+  LMI1 := uTILS.ElapsedMiliseconds;
+  for I := 1 to 10000000 do
+  begin
+    LMapa.Add(I, I);
+  end;
+  LF1 := Utils.ElapsedTicks;
+  LMF1 := Utils.ElapsedMiliseconds;
+  LI2 := Utils.ElapsedTicks;
+  LMI2 := Utils.ElapsedMiliseconds;
+  for I := 1 to 10000000 do
+  begin
+    LDiccionario[I] := I;
+  end;
+  LF2 := Utils.ElapsedTicks;
+  LMF2 := uTILS.ElapsedMiliseconds;
+  WriteLn('Map: ' + (LF1 - LI1).ToString + ' - ' + (LMF1 - LMI1).ToString);
+  WriteLn('Dicc: ' + (LF2 - LI2).ToString + ' - ' + (LMF2 - LMI2).ToString);
+
+  LI1 := Utils.ElapsedTicks;
+  LMI1 := Utils.ElapsedMiliseconds;
+  LMapa.TryGetValues(500000, LCol);
+  LF1 := Utils.ElapsedTicks;
+  LMF1 := Utils.ElapsedMiliseconds;
+  for LVal in LCol do
+    WriteLn('Col: ' + LVal.ToString);
+
+  LI2 := Utils.ElapsedTicks;
+  LMI2 := Utils.ElapsedMiliseconds;
+  LDiccionario.TryGetValue(500000, LVal);
+  LF2 := Utils.ElapsedTicks;
+  LMF2 := Utils.ElapsedMiliseconds;
+  WriteLn('Val: ' + LVal.ToString);
+
+  WriteLn('Map*: ' + (LF1 - LI1).ToString + ' - ' + (LMF1 - LMI1).ToString);
+  WriteLn('Dicc*: ' + (LF2 - LI2).ToString + ' - ' + (LMF2 - LMI2).ToString);
+
+  LI1 := Utils.ElapsedTicks;
+  LMI1 := Utils.ElapsedMiliseconds;
+  LMapa.Add(500000, 1);
+  for I := 1 to 100 do
+  begin
+    LMapa.Add(500000, I);
+  end;
+  LF1 := Utils.ElapsedTicks;
+  LMF1 := Utils.ElapsedMiliseconds;
+  WriteLn('Map**: ' + (LF1 - LI1).ToString + ' - ' + (LMF1 - LMI1).ToString);
+
+  LI1 := Utils.ElapsedTicks;
+  LMI1 := Utils.ElapsedMiliseconds;
+  LMapa.TryGetValues(500000, LCol);
+  LF1 := Utils.ElapsedTicks;
+  LMF1 := Utils.ElapsedMiliseconds;
+  WriteLn('Map***: ' + (LF1 - LI1).ToString + ' - ' + (LMF1 - LMI1).ToString);
+  for LVal in LCol do
+    WriteLn('Col: ' + LVal.ToString);
+
+  Assert.Pass;
+end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_ArcoReset;
 var
@@ -310,8 +385,8 @@ begin
   FTransicion.AddArcoOut(FArcoO2);
 
   LModelo.Elementos.Add(FTransicion);
+  LPNet := TdpnPetriNetCoordinador.Create;
   try
-    LPNet := TdpnPetriNetCoordinador.Create;
     // LPNet.MultipleEnablednessOfTransitions := False;
     LPNet.Grafo := LModelo;
     LPNet.Start;

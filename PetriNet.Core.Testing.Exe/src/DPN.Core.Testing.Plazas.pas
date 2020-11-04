@@ -167,11 +167,11 @@ begin
 
     Sleep(100);
 
-    if not(FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 0) then
-      Assert.Fail('no ha transicionado');
-
     Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
     Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+    if not((FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 0)) then
+      Assert.Fail('no ha transicionado');
+
     Assert.Pass;
   finally
     LModelo     := nil;

@@ -30,6 +30,8 @@ type
   public
     [Test]
     procedure Test_Scheduler_1_Timer;
+    [Test]
+    procedure Test_Scheduler_1_Timer_Cancelacion;
 //    [Test]
 //    [TestCase('Test-Count=1','1')]
 //    [TestCase('Test-Count=5','5')]
@@ -71,6 +73,27 @@ begin
   if LCallbackLlamado then
     Assert.Pass
   else Assert.Fail;
+end;
+
+procedure TPetriNetCoreTesting_Scheduler.Test_Scheduler_1_Timer_Cancelacion;
+var
+  LCallbackLlamado: Boolean;
+  LTaskID: int64;
+begin
+  LCallbackLlamado := False;
+  LTaskID := DPNCore.TaskScheduler.SetTimer(300, procedure (const ATaskID: int64)
+                                                 begin
+                                                   LCallbackLlamado := True;
+                                                 end);
+  Sleep(150);
+
+  DPNCore.TaskScheduler.RemoveTimer(LTaskID);
+
+  Sleep(200);
+
+  if LCallbackLlamado then
+    Assert.Fail('debe estar cancelado')
+  else Assert.Pass;
 end;
 
 procedure TPetriNetCoreTesting_Scheduler.Test_Scheduler_N_Timers(const ACnt: integer);

@@ -42,7 +42,6 @@
 * Superplazas: plazas que contienen a otras plazas y provocan una herencia de comportamientos
 
 ### Pendiente (mucho)
-* Pendiente: disparo temporizado tras que transcurre el tiempo de reevaluación de una transición
 * terminar unittesting del core: integración eventos
 * ampliar core: logging, debugging, persistencia de configuracion
 * capas posteriores al core

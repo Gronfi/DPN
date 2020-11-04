@@ -6,6 +6,9 @@ uses
   System.Classes,
   System.Types,
 
+  Spring,
+  Spring.Collections,
+
   Helper.ThreadedQueue,
   DPN.Interfaces;
 
@@ -17,6 +20,13 @@ type
     FComm: TThreadedQueue<ITransicion>;
     FMultipleEnablednessOfTransitions: Boolean;
 
+    FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
+
+    FNodos: IDictionary<Integer, INodoPetriNet>;
+    FMarcado: IDictionary<Integer, Integer>;
+    FNombresEstados: IBidiDictionary<String, Integer>;
+    FNombresTransiciones: IBidiDictionary<String, Integer>;
+
     function GetMultipleEnablednessOfTransitions: Boolean;
     procedure SetMultipleEnablednessOfTransitions(const Value: Boolean);
 
@@ -24,8 +34,10 @@ type
     procedure SetGrafo(AGrafo: IModelo);
 
     function GetEstado: EEstadoPetriNet;
+    function GetOnEstadoChanged: IEvent<EventoEstadoPN>;
 
     procedure DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
+    procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer);
 
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion): TWaitResult; overload;
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion; const ATimeOut: Cardinal): TWaitResult; overload;
@@ -35,25 +47,36 @@ type
     procedure LinkarTransicionesAlCoordinador;
     procedure DeslinkarTransicionesAlCoordinador;
 
+    procedure AsociacionesPN;
+
     procedure EjecutarTransicionEnTask(ATransicion: ITransicion);
     procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
 
+    //function GetTransicionesHabilitadas: I
+
     procedure Start;
     procedure Stop;
+    procedure Reset;
 
     property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
     property Grafo: IModelo read GetGrafo write SetGrafo;
     property Estado: EEstadoPetriNet read GetEstado;
+    property OnEstadoChanged: IEvent<EventoEstadoPN> read GetOnEstadoChanged;
+    property Nodos: IDictionary<Integer, INodoPetriNet> read FNodos;
+    property NombresEstados: IBidiDictionary<String, Integer> read FNombresEstados;
+    property NombresTransiciones: IBidiDictionary<String, Integer>read FNombresTransiciones;
   end;
 
 implementation
 
 uses
   System.SysUtils,
-  System.Threading;
+  System.Threading,
+
+  DPN.Core;
 
 { TdpnPetriNetCoordinador }
 
@@ -75,12 +98,37 @@ begin
   until LRes = TWaitResult.wrSignaled;
 end;
 
+procedure TdpnPetriNetCoordinador.AsociacionesPN;
+begin
+  FGrafo.GetTransiciones.ForEach(
+                                 procedure (const ATransicion: ITransicion)
+                                 begin
+                                   FNodos[ATransicion.ID] := ATransicion;
+                                   FNombresTransiciones[ATransicion.Nombre] := ATransicion.ID;
+                                 end);
+  FGrafo.GetPlazas.ForEach(
+                                 procedure (const APlaza: IPlaza)
+                                 begin
+                                   FNodos[APlaza.ID] := APlaza;
+                                   FMarcado[APlaza.ID] := 0;
+                                   FNombresEstados[APlaza.Nombre] := APlaza.ID;
+                                   APlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+                                 end);
+end;
+
 constructor TdpnPetriNetCoordinador.Create;
 begin
   inherited Create(False);
   FEstado                           := EEstadoPetriNet.GrafoNoAsignado;
   FMultipleEnablednessOfTransitions := True;
   FComm                             := TThreadedQueue<ITransicion>.Create(10, 100, Cardinal.MaxValue);
+
+  FNodos := TCollections.CreateDictionary<Integer, INodoPetriNet>;
+  FMarcado := TCollections.CreateDictionary<Integer, Integer>;
+  FNombresEstados     := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresTransiciones:= TCollections.CreateBidiDictionary<String, Integer>;
+
+  FEvento_OnEstadoChanged := DPNCore.CrearEvento<EventoEstadoPN>;
 end;
 
 procedure TdpnPetriNetCoordinador.DeslinkarTransicionesAlCoordinador;
@@ -98,6 +146,11 @@ begin
   Terminate;
   FComm.DoShutDown;
   WaitFor;
+end;
+
+procedure TdpnPetriNetCoordinador.DoOnTokenCountChanged(const AID, ACount: Integer);
+begin
+  FMarcado[AID] := ACount;
 end;
 
 procedure TdpnPetriNetCoordinador.DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
@@ -169,6 +222,11 @@ begin
   Result := FMultipleEnablednessOfTransitions
 end;
 
+function TdpnPetriNetCoordinador.GetOnEstadoChanged: IEvent<EventoEstadoPN>;
+begin
+  Result := FEvento_OnEstadoChanged
+end;
+
 function TdpnPetriNetCoordinador.GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion; const ATimeOut: Cardinal): TWaitResult;
 begin
   Result := FComm.PopItem(AQueueSize, ATransicion, ATimeout);
@@ -181,6 +239,14 @@ begin
                                  begin
                                    ATransicion.OnRequiereEvaluacionChanged.Add(DoOnTransicionRequiereEvaluacion)
                                  end);
+end;
+
+procedure TdpnPetriNetCoordinador.Reset;
+begin
+  if Assigned(FGrafo) then
+  begin
+    FGrafo.Reset;
+  end;
 end;
 
 function TdpnPetriNetCoordinador.GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion): TWaitResult;
@@ -205,11 +271,17 @@ end;
 
 procedure TdpnPetriNetCoordinador.Start;
 begin
+  FMarcado.Clear;
+  FNodos.Clear;
+  FNombresEstados.Clear;
+  FNombresTransiciones.Clear;
   if Assigned(FGrafo) then
   begin
     LinkarTransicionesAlCoordinador;
+    AsociacionesPN;
     FGrafo.Start;
     FEstado := EEstadoPetriNet.Iniciada;
+    FEvento_OnEstadoChanged.Invoke(FEstado);
   end;
 end;
 
@@ -220,6 +292,7 @@ begin
     FEstado := EEstadoPetriNet.Detenida;
     DeslinkarTransicionesAlCoordinador;
     FGrafo.Stop;
+    FEvento_OnEstadoChanged.Invoke(FEstado);
   end;
 end;
 

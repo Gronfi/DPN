@@ -26,8 +26,6 @@ type
 
     FTaskListToRemove: IList<IdpnSchedulerTask>;
 
-    procedure Execute; override;
-
     function Checks: Boolean;
     procedure RecalcScheduling;
     function GetIndex: Int64;
@@ -38,12 +36,14 @@ type
 
     function GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase): TWaitResult; overload;
     function GetNewTask(out AQueueSize: Integer; out ATask: IdpnSchedulerBase; const ATimeOut: Cardinal): TWaitResult; overload;
+  protected
+    procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
 
     function SetTimer(const AAvisarCuandoPasenMilisegundos: Int64; const ACallBack: TCallBackTimer): Int64;
-    function RemoveTimer(const ATimerID: Int64): Boolean;
+    procedure RemoveTimer(const ATimerID: Int64);
   end;
 
 implementation
@@ -180,7 +180,6 @@ end;
 procedure TEventsScheduler.DoScheduling;
 var
   LAccion              : IdpnSchedulerBase;
-  LNoTarea             : Int64;
   LTimeToSleep         : Int64;
   LTask                : IdpnSchedulerTask;
   LRemoveTask          : IdpnSchedulerRemoveTask;
@@ -190,6 +189,7 @@ var
   LRecalcChecks        : Boolean;
 begin
   LRecalcChecks := False;
+  LRes := TWaitResult.wrTimeout;
   while not(Terminated) do
   begin
     repeat
@@ -273,7 +273,7 @@ begin
   end;
 end;
 
-function TEventsScheduler.RemoveTimer(const ATimerID: Int64): Boolean;
+procedure TEventsScheduler.RemoveTimer(const ATimerID: Int64);
 var
   LTareaRemove: IdpnSchedulerBase;
   LSize       : Integer;
