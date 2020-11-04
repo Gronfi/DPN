@@ -22,6 +22,9 @@ type
     FTiempoEvaluacion: integer;
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken: Boolean;
 
+    FID_TimerReEvaluacion: int64;
+    FActivo_TimerReEvaluacion: boolean;
+
     FIsTransicionDependeDeEvento: Boolean;
     FCondicionDeEvento: ICondicion;
 
@@ -35,6 +38,8 @@ type
     FPreCondicionesAgregadas: IList<ICondicion>;
 
     FLock: TSpinLock;
+    FLockTimer: TSpinLock;
+
     FEstadosHabilitacion: IDictionary<integer, boolean>;
     FEstadoCondicionesNoDependenDeToken: IDictionary<integer, boolean>;
 
@@ -76,6 +81,9 @@ type
     procedure PreparacionDependencias;
     procedure CapturarDependencias;
     procedure LiberarDependencias;
+
+    procedure IniciarTimerReEvaluacion; virtual;
+    procedure DetenerTimerReEvaluacion; virtual;
 
     function ObtenerMarcadoTokens: IMarcadotokens;
 
@@ -266,11 +274,27 @@ begin
   FEstadoCondicionesNoDependenDeToken := TCollections.CreateDictionary<integer, boolean>;
   FDependencias := TCollections.CreateList<IBloqueable>;
   FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
+  FID_TimerReEvaluacion := 0;
+  FActivo_TimerReEvaluacion := False;
 end;
 
 function TdpnTransicion.DebugLog: string;
 begin
   Result := '';
+end;
+
+procedure TdpnTransicion.DetenerTimerReEvaluacion;
+begin
+  FLockTimer.Enter;
+  try
+    if FActivo_TimerReEvaluacion then
+    begin
+      FActivo_TimerReEvaluacion := False;
+      DPNCore.TaskScheduler.RemoveTimer(FID_TimerReEvaluacion);
+    end;
+  finally
+    FLockTimer.Exit;
+  end;
 end;
 
 function TdpnTransicion.EjecutarTransicion: Boolean;
@@ -285,6 +309,8 @@ begin
   Inc(FTransicionesIntentadas);
   //writeln('<TdpnTransicion.EjecutarTransicion> Cnt: ' + FTransicionesIntentadas.ToString);
   try
+    // 0) si hay un timer activo para esta transicion lo cancelamos
+    DetenerTimerReEvaluacion;
     // 1) chequeo de integridad, debe estar habilitada la transicion (enabled)
     if not FEnabled then
     begin
@@ -498,6 +524,33 @@ begin
   Result := (FCondicionDeEvento.EventosCount <> 0)
 end;
 
+procedure TdpnTransicion.IniciarTimerReEvaluacion;
+begin
+  FLockTimer.Enter;
+  try
+    if not FActivo_TimerReEvaluacion then
+    begin
+      if TiempoEvaluacion > 0 then //solo si hay un tiempo configurado
+      begin
+        FID_TimerReEvaluacion := DPNCore.TaskScheduler.SetTimer(TiempoEvaluacion, procedure (const ATaskID: int64)
+                                                                                  begin
+                                                                                    FLockTimer.Enter;
+                                                                                    try
+                                                                                      FActivo_TimerReEvaluacion := False;
+                                                                                      FID_TimerReEvaluacion := 0;
+                                                                                    finally
+                                                                                      FLockTimer.Exit;
+                                                                                    end;
+                                                                                    FOnRequiereEvaluacion.Invoke(ID, Self); //requerimos reevaluacion
+                                                                                  end);
+        FActivo_TimerReEvaluacion := True;
+      end;
+    end;
+  finally
+    FLockTimer.Exit;
+  end;
+end;
+
 procedure TdpnTransicion.LiberarDependencias;
 var
   LBloqueable: IBloqueable;
@@ -600,7 +653,10 @@ begin
                begin
                  //se reintenta el disparo
                  FOnRequiereEvaluacion.Invoke(ID, Self);
-               end;
+               end
+               else begin
+                      //a la espera de evento
+                    end;
              end;
            False:
              begin
@@ -610,9 +666,19 @@ begin
          end;
       end
       else begin //a dormir infinito hasta que haya un cambio de contexto
-             //si hay eventos pendientes se eliminan
-             EliminarEventosPendientesTransicionSiNecesario;
-           end;
+             case IsTransicionDependeDeEvento of
+               True:
+                 begin
+                   //si hay eventos pendientes se eliminan
+                   EliminarEventosPendientesTransicionSiNecesario;
+                   //a la espera de evento
+                 end;
+               False:
+                 begin
+                   //a la espera de cambio en condiciones/contexto
+                 end;
+             end;
+           end
     end
     else begin //a esperar hasta que haya un cambio en una plaza
            //si hay eventos pendientes se eliminan
@@ -636,18 +702,20 @@ begin
                      FOnRequiereEvaluacion.Invoke(ID, Self);
                    end
                    else begin
-                          //DAVE
+                          //a la espera de que llegue un evento
                         end;
                  end;
                False:
                  begin
                    //esperamos el tiempo de la transición dormidos
-
+                   //hay condiciones que fallan por lo que debemos dormirnos y reevaluar al despertar
+                   IniciarTimerReEvaluacion;
                  end;
              end;
            end
            else begin
-
+                  //a la espera de cambio en condicion/contexto
+                  EliminarEventosPendientesTransicionSiNecesario;
                 end;
          end
          else begin //a esperar hasta que haya un cambio en una plaza

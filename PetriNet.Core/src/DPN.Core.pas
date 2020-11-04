@@ -8,6 +8,7 @@ uses
   Spring,
   Spring.Collections,
 
+  DPN.Core.Scheduler,
   DPN.Interfaces;
 
 type
@@ -21,14 +22,18 @@ type
       class var FTokenID: int64;
       class var FLock: TSpinLock;
       class var FTokenLock: TSpinLock;
+      class var FScheduler: TEventsScheduler;
     protected
       class constructor CreateC;
+      class destructor DestroyC;
     public
       class function GetNuevoID: Integer; static;
       class function GetNuevoTokenID: Int64; static;
       class function CrearEvento<T>: IEvent<T>; static;
       class function GenerarNTokensSistema(const ACount: Integer): IList<IToken>; static;
       class function GenerarTokensAdecuados(AMarcado: IMarcadoTokens; const ACount: Integer): IList<IToken>; static;
+
+      class property TaskScheduler: TEventsScheduler read FScheduler;
   end;
 
 implementation
@@ -54,6 +59,12 @@ begin
   FTokenID := 0;
   EventBus.RegisterChannel(CHANNEL_SINGLE_THREADED, 1);
   EventBus.RegisterChannel(CHANNEL_MULTI_THREADED, MAX_MULTITHREADING_POOL);
+  FScheduler := TEventsScheduler.Create;
+end;
+
+class destructor DPNCore.DestroyC;
+begin
+  FScheduler.Destroy;
 end;
 
 class function DPNCore.GenerarNTokensSistema(const ACount: Integer): IList<IToken>;

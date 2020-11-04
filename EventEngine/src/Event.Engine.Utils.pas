@@ -17,7 +17,7 @@ type
   private
     class var Reference: TStopwatch;
 
-    class procedure CreateIni; static;
+    class constructor CreateIni;
   public
     class function CreateEvent<T>: IEvent<T>; static;
 {$IFDEF MSWINDOWS}
@@ -54,9 +54,9 @@ begin
   Result := E;
 end;
 
-class procedure Utils.CreateIni;
+class constructor Utils.CreateIni;
 begin
-  Reference             := TStopwatch.Create;
+  Reference := TStopwatch.Create;
   Reference.Start;
 end;
 

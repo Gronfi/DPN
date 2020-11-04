@@ -336,7 +336,8 @@ type
     function GetTipoModelo: string;
     procedure SetTipoModelo(const Valor: string);
 
-    function GetTransiciones: IList<ITransicion>;
+    function GetPlazas: IReadOnlyList<IPlaza>;
+    function GetTransiciones: IReadOnlyList<ITransicion>;
 
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
@@ -364,6 +365,31 @@ type
 //    property Grafo: IModelo read GetGrafo write SetGrafo;
 //    property Estado: EEstadoPetriNet read GetEstado write SetEstado;
 //  end;
+
+{$REGION 'TIMERS'}
+  TCallBackTimer = reference to procedure(const ATaskID: int64);
+
+  IdpnSchedulerBase = interface
+    ['{6FFF8050-664B-4AE0-AD2D-2A1CD2F07CDB}']
+    function GetTaskID: Int64;
+
+    property TaskID: Int64 read GetTaskID;
+  end;
+
+  IdpnSchedulerTask = interface(IdpnSchedulerBase)
+    ['{B80E5645-C9BC-4D2F-B746-B45F015F387E}']
+    function GetMilisecondsToAwake: Int64;
+
+    function IsDone: Boolean;
+    function CheckAndNotify: Boolean;
+
+    property MilisecondsToAwake: Int64 read GetMilisecondsToAwake;
+  end;
+
+  IdpnSchedulerRemoveTask = interface(IdpnSchedulerBase)
+    ['{99479240-985A-43A4-8239-3E8C94D3F2BD}']
+  end;
+{$ENDREGION}
 
 implementation
 

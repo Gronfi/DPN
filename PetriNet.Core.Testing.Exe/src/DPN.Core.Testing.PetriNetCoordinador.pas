@@ -25,27 +25,7 @@ uses
   DPN.Transicion;
 
 type
-  TMsg_SGA_42 = class(TEventEE)
-
-  end;
-
-  TdpnCondicion_es_mensaje_sga_07 = class(TdpnCondicionBaseEsperaEvento)
-  protected
-    FEvento        : IEventEE;
-    FListenerEvento: IEventEEListener;
-
-    function GetDependencias: IList<IBloqueable>; override;
-
-    function CrearListenerEvento: IEventEEListener; override;
-
-    function Filtrado(AEvento: IEventEE): Boolean;
-    procedure Ejecutar(AEvento: IEventEE);
-
-  public
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
-  end;
-
-  [TestFixture]
+  //[TestFixture]
   TPetriNetCoreTesting_PetriNet = class
   public
     // [Test]
@@ -157,7 +137,6 @@ begin
 
     LPNet.Destroy;
   end;
-
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_Arranca_Para_OK;
@@ -942,37 +921,8 @@ begin
   end;
 end;
 
-{ TdpnCondicion_es_mensaje_sga_07 }
-
-function TdpnCondicion_es_mensaje_sga_07.CrearListenerEvento: IEventEEListener;
-begin
-  Result := TEventListener<TMsg_SGA_42>.Create(Ejecutar, Filtrado);
-end;
-
-procedure TdpnCondicion_es_mensaje_sga_07.Ejecutar(AEvento: IEventEE);
-begin
-  Writeln('Ejecutar --> ' + QualifiedClassName);
-  FEvento := AEvento;
-  FEventoOnContextoCondicionChanged.Invoke(ID);
-end;
-
-function TdpnCondicion_es_mensaje_sga_07.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
-begin
-  Result := Assigned(FEvento)
-end;
-
-function TdpnCondicion_es_mensaje_sga_07.Filtrado(AEvento: IEventEE): Boolean;
-begin
-  Result := True;
-end;
-
-function TdpnCondicion_es_mensaje_sga_07.GetDependencias: IList<IBloqueable>;
-begin
-  Result := inherited;
-end;
-
 initialization
 
-TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
+//TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
 
 end.
