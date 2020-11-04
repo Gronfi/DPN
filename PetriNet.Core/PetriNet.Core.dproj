@@ -164,6 +164,7 @@
         <DCCReference Include="src\DPN.Plaza.Start.pas"/>
         <DCCReference Include="src\DPN.Plaza.Super.pas"/>
         <DCCReference Include="src\DPN.Core.Scheduler.pas"/>
+        <DCCReference Include="src\DPN.Plaza.Finish.pas"/>
         <None Include="PetriNet.Core.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

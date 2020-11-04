@@ -217,7 +217,7 @@ end;
 
 function TdpnPlaza.GetPreAcciones: IList<IAccion>;
 begin
-
+  Result := FPreAcciones
 end;
 
 function TdpnPlaza.GetPreCondiciones: IList<ICondicion>;

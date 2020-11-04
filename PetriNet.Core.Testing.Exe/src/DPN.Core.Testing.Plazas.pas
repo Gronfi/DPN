@@ -10,11 +10,19 @@ uses
 
   DPN.Interfaces,
   DPN.Plaza,
+  DPN.Modelo,
   DPN.Plaza.Start,
-  DPN.ArcoIn;
+  DPN.Plaza.Finish,
+  DPN.ArcoIn,
+  DPN.ArcoReset,
+  DPN.Condicion,
+  DPN.ArcoOut,
+  DPN.Transicion,
+  DPN.PetriNet,
+  DPN.Variable;
 
 type
-  //[TestFixture]
+  [TestFixture]
   TPetriNetCoreTesting_Plazas = class
   private
     FID      : Integer;
@@ -30,6 +38,8 @@ type
     procedure Test_Transicionado_Arco_En_Plaza_Start;
     [Test]
     procedure Test_Cambio_En_PlazaStart_Notifica_A_Arco;
+    [Test]
+    procedure Test_Plaza_Finish;
   end;
 
 implementation
@@ -103,6 +113,78 @@ begin
   end;
 end;
 
+procedure TPetriNetCoreTesting_Plazas.Test_Plaza_Finish;
+var
+  LPNet: TdpnPetriNetCoordinador;
+
+  LModelo: IModelo;
+  LToken : IToken;
+  I      : Integer;
+
+  FArcoI1 : IArcoIn;
+  FPlazaI1: IPlaza;
+
+  FArcoO1 : IArcoOut;
+  FPlazaO1: IPlaza;
+
+  FTransicion: ITransicion;
+begin
+  LModelo := TdpnModelo.Create;
+
+  FPlazaI1           := TdpnPlaza.Create;
+  FPlazaI1.Nombre    := 'I1';
+  FPlazaI1.Capacidad := 1;
+
+  FArcoI1             := TdpnArcoIn.Create;
+  FArcoI1.Plaza       := FPlazaI1;
+  FArcoI1.Peso        := 1;
+  FArcoI1.PesoEvaluar := 1;
+
+  FPlazaO1           := TdpnPlazaFinish.Create;
+  FPlazaO1.Nombre    := 'O1';
+  FPlazaO1.Capacidad := 1;
+
+  FArcoO1       := TdpnArcoOut.Create;
+  FArcoO1.Plaza := FPlazaO1;
+  FArcoO1.Peso  := 1;
+
+  FTransicion := TdpnTransicion.Create;
+  FTransicion.AddArcoIn(FArcoI1);
+  FTransicion.AddArcoOut(FArcoO1);
+
+  LModelo.Elementos.Add(FTransicion);
+
+  LPNet := TdpnPetriNetCoordinador.Create;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
+
+    for I := 1 to 1 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(100);
+
+    if not(FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 0) then
+      Assert.Fail('no ha transicionado');
+
+    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
+    Assert.Pass;
+  finally
+    LModelo     := nil;
+    FPlazaI1    := nil;
+    FArcoI1     := nil;
+    FPlazaO1    := nil;
+    FArcoO1     := nil;
+    FTransicion := nil;
+
+    LPNet.Destroy;
+  end;
+end;
+
 procedure TPetriNetCoreTesting_Plazas.Test_Transicionado_Arco_En_Plaza_Start;
 var
   LMarcado: IMarcadoTokens;
@@ -145,5 +227,5 @@ begin
 end;
 
 initialization
-  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
+  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
 end.
