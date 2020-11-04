@@ -230,6 +230,9 @@ type
     function GetIsHabilitado: Boolean;
     function GetIsTransicionDependeDeEvento: Boolean;
 
+    function GetTiempoEvaluacion: integer;
+    procedure SetTiempoEvaluacion(const AValor: integer);
+
     function GetTransicionesIntentadas: int64;
     function GetTransicionesRealizadas: int64;
 
@@ -258,6 +261,7 @@ type
     function DebugLog: string;
 
     property IsHabilitado: Boolean read GetIsHabilitado;
+    property TiempoEvaluacion: integer read GetTiempoEvaluacion write SetTiempoEvaluacion;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
     property ArcosOut: IReadOnlyList<IArcoOut> read GetArcosOut;

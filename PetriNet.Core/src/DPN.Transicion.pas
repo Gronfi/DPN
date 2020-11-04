@@ -8,15 +8,18 @@ uses
   Spring,
   Spring.Collections,
 
+  Event.Engine,
   Event.Engine.Interfaces,
 
   DPN.Interfaces,
   DPN.NodoPetriNet;
 
 type
+
   TdpnTransicion = class (TdpnNodoPetriNet, ITransicion)
   protected
     FIsHabilitado: boolean;
+    FTiempoEvaluacion: integer;
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken: Boolean;
 
     FIsTransicionDependeDeEvento: Boolean;
@@ -50,6 +53,9 @@ type
     function GetIsTransicionDependeDeEvento: Boolean; virtual;
 
     function GetIsHabilitado: Boolean; virtual;
+
+    function GetTiempoEvaluacion: integer;
+    procedure SetTiempoEvaluacion(const AValor: integer);
 
     function GetTransicionesIntentadas: int64;
     function GetTransicionesRealizadas: int64;
@@ -104,6 +110,7 @@ type
     function DebugLog: string;
 
     property IsHabilitado: Boolean read GetIsHabilitado;
+    property TiempoEvaluacion: integer read GetTiempoEvaluacion write SetTiempoEvaluacion;
 
     property ArcosIN: IReadOnlyList<IArcoIn> read GetArcosIn;
     property ArcosOut: IReadOnlyList<IArcoout> read GetArcosOut;
@@ -471,6 +478,11 @@ begin
   Result := FOnRequiereEvaluacion
 end;
 
+function TdpnTransicion.GetTiempoEvaluacion: integer;
+begin
+  Result := FTiempoEvaluacion
+end;
+
 function TdpnTransicion.GetTransicionesIntentadas: int64;
 begin
   Result := FTransicionesIntentadas
@@ -649,6 +661,15 @@ procedure TdpnTransicion.Reset;
 begin
   FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := false;
   FEstadoCondicionesNoDependenDeToken.Clear;
+end;
+
+procedure TdpnTransicion.SetTiempoEvaluacion(const AValor: integer);
+begin
+  Guard.CheckTrue(AValor >= 0, 'No puede ser negativo el tiempo de evaluacion');
+  if FTiempoEvaluacion <> AValor then
+  begin
+    FTiempoEvaluacion := AValor;
+  end;
 end;
 
 procedure TdpnTransicion.Start;
