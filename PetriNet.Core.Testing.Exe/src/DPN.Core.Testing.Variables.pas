@@ -12,7 +12,7 @@ uses
   DPN.Variable;
 
 type
-  //[TestFixture]
+  [TestFixture]
   TPetriNetCoreTesting_Variables = class
   private
     FEnabled : IVariable;
@@ -63,6 +63,6 @@ begin
 end;
 
 initialization
-  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Variables);
+  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Variables);
 
 end.
