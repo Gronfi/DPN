@@ -88,7 +88,7 @@ type
     property Numero: integer read FNumero write FNumero;
   end;
 
-  //[TestFixture]
+  [TestFixture]
   TPetriNetCoreTesting_Funciones = class
   private
     FID      : Integer;
@@ -471,6 +471,6 @@ begin
 end;
 
 initialization
-  //TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Funciones);
+  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Funciones);
 
 end.

@@ -32,13 +32,13 @@ type
     procedure Test_Scheduler_1_Timer;
     [Test]
     procedure Test_Scheduler_1_Timer_Cancelacion;
-//    [Test]
-//    [TestCase('Test-Count=1','1')]
-//    [TestCase('Test-Count=5','5')]
-//    [TestCase('Test-Count=10','10')]
-//    [TestCase('Test-Count=100','100')]
-//    [TestCase('Test-Count=1000','1000')]
-//    [TestCase('Test-Count=10000','10000')]
+    [Test]
+    [TestCase('Test-Count=1','1')]
+    [TestCase('Test-Count=5','5')]
+    [TestCase('Test-Count=10','10')]
+    [TestCase('Test-Count=100','100')]
+    [TestCase('Test-Count=1000','1000')]
+    [TestCase('Test-Count=10000','10000')]
     procedure Test_Scheduler_N_Timers(const ACnt: integer);
     [Test]
     procedure Test_Scheduler_Transicion_No_Debe_Reintentar_Reevaluacion;
@@ -131,51 +131,57 @@ var
   LToken : IToken;
   I      : Integer;
 
-  FArcoI1 : IArcoIn;
-  FPlazaI1: IPlaza;
+  LArcoI1 : IArcoIn;
+  LPlazaI1: IPlaza;
 
-  FArcoO1 : IArcoOut;
-  FPlazaO1: IPlaza;
+  LArcoO1 : IArcoOut;
+  LPlazaO1: IPlaza;
 
-  FFuncion : ICondicion;
-  FEnabled : IVariable;
+  LFuncion : ICondicion;
+  LEnabled : IVariable;
 
-  FTransicion: ITransicion;
+  LTransicion: ITransicion;
 begin
-  FEnabled        := TdpnVariable.Create;
-  FEnabled.Nombre := 'Enabled';
-  FEnabled.Valor  := 0;
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
 
-  FFuncion                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion).ValorToCheck := 5;
+  LFuncion                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion).ValorToCheck := 5;
 
   LModelo := TdpnModelo.Create;
 
-  FPlazaI1           := TdpnPlaza.Create;
-  FPlazaI1.Nombre    := 'I1';
-  FPlazaI1.Capacidad := 1;
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 1;
 
-  FArcoI1             := TdpnArcoIn.Create;
-  FArcoI1.Plaza       := FPlazaI1;
-  FArcoI1.Peso        := 1;
-  FArcoI1.PesoEvaluar := 1;
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
 
-  FPlazaO1           := TdpnPlaza.Create;
-  FPlazaO1.Nombre    := 'O1';
-  FPlazaO1.Capacidad := 1;
+  LPlazaO1           := TdpnPlaza.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.Capacidad := 1;
 
-  FArcoO1       := TdpnArcoOut.Create;
-  FArcoO1.Plaza := FPlazaO1;
-  FArcoO1.Peso  := 1;
+  LArcoO1       := TdpnArcoOut.Create;
+  LArcoO1.Plaza := LPlazaO1;
+  LArcoO1.Peso  := 1;
 
-  FTransicion := TdpnTransicion.Create;
-  FTransicion.TiempoEvaluacion := 100;
-  FTransicion.AddArcoIn(FArcoI1);
-  FTransicion.AddArcoOut(FArcoO1);
-  FTransicion.AddCondicion(FFuncion);
+  LTransicion := TdpnTransicion.Create;
+  LTransicion.TiempoEvaluacion := 100;
+  LTransicion.AddArcoIn(LArcoI1);
+  LTransicion.AddArcoOut(LArcoO1);
+  LTransicion.AddCondicion(LFuncion);
 
-  LModelo.Elementos.Add(FTransicion);
+  LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LFuncion);
+  LModelo.Elementos.Add(LEnabled);
 
   LPNet := TdpnPetriNetCoordinador.Create;
   try
@@ -185,31 +191,31 @@ begin
     for I := 1 to 1 do
     begin
       LToken := TdpnTokenColoreado.Create;
-      FPlazaI1.AddToken(LToken);
+      LPlazaI1.AddToken(LToken);
     end;
 
     Sleep(500);
 
     //no debe transicionar
-    if not(FPlazaI1.TokenCount = 1) and (FPlazaO1.TokenCount = 0) then
+    if not(LPlazaI1.TokenCount = 1) and (LPlazaO1.TokenCount = 0) then
       Assert.Fail('no ha transicionado bien');
 
     //no debe estar reevaluando
-    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-    if not(FTransicion.TransicionesRealizadas = 0) and (FTransicion.TransicionesIntentadas > 1) then
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    if not(LTransicion.TransicionesRealizadas = 0) and (LTransicion.TransicionesIntentadas > 1) then
       Assert.Fail('el numero de intentos de transicionar no es bueno');
     Assert.Pass;
   finally
     LModelo     := nil;
 
-    FFuncion    := nil;
-    FEnabled    := nil;
-    FPlazaI1    := nil;
-    FArcoI1     := nil;
-    FPlazaO1    := nil;
-    FArcoO1     := nil;
-    FTransicion := nil;
+    LFuncion    := nil;
+    LEnabled    := nil;
+    LPlazaI1    := nil;
+    LArcoI1     := nil;
+    LPlazaO1    := nil;
+    LArcoO1     := nil;
+    LTransicion := nil;
 
     LPNet.Destroy;
   end;
@@ -223,50 +229,56 @@ var
   LToken : IToken;
   I      : Integer;
 
-  FArcoI1 : IArcoIn;
-  FPlazaI1: IPlaza;
+  LArcoI1 : IArcoIn;
+  LPlazaI1: IPlaza;
 
-  FArcoO1 : IArcoOut;
-  FPlazaO1: IPlaza;
+  LArcoO1 : IArcoOut;
+  LPlazaO1: IPlaza;
 
-  FFuncion : ICondicion;
-  FEnabled : IVariable;
+  LFuncion : ICondicion;
+  LEnabled : IVariable;
 
-  FTransicion: ITransicion;
+  LTransicion: ITransicion;
 begin
-  FEnabled        := TdpnVariable.Create;
-  FEnabled.Nombre := 'Enabled';
-  FEnabled.Valor  := 0;
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
 
-  FFuncion                                                := TdpnCondicion_es_tabla_variables.Create;
-  TdpnCondicion_es_tabla_variables(FFuncion).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables(FFuncion).ValorToCheck := 5;
+  LFuncion                                                := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(LFuncion).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncion).ValorToCheck := 5;
 
   LModelo := TdpnModelo.Create;
 
-  FPlazaI1           := TdpnPlaza.Create;
-  FPlazaI1.Nombre    := 'I1';
-  FPlazaI1.Capacidad := 1;
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 1;
 
-  FArcoI1             := TdpnArcoIn.Create;
-  FArcoI1.Plaza       := FPlazaI1;
-  FArcoI1.Peso        := 1;
-  FArcoI1.PesoEvaluar := 1;
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
 
-  FPlazaO1           := TdpnPlaza.Create;
-  FPlazaO1.Nombre    := 'O1';
-  FPlazaO1.Capacidad := 1;
+  LPlazaO1           := TdpnPlaza.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.Capacidad := 1;
 
-  FArcoO1       := TdpnArcoOut.Create;
-  FArcoO1.Plaza := FPlazaO1;
-  FArcoO1.Peso  := 1;
+  LArcoO1       := TdpnArcoOut.Create;
+  LArcoO1.Plaza := LPlazaO1;
+  LArcoO1.Peso  := 1;
 
-  FTransicion := TdpnTransicion.Create;
-  FTransicion.AddArcoIn(FArcoI1);
-  FTransicion.AddArcoOut(FArcoO1);
-  FTransicion.AddCondicion(FFuncion);
+  LTransicion := TdpnTransicion.Create;
+  LTransicion.AddArcoIn(LArcoI1);
+  LTransicion.AddArcoOut(LArcoO1);
+  LTransicion.AddCondicion(LFuncion);
 
-  LModelo.Elementos.Add(FTransicion);
+  LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LFuncion);
+  LModelo.Elementos.Add(LEnabled);
 
   LPNet := TdpnPetriNetCoordinador.Create;
   try
@@ -276,31 +288,31 @@ begin
     for I := 1 to 1 do
     begin
       LToken := TdpnTokenColoreado.Create;
-      FPlazaI1.AddToken(LToken);
+      LPlazaI1.AddToken(LToken);
     end;
 
     Sleep(100);
 
     //no debe transicionar
-    if not(FPlazaI1.TokenCount = 1) and (FPlazaO1.TokenCount = 0) then
+    if not(LPlazaI1.TokenCount = 1) and (LPlazaO1.TokenCount = 0) then
       Assert.Fail('no ha transicionado bien');
 
     //no debe estar reevaluando
-    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-    if not(FTransicion.TransicionesRealizadas = 0) and (FTransicion.TransicionesIntentadas = 1) then
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    if not(LTransicion.TransicionesRealizadas = 0) and (LTransicion.TransicionesIntentadas = 1) then
       Assert.Fail('el numero de intentos de transicionar no es bueno');
     Assert.Pass;
   finally
     LModelo     := nil;
 
-    FFuncion    := nil;
-    FEnabled    := nil;
-    FPlazaI1    := nil;
-    FArcoI1     := nil;
-    FPlazaO1    := nil;
-    FArcoO1     := nil;
-    FTransicion := nil;
+    LFuncion    := nil;
+    LEnabled    := nil;
+    LPlazaI1    := nil;
+    LArcoI1     := nil;
+    LPlazaO1    := nil;
+    LArcoO1     := nil;
+    LTransicion := nil;
 
     LPNet.Destroy;
   end;
@@ -314,56 +326,63 @@ var
   LToken : IToken;
   I      : Integer;
 
-  FArcoI1 : IArcoIn;
-  FPlazaI1: IPlaza;
+  LArcoI1 : IArcoIn;
+  LPlazaI1: IPlaza;
 
-  FArcoO1 : IArcoOut;
-  FPlazaO1: IPlaza;
+  LArcoO1 : IArcoOut;
+  LPlazaO1: IPlaza;
 
-  FFuncion1 : ICondicion;
-  FFuncion2 : ICondicion;
-  FEnabled : IVariable;
+  LFuncion1 : ICondicion;
+  LFuncion2 : ICondicion;
+  LEnabled : IVariable;
 
-  FTransicion: ITransicion;
+  LTransicion: ITransicion;
 begin
-  FEnabled        := TdpnVariable.Create;
-  FEnabled.Nombre := 'Enabled';
-  FEnabled.Valor  := 0;
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
 
-  FFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion1).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion1).ValorToCheck := 5;
+  LFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion1).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion1).ValorToCheck := 5;
 
-  FFuncion2                                                := TdpnCondicion_es_tabla_variables.Create;
-  TdpnCondicion_es_tabla_variables(FFuncion2).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables(FFuncion2).ValorToCheck := 5;
+  LFuncion2                                                := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(LFuncion2).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncion2).ValorToCheck := 5;
 
   LModelo := TdpnModelo.Create;
 
-  FPlazaI1           := TdpnPlaza.Create;
-  FPlazaI1.Nombre    := 'I1';
-  FPlazaI1.Capacidad := 1;
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 1;
 
-  FArcoI1             := TdpnArcoIn.Create;
-  FArcoI1.Plaza       := FPlazaI1;
-  FArcoI1.Peso        := 1;
-  FArcoI1.PesoEvaluar := 1;
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
 
-  FPlazaO1           := TdpnPlaza.Create;
-  FPlazaO1.Nombre    := 'O1';
-  FPlazaO1.Capacidad := 1;
+  LPlazaO1           := TdpnPlaza.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.Capacidad := 1;
 
-  FArcoO1       := TdpnArcoOut.Create;
-  FArcoO1.Plaza := FPlazaO1;
-  FArcoO1.Peso  := 1;
+  LArcoO1       := TdpnArcoOut.Create;
+  LArcoO1.Plaza := LPlazaO1;
+  LArcoO1.Peso  := 1;
 
-  FTransicion := TdpnTransicion.Create;
-  FTransicion.AddArcoIn(FArcoI1);
-  FTransicion.AddArcoOut(FArcoO1);
-  FTransicion.AddCondicion(FFuncion2);
-  FTransicion.AddCondicion(FFuncion1);
+  LTransicion := TdpnTransicion.Create;
+  LTransicion.AddArcoIn(LArcoI1);
+  LTransicion.AddArcoOut(LArcoO1);
+  LTransicion.AddCondicion(LFuncion2);
+  LTransicion.AddCondicion(LFuncion1);
 
-  LModelo.Elementos.Add(FTransicion);
+  LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LFuncion1);
+  LModelo.Elementos.Add(LFuncion2);
+  LModelo.Elementos.Add(LEnabled);
 
   LPNet := TdpnPetriNetCoordinador.Create;
   try
@@ -373,32 +392,32 @@ begin
     for I := 1 to 1 do
     begin
       LToken := TdpnTokenColoreado.Create;
-      FPlazaI1.AddToken(LToken);
+      LPlazaI1.AddToken(LToken);
     end;
 
     Sleep(500);
 
     //no debe transicionar
-    if not(FPlazaI1.TokenCount = 1) and (FPlazaO1.TokenCount = 0) then
+    if not(LPlazaI1.TokenCount = 1) and (LPlazaO1.TokenCount = 0) then
       Assert.Fail('no ha transicionado bien');
 
     //no debe estar reevaluando
-    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-    if not(FTransicion.TransicionesRealizadas = 0) and (FTransicion.TransicionesIntentadas = 1) then
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    if not(LTransicion.TransicionesRealizadas = 0) and (LTransicion.TransicionesIntentadas = 1) then
       Assert.Fail('el numero de intentos de transicionar no es bueno');
     Assert.Pass;
   finally
     LModelo     := nil;
 
-    FFuncion1    := nil;
-    FFuncion2    := nil;
-    FEnabled    := nil;
-    FPlazaI1    := nil;
-    FArcoI1     := nil;
-    FPlazaO1    := nil;
-    FArcoO1     := nil;
-    FTransicion := nil;
+    LFuncion1    := nil;
+    LFuncion2    := nil;
+    LEnabled    := nil;
+    LPlazaI1    := nil;
+    LArcoI1     := nil;
+    LPlazaO1    := nil;
+    LArcoO1     := nil;
+    LTransicion := nil;
 
     LPNet.Destroy;
   end;
@@ -412,56 +431,63 @@ var
   LToken : IToken;
   I      : Integer;
 
-  FArcoI1 : IArcoIn;
-  FPlazaI1: IPlaza;
+  LArcoI1 : IArcoIn;
+  LPlazaI1: IPlaza;
 
-  FArcoO1 : IArcoOut;
-  FPlazaO1: IPlaza;
+  LArcoO1 : IArcoOut;
+  LPlazaO1: IPlaza;
 
-  FFuncion1 : ICondicion;
-  FFuncion2 : ICondicion;
-  FEnabled : IVariable;
+  LFuncion1 : ICondicion;
+  LFuncion2 : ICondicion;
+  LEnabled : IVariable;
 
-  FTransicion: ITransicion;
+  LTransicion: ITransicion;
 begin
-  FEnabled        := TdpnVariable.Create;
-  FEnabled.Nombre := 'Enabled';
-  FEnabled.Valor  := 0;
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
 
-  FFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion1).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables_trucada(FFuncion1).ValorToCheck := 5;
+  LFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion1).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables_trucada(LFuncion1).ValorToCheck := 5;
 
-  FFuncion2                                                := TdpnCondicion_es_tabla_variables.Create;
-  TdpnCondicion_es_tabla_variables(FFuncion2).Variable     := FEnabled;
-  TdpnCondicion_es_tabla_variables(FFuncion2).ValorToCheck := 5;
+  LFuncion2                                                := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(LFuncion2).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncion2).ValorToCheck := 5;
 
   LModelo := TdpnModelo.Create;
 
-  FPlazaI1           := TdpnPlaza.Create;
-  FPlazaI1.Nombre    := 'I1';
-  FPlazaI1.Capacidad := 1;
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 1;
 
-  FArcoI1             := TdpnArcoIn.Create;
-  FArcoI1.Plaza       := FPlazaI1;
-  FArcoI1.Peso        := 1;
-  FArcoI1.PesoEvaluar := 1;
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
 
-  FPlazaO1           := TdpnPlaza.Create;
-  FPlazaO1.Nombre    := 'O1';
-  FPlazaO1.Capacidad := 1;
+  LPlazaO1           := TdpnPlaza.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.Capacidad := 1;
 
-  FArcoO1       := TdpnArcoOut.Create;
-  FArcoO1.Plaza := FPlazaO1;
-  FArcoO1.Peso  := 1;
+  LArcoO1       := TdpnArcoOut.Create;
+  LArcoO1.Plaza := LPlazaO1;
+  LArcoO1.Peso  := 1;
 
-  FTransicion := TdpnTransicion.Create;
-  FTransicion.AddArcoIn(FArcoI1);
-  FTransicion.AddArcoOut(FArcoO1);
-  FTransicion.AddCondicion(FFuncion2);
-  FTransicion.AddCondicion(FFuncion1);
+  LTransicion := TdpnTransicion.Create;
+  LTransicion.AddArcoIn(LArcoI1);
+  LTransicion.AddArcoOut(LArcoO1);
+  LTransicion.AddCondicion(LFuncion2);
+  LTransicion.AddCondicion(LFuncion1);
 
-  LModelo.Elementos.Add(FTransicion);
+  LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LFuncion1);
+  LModelo.Elementos.Add(LFuncion2);
+  LModelo.Elementos.Add(LEnabled);
 
   LPNet := TdpnPetriNetCoordinador.Create;
   try
@@ -471,45 +497,45 @@ begin
     for I := 1 to 1 do
     begin
       LToken := TdpnTokenColoreado.Create;
-      FPlazaI1.AddToken(LToken);
+      LPlazaI1.AddToken(LToken);
     end;
 
     Sleep(500);
 
     //no debe transicionar
-    if not(FPlazaI1.TokenCount = 1) and (FPlazaO1.TokenCount = 0) then
+    if not(LPlazaI1.TokenCount = 1) and (LPlazaO1.TokenCount = 0) then
       Assert.Fail('no ha transicionado bien');
 
     //no debe estar reevaluando
-    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-    if not(FTransicion.TransicionesRealizadas = 0) and (FTransicion.TransicionesIntentadas = 1) then
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    if not(LTransicion.TransicionesRealizadas = 0) and (LTransicion.TransicionesIntentadas = 1) then
       Assert.Fail('el numero de intentos de transicionar no es bueno');
 
-    FEnabled.Valor  := 5;
+    LEnabled.Valor  := 5;
 
     Sleep(100);
 
     //debe transicionar
-    if not(FPlazaI1.TokenCount = 0) and (FPlazaO1.TokenCount = 1) then
+    if not(LPlazaI1.TokenCount = 0) and (LPlazaO1.TokenCount = 1) then
       Assert.Fail('no ha transicionado');
-    Writeln('I1: ' + FPlazaI1.TokenCount.ToString + ' - O1: ' + FPlazaO1.TokenCount.ToString);
-    Writeln('Datos: ' + FTransicion.TransicionesRealizadas.ToString + '/' + FTransicion.TransicionesIntentadas.ToString);
-    if not(FTransicion.TransicionesRealizadas = 1) and (FTransicion.TransicionesIntentadas = 2) then
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
+    Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    if not(LTransicion.TransicionesRealizadas = 1) and (LTransicion.TransicionesIntentadas = 2) then
       Assert.Fail('el numero de intentos de transicionar no es bueno (*)');
 
     Assert.Pass;
   finally
     LModelo     := nil;
 
-    FFuncion1    := nil;
-    FFuncion2    := nil;
-    FEnabled    := nil;
-    FPlazaI1    := nil;
-    FArcoI1     := nil;
-    FPlazaO1    := nil;
-    FArcoO1     := nil;
-    FTransicion := nil;
+    LFuncion1    := nil;
+    LFuncion2    := nil;
+    LEnabled    := nil;
+    LPlazaI1    := nil;
+    LArcoI1     := nil;
+    LPlazaO1    := nil;
+    LArcoO1     := nil;
+    LTransicion := nil;
 
     LPNet.Destroy;
   end;
