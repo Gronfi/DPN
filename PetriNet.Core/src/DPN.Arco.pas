@@ -94,6 +94,8 @@ begin
   if (FPlazaIsEnabled <> AEnabled) then
   begin
     FPlazaIsEnabled := AEnabled;
+    if FPlazaIsEnabled then
+      Evaluar(FPlaza.TokenCount);
   end;
 end;
 
@@ -101,7 +103,7 @@ procedure TdpnArco.DoOnTokenCountChanged(const AID: integer; const ACount: Integ
 var
   LOldValue, LNewValue: Boolean;
 begin
-  LOldValue := GetIsHabilitado;
+  LOldValue := IsHabilitado;
   LNewValue := Evaluar(ACount);
   if (LOldValue <> LNewValue) then
     FEventoOnHabilitacionChanged.Invoke(ID, LNewValue);
@@ -112,6 +114,8 @@ begin
   if (FTransicionIsEnabled <> AEnabled) then
   begin
     FTransicionIsEnabled := AEnabled;
+    if FTransicionIsEnabled and FPlazaIsEnabled then
+      Evaluar(FPlaza.TokenCount);
   end;
 end;
 
@@ -122,6 +126,8 @@ end;
 
 function TdpnArco.GetIsHabilitado: Boolean;
 begin
+  if (not FTransicionIsEnabled) or (not FPlazaIsEnabled) then
+    Exit(False);
   if FIsForzado then
     Result := FValorForzado
   else Result := FIsHabilitado;
@@ -155,7 +161,7 @@ end;
 procedure TdpnArco.SetIsForzado(const Value: Boolean);
 begin
   FIsForzado := Value;
-  FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+  FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
 end;
 
 procedure TdpnArco.SetPeso(const Value: Integer);
@@ -178,13 +184,15 @@ begin
   begin
     FPlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
     FPlaza.OnEnabledChanged.Add(DoOnPlazaEnabledChanged);
-    if Enabled and Plaza.Enabled then
+    FPlazaIsEnabled := Plaza.Enabled;
+    if Enabled and FPlazaIsEnabled and FTransicionIsEnabled then
     begin
       Evaluar(FPlaza.TokenCount);
       if FPlaza.TokenCount <> 0 then
-        FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+        FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
     end;
-  end;
+  end
+  else FPlazaIsEnabled := False;
 end;
 
 procedure TdpnArco.SetTransicion(Value: ITransicion);
@@ -197,13 +205,15 @@ begin
   if Assigned(FTransicion) then
   begin
     FTransicion.OnEnabledChanged.Add(DoOnTransicionEnabledChanged);
-  end;
+    FTransicionIsEnabled := FTransicion.Enabled;
+  end
+  else FTransicionIsEnabled := False;
 end;
 
 procedure TdpnArco.SetValorForzado(const Value: Boolean);
 begin
   FValorForzado := Value;
-  FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+  FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
   if Assigned(FPlaza) then
     Evaluar(FPlaza.TokenCount);
 end;
@@ -217,7 +227,7 @@ begin
     begin
       Evaluar(FPlaza.TokenCount);
       if FPlaza.TokenCount <> 0 then
-        FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+        FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
     end;
   end;
 end;

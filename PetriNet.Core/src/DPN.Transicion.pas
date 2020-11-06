@@ -1,5 +1,7 @@
 unit DPN.Transicion;
 
+{$UNDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+
 interface
 
 uses
@@ -21,7 +23,9 @@ type
     FIsHabilitado: boolean;
     FTiempoEvaluacion: integer;
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken: Boolean;
-
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad: IList<String>;
+{$ENDIF}
     FID_TimerReEvaluacion: int64;
     FActivo_TimerReEvaluacion: boolean;
 
@@ -180,6 +184,9 @@ begin
           FCondicionDeEvento.ListenerEventoHabilitado := True
         else begin //si es transicion sin evento, requerimos la evaluacion
                FOnRequiereEvaluacion.Invoke(ID, Self);
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+               FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.ActualizarEstadoHabilitacionPorEstadoArco> requiere evaluacion');
+{$ENDIF}
              end;
       end
       else begin //la transicion ha pasado a deshabilitada
@@ -194,16 +201,13 @@ end;
 
 procedure TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(const AID: integer; const AValor: boolean);
 begin
-  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> I: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
   FEstadoCondicionesNoDependenDeToken[AID] := AValor;
-  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> ID: ' + AID.ToString + '= ' + FEstadoCondicionesNoDependenDeToken[AID].ToString);
   FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
                                                                                                     Result := (AValue = false)
                                                                                                   end
                                                                                                );
-  //writeln('<TdpnTransicion.ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens> F: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
 end;
 
 procedure TdpnTransicion.AddAccion(AAccion: IAccion);
@@ -263,12 +267,9 @@ end;
 
 procedure TdpnTransicion.CalcularPosibleCambioContexto(const AID: integer);
 begin
-  //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> I: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
   if FEstadoCondicionesNoDependenDeToken.ContainsKey(AID) then
   begin
-    //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> 1');
     FEstadoCondicionesNoDependenDeToken[AID]    := True; //trampeamos para provocar su posible reevaluacion
-    //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> ID: ' + AID.ToString + '= ' + FEstadoCondicionesNoDependenDeToken[AID].ToString);
     FHayAlgunaCondicionDesactivadaQueNoDependeDeToken := FEstadoCondicionesNoDependenDeToken.Values.Any(
                                                                                                   function (const AValue: boolean): Boolean
                                                                                                   begin
@@ -276,7 +277,6 @@ begin
                                                                                                   end
                                                                                                );
   end;
-  //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> F: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
 end;
 
 procedure TdpnTransicion.CapturarDependencias;
@@ -308,6 +308,9 @@ begin
   FEventoOnMarcadoChanged := DPNCore.CrearEvento<EventoNodoPN_MarcadoPlazasTokenCount>;
   FID_TimerReEvaluacion := 0;
   FActivo_TimerReEvaluacion := False;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+  FTrazabilidad := TCollections.CreateList<String>;
+{$ENDIF}
 end;
 
 destructor TdpnTransicion.Destroy;
@@ -339,58 +342,52 @@ function TdpnTransicion.EjecutarTransicion: Boolean;
 var
   LEvento: IEventEE;
 begin
-  //writeln('<TdpnTransicion.EjecutarTransicion> ID: ' + ID.ToString);
   Result := False;
   CapturarDependencias; // todas las dependencias son capturadas
-  //writeln('<TdpnTransicion.EjecutarTransicion> Tras dependencias');
   // transicion efectiva
   Inc(FTransicionesIntentadas);
-  //writeln('<TdpnTransicion.EjecutarTransicion> Cnt: ' + FTransicionesIntentadas.ToString);
   try
     // 0) si hay un timer activo para esta transicion lo cancelamos
     DetenerTimerReEvaluacion;
     // 1) chequeo de integridad, debe estar habilitada la transicion (enabled)
     if not FEnabled then
     begin
-      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-Enabled');
       Exit;
     end;
     // 2) chequeo de integridad, debe estar habilitada la transicion (estados in y out cumplen sus restricciones)
     if not(FIsHabilitado) then
     begin
-      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-habilitado');
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+      FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.EjecutarTransicion> sale en FIsHabilitado');
+{$ENDIF}
       Exit;
     end;
     // 3) si alguna condicion que no depende de token esta desactivada y no ha habido variacion en la misma no se pasa a evaluar
     if FHayAlgunaCondicionDesactivadaQueNoDependeDeToken then
     begin
-      //writeln('<TdpnTransicion.EjecutarTransicion> Filtros no-depende de token');
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+      FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.EjecutarTransicion> sale en FHayAlgunaCondicionDesactivadaQueNoDependeDeToken');
+{$ENDIF}
       Exit;
     end;
-    //writeln('<TdpnTransicion.EjecutarTransicion> Filtros superados');
     // 4) estrategia disparo
     case FIsTransicionDependeDeEvento of
       False:
         begin
-          //writeln('<TdpnTransicion.EjecutarTransicion> Transicion de tipo No-Evento');
           Result := EstrategiaDisparo;
-          //writeln('<TdpnTransicion.EjecutarTransicion> Result: ' + Result.ToString);
         end;
       True:
         begin
-          //writeln('<TdpnTransicion.EjecutarTransicion> Transicion de tipo Evento');
           if FCondicionDeEvento.EventosCount > 0 then
           begin
             LEvento := FCondicionDeEvento.GetPrimerEvento;
             try
               Result := EstrategiaDisparo(LEvento);
-              //writeln('<TdpnTransicion.EjecutarTransicion> * Result: ' + Result.ToString);
             finally
               FCondicionDeEvento.RemovePrimerEvento;
             end;
           end
           else begin
-                 //writeln('<TdpnTransicion.EjecutarTransicion> No hay eventos?');
                  Exit;
                end;
         end;
@@ -442,7 +439,6 @@ var
   LArcoOut: IArcoOut;
   LMarcadoNotificacion: IMarcadoPlazasCantidadTokens;
 begin
-  //writeln('<TdpnTransicion.EstrategiaDisparo>');
   Result := False;
   // Pasos:
   // 1) obtenemos los jetones implicados por estado
@@ -455,12 +451,10 @@ begin
       LResult := LCondicion.Evaluar(LTokens, AEvento);
       if LCondicion.IsEvaluacionNoDependeDeTokensOEvento then
       begin
-        //writeln('<TdpnTransicion.EstrategiaDisparo> --> ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens');
         ActualizarEstadoTransicionPorCondicionQueNoDependeDeTokens(LCondicion.ID, LResult);
       end;
       if not LResult then
       begin
-        //writeln('<TdpnTransicion.EstrategiaDisparo> No se han cumplido las condiciones');
         Exit;
       end;
     except
@@ -471,7 +465,6 @@ begin
       end;
     end;
   end;
-  //writeln('<TdpnTransicion.EstrategiaDisparo> Condiciones OK!');
   Result := True;
   // 3) ejecucion de acciones
   for LAccion in FAcciones do
@@ -601,6 +594,9 @@ begin
                                                                                       FLockTimer.Exit;
                                                                                     end;
                                                                                     FOnRequiereEvaluacion.Invoke(ID, Self); //requerimos reevaluacion
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+                                                                                    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.IniciarTimerReEvaluacion> requiere evaluacion');
+{$ENDIF}
                                                                                   end);
         FActivo_TimerReEvaluacion := True;
       end;
@@ -619,9 +615,19 @@ begin
 end;
 
 function TdpnTransicion.LogAsString: string;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+var
+  LTexto: string;
+{$ENDIF}
 begin
   Result := inherited + '<' + ClassName + '>' + '[IsHabilitado]' + IsHabilitado.ToString + '[IsHabilitadoParcialmente]' + IsHabilitadoParcialmente.ToString +
             '[TiempoEvaluacion]' + TiempoEvaluacion.ToString + '[TransicionesIntentadas]' + TransicionesIntentadas.ToString + '[TransicionesRealizadas]' + TransicionesRealizadas.ToString + '[IsTransicionDependeDeEvento]' + IsTransicionDependeDeEvento.ToString;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+  for LTexto in FTrazabilidad do
+  begin
+    Result := Result + #13#10 + LTexto;
+  end;
+{$ENDIF}
 end;
 
 function TdpnTransicion.ObtenerMarcadoTokens: IMarcadoTokens;
@@ -643,6 +649,9 @@ begin
   if FIsHabilitado and (not FHayAlgunaCondicionDesactivadaQueNoDependeDeToken) then
   begin
     FOnRequiereEvaluacion.Invoke(ID, Self);
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.OnCondicionContextChanged> requiere evaluacion');
+{$ENDIF}
   end;
 end;
 
@@ -727,6 +736,9 @@ begin
                begin
                  //se reintenta el disparo
                  FOnRequiereEvaluacion.Invoke(ID, Self);
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+                 FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.QueHacerTrasDisparo> requiere evaluacion 1');
+{$ENDIF}
                end
                else begin
                       //a la espera de evento
@@ -736,6 +748,9 @@ begin
              begin
                //se reintenta el disparo
                FOnRequiereEvaluacion.Invoke(ID, Self);
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+               FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.QueHacerTrasDisparo> requiere evaluacion 2');
+{$ENDIF}
              end;
          end;
       end
@@ -774,6 +789,9 @@ begin
                    begin
                      //se reintenta el disparo
                      FOnRequiereEvaluacion.Invoke(ID, Self);
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+                     FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.QueHacerTrasDisparo> requiere evaluacion 3');
+{$ENDIF}
                    end
                    else begin
                           //a la espera de que llegue un evento
