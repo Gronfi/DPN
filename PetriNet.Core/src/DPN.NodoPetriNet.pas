@@ -36,6 +36,8 @@ type
     function GetModelo: IModelo; virtual;
     procedure SetModelo(AModelo: IModelo); virtual;
 
+    function LogAsString: string; virtual;
+
     procedure Stop; virtual;
     procedure Start; virtual;
     procedure Reset; virtual;
@@ -125,6 +127,11 @@ begin
   Result := FEvento_OnReseted;
 end;
 
+function TdpnNodoPetriNet.LogAsString: string;
+begin
+  Result := '<Nodo>' + '[ID]' + ID.ToString + '[Nombre]' + Nombre + '[Enabled]' + Enabled.ToString;
+end;
+
 procedure TdpnNodoPetriNet.Reset;
 begin
   ;
@@ -162,6 +169,7 @@ end;
 
 procedure TdpnNodoPetriNet.Start;
 begin
+  Guard.CheckFalse(FNombre.IsEmpty, 'Debe tener un nombre asignado, clase:' + QualifiedClassName);
   if not FEnabled then
   begin
     FEnabled := True;

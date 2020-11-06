@@ -3,6 +3,7 @@ unit DPN.Core.Testing.PetriNetCoordinador;
 interface
 
 uses
+  System.Classes,
   System.Rtti,
   Spring.Collections,
 
@@ -17,7 +18,9 @@ uses
   DPN.Modelo,
   DPN.Variable,
   DPN.Plaza,
+  DPN.Plaza.Start,
   DPN.Plaza.Super,
+  DPN.Plaza.Finish,
   DPN.ArcoIn,
   DPN.ArcoReset,
   DPN.Condicion,
@@ -25,33 +28,60 @@ uses
   DPN.Transicion;
 
 type
+  TThreadTestModificaPlaza = class(TThread)
+    protected
+      FPlaza: IPlaza;
+      procedure Execute; override;
+    public
+      constructor Create(const APlaza: IPlaza);
+  end;
+
+//{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+//{$ENDIF}
   TPetriNetCoreTesting_PetriNet = class
   public
-    [Test]
+    //[Test]
     procedure Test_PetriNet_Arranca_Para_OK;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_Start;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_1_destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos_Varios_Tokens;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_CondicionesOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_SuperPlaza_Extrae_Token;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_ArcoReset;
-    [Test]
+    //[Test]
     procedure Test_PetriNet_Nombres;
-    [Test]
+    //[Test]
     procedure Test_Maps_vs_Diccionarios; //es un test de rendimiento, comparativa de tiempos, no de que funcionen bien
+//    [Test]
+//    [TestCase('Test=1','1')]
+//    [TestCase('Test=5','5')]
+//    [TestCase('Test=10','10')]
+//    [TestCase('Test=100','100')]
+    //[TestCase('Test=1000','1000')]
+    procedure Test_Marcado_Cambiante(const ANoEstados: integer);
+    [Test]
+    [TestCase('Test=2,1','2,1')]
+    [TestCase('Test=5,1','5,1')]
+    [TestCase('Test=10,1','10,1')]
+    [TestCase('Test=20,1','20,1')]
+    [TestCase('Test=2,5','2,5')]
+    [TestCase('Test=5,5','5,5')]
+    [TestCase('Test=10,5','10,5')]
+    [TestCase('Test=20,5','20,5')]
+    procedure Test_Evolucion_Y_Timings_Sin_Eventos(const ANoEstadosIntermedios: Integer; const ANoCiclosEjecutar: Integer);
   end;
 
 implementation
@@ -64,6 +94,212 @@ uses
   DPN.TokenColoreado;
 
 { TPetriNetCoreTesting_PetriNet }
+
+procedure TPetriNetCoreTesting_PetriNet.Test_Evolucion_Y_Timings_Sin_Eventos(const ANoEstadosIntermedios, ANoCiclosEjecutar: Integer);
+var
+  LPNet: TdpnPetriNetCoordinador;
+
+  LModelo: IModelo;
+
+  LPlazaStart : IPlaza;
+  LArcoStartI : IArcoIn;
+  LArcoStartO : IArcoOut;
+  LTransicionStart: ITransicion;
+  LPlazaFin : IPlaza;
+  LArcoFinI : IArcoIn;
+  LArcoFinO : IArcoOut;
+  LTransicionFin: ITransicion;
+
+  I : Integer;
+
+  LArcoI : IArcoIn;
+  LPlaza: IPlaza;
+  LArcoO : IArcoOut;
+  LTransicion: ITransicion;
+
+  LPlaza1 : IPlaza;
+  LArcoOBack: IArcoOut;
+
+  LFuncionF : ICondicion;
+  LEnabled : IVariable;
+  LFuncionNF: ICondicion;
+  LAccion  : IAccion;
+begin
+  LModelo        := TdpnModelo.Create;
+  LModelo.Nombre := 'Prueba.Bucle';
+
+  //funciones y acciones
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
+
+  LModelo.Elementos.Add(LEnabled);
+
+  LAccion                                                         := TdpnAccion_incrementar_tabla_variables.Create;
+  LAccion.Nombre                                                  := 'Accion_' + LAccion.ID.ToString;
+  TdpnAccion_incrementar_tabla_variables(LAccion).Variable        := LEnabled;
+  TdpnAccion_incrementar_tabla_variables(LAccion).ValorIncremento := 1;
+
+  LFuncionF                                                := TdpnCondicion_es_tabla_variables.Create;
+  LFuncionF.Nombre                                         := 'Funcion_' + LFuncionF.ID.ToString;
+  TdpnCondicion_es_tabla_variables(LFuncionF).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncionF).ValorToCheck := ANoCiclosEjecutar;
+
+  LFuncionNF                                                := TdpnCondicion_es_tabla_variables.Create;
+  LFuncionNF.Nombre                                         := 'Funcion_' + LFuncionNF.ID.ToString;
+  LFuncionNF.IsCondicionNegada                              := True;
+  TdpnCondicion_es_tabla_variables(LFuncionNF).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncionNF).ValorToCheck := ANoCiclosEjecutar;
+
+  LModelo.Elementos.Add(LAccion);
+  LModelo.Elementos.Add(LFuncionF);
+  LModelo.Elementos.Add(LFuncionNF);
+
+  //START
+  LPlazaStart           := TdpnPlazaStart.Create;
+  LPlazaStart.Nombre    := 'PlazaStart';
+
+  LArcoStartI             := TdpnArcoIn.Create;
+  LArcoStartI.Nombre      := 'ArcoStartI';
+  LArcoStartI.Plaza       := LPlazaStart;
+  LArcoStartI.Peso        := 1;
+  LArcoStartI.PesoEvaluar := 1;
+
+  LArcoStartO           := TdpnArcoOut.Create;
+  LArcoStartO.Nombre    := 'ArcoStartO';
+  LArcoStartO.Peso      := 1;
+
+  LTransicionStart           := TdpnTransicion.Create;
+  LTransicionStart.Nombre    := 'TransicionStart';
+  LTransicionStart.AddArcoIn(LArcoStartI);
+  LTransicionStart.AddArcoOut(LArcoStartO);
+
+  LModelo.Elementos.Add(LTransicionStart);
+  LModelo.Elementos.Add(LPlazaStart);
+  LModelo.Elementos.Add(LArcoStartI);
+  LModelo.Elementos.Add(LArcoStartO);
+
+  //FIN
+  LPlazaFin           := TdpnPlaza.Create;
+  LPlazaFin.Capacidad := 1;
+  LPlazaFin.Nombre    := 'PlazaFin';
+
+  LArcoFinI             := TdpnArcoIn.Create;
+  LArcoFinI.Nombre      := 'ArcoFinI';
+  //LArcoFinI.Plaza       := LPlazaFin;
+  LArcoFinI.Peso        := 1;
+  LArcoFinI.PesoEvaluar := 1;
+
+  LArcoFinO           := TdpnArcoOut.Create;
+  LArcoFinO.Nombre    := 'ArcoFinO';
+  LArcoFinO.Plaza     := LPlazaFin;
+  LArcoFinO.Peso      := 1;
+
+  LTransicionFin           := TdpnTransicion.Create;
+  LTransicionFin.Nombre    := 'TransicionFin';
+  LTransicionFin.AddArcoIn(LArcoFinI);
+  LTransicionFin.AddArcoOut(LArcoFinO);
+  LTransicionFin.AddCondicion(LFuncionF);
+
+  LModelo.Elementos.Add(LTransicionFin);
+  LModelo.Elementos.Add(LPlazaFin);
+  LModelo.Elementos.Add(LArcoFinI);
+  LModelo.Elementos.Add(LArcoFinO);
+
+  //INTERMEDIO
+  for I := 1 to ANoEstadosIntermedios do
+  begin
+    LPlaza           := TdpnPlaza.Create;
+    LPlaza.Capacidad := 1;
+    LPlaza.Nombre    := 'Plaza' + I.ToString;
+
+    LArcoI             := TdpnArcoIn.Create;
+    LArcoI.Nombre      := 'ArcoI' + I.ToString;
+    LArcoI.Plaza       := LPlaza;
+    LArcoI.Peso        := 1;
+    LArcoI.PesoEvaluar := 1;
+
+    LArcoO           := TdpnArcoOut.Create;
+    LArcoO.Nombre    := 'ArcoO' + I.ToString;
+    LArcoO.Peso      := 1;
+
+    LTransicion := TdpnTransicion.Create;
+    LTransicion.Nombre := 'Transicion' + I.ToString;
+    LTransicion.AddArcoIn(LArcoI);
+    LTransicion.AddArcoOut(LArcoO);
+
+    LModelo.Elementos.Add(LTransicion);
+    LModelo.Elementos.Add(LPlaza);
+    LModelo.Elementos.Add(LArcoI);
+    LModelo.Elementos.Add(LArcoO);
+
+    case I of
+      1:
+        begin
+          LArcoStartO.Plaza := LPlaza;
+          LArcoOBack := LArcoO;
+          LPlaza1 := LPlaza;
+          if I = ANoEstadosIntermedios then
+           begin
+             LArcoFinI.Plaza  := LPlaza;
+             LArcoOBack.Plaza := LPlaza;
+             LArcoO.Plaza     := LPlaza1; //linkar a primer estado del bucle formado
+             //agregamos funcion
+             LTransicion.AddCondicion(LFuncionNF);
+           end;
+        end;
+      else begin
+             if I = ANoEstadosIntermedios then
+             begin
+               LArcoFinI.Plaza  := LPlaza;
+               LArcoOBack.Plaza := LPlaza;
+               LArcoO.Plaza     := LPlaza1; //linkar a primer estado del bucle formado
+               //agregamos funcion
+               LTransicion.AddCondicion(LFuncionNF);
+               LTransicion.AddAccion(LAccion);
+             end
+             else begin
+                    LArcoOBack.Plaza := LPlaza;
+                    LArcoOBack := LArcoO;
+                  end;
+           end;
+    end;
+  end;
+
+  LPNet := TdpnPetriNetCoordinador.Create;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
+
+    Sleep(1000);
+
+    WriteLn('--PLAZAS--');
+    LModelo.GetPlazas.ForEach(procedure (const APlaza: IPlaza)
+                              begin
+                                WriteLn(APlaza.LogAsString);
+                              end
+                             );
+    WriteLn('--TRANSICIONES--');
+    LModelo.GetTransiciones.ForEach(procedure (const ATransicion: ITransicion)
+                              begin
+                                WriteLn(ATransicion.LogAsString);
+                              end
+                             );
+    WriteLn('--VARIABLES--');
+    LModelo.GetVariables.ForEach(procedure (const AVariable: IVariable)
+                              begin
+                                WriteLn(AVariable.LogAsString);
+                              end
+                             );
+
+    if not(LPlazaFin.TokenCount = 1) then
+      Assert.Fail('no ha transicionado bien');
+    Assert.Pass;
+  finally
+    LModelo := nil;
+    LPNet.Destroy;
+  end;
+end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_Maps_vs_Diccionarios;
 var
@@ -135,6 +371,34 @@ begin
     WriteLn('Col: ' + LVal.ToString);
 
   Assert.Pass;
+end;
+
+procedure TPetriNetCoreTesting_PetriNet.Test_Marcado_Cambiante(const ANoEstados: integer);
+var
+  LThreadsWrite: TArray<TThread>;
+  I: integer;
+  LModelo: IModelo;
+  LPNet: TdpnPetriNetCoordinador;
+  LPlaza: IPlaza;
+begin
+  Randomize;
+  LModelo := TdpnModelo.Create;
+
+  SetLength(LThreadsWrite, ANoEstados);
+  for I := 0 to ANoEstados - 1 do
+  begin
+    LPlaza           := TdpnPlaza.Create;
+    LPlaza.Nombre    := 'I' + I.ToString;
+    LPlaza.Capacidad := 1;
+    LModelo.Elementos.Add(LPlaza);
+    LThreadsWrite[I] := TThreadTestModificaPlaza.Create(LPlaza);
+    LThreadsWrite[I].FreeOnTerminate := True;
+  end;
+  for I := 0 to ANoEstados - 1 do
+  begin
+    LThreadsWrite[I].Start;
+  end;
+  Sleep(5000);
 end;
 
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_ArcoReset;
@@ -493,7 +757,7 @@ begin
       LPlazaI1.AddToken(LToken);
     end;
 
-    Sleep(100);
+    Sleep(200);
 
     Writeln('Step1 -- > I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString + ' - O2: ' + LPlazaO2.TokenCount.ToString);
     Writeln('Step1 -- > Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
@@ -507,7 +771,7 @@ begin
       LPlazaI1.AddToken(LToken);
     end;
 
-    Sleep(100);
+    Sleep(200);
 
     Writeln('Step2 -- > I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString + ' - O2: ' + LPlazaO2.TokenCount.ToString);
     Writeln('Step2 -- > Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
@@ -1062,6 +1326,7 @@ begin
 
     if LFuncionE.EventosCount <> 0 then
       Assert.Fail('no debiera tener ningun evento guardado');
+    WriteLn('PN: ' + LPNet.LogMarcado);
     Assert.Pass;
   finally
     LEnabled    := nil;
@@ -1078,8 +1343,32 @@ begin
   end;
 end;
 
+{ TThreadTestModificaPlaza }
+
+constructor TThreadTestModificaPlaza.Create(const APlaza: IPlaza);
+begin
+  inherited Create(True);
+  FPlaza := APlaza;
+end;
+
+procedure TThreadTestModificaPlaza.Execute;
+var
+  I, J : integer;
+  LToken: IToken;
+begin
+  for i := 1 to 100 do
+  begin
+    for J := 1 to Random(10) do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      FPlaza.AddToken(LToken);
+    end;
+    FPlaza.EliminarTodosTokens;
+  end;
+end;
+
 initialization
-
+//{$IFDEF TESTS_HABILITADOS}
 TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
-
+//{$ENDIF}
 end.

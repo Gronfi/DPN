@@ -3,6 +3,7 @@ unit DPN.PetriNet;
 interface
 
 uses
+  System.SyncObjs,
   System.Classes,
   System.Types,
 
@@ -19,7 +20,7 @@ type
     FEstado: EEstadoPetriNet;
     FComm: TThreadedQueue<ITransicion>;
     FMultipleEnablednessOfTransitions: Boolean;
-
+    FLock: TLightweightMREW;
     FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
 
     FNodos: IDictionary<Integer, INodoPetriNet>;
@@ -37,7 +38,7 @@ type
     function GetOnEstadoChanged: IEvent<EventoEstadoPN>;
 
     procedure DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
-    procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer);
+    procedure DoOnTokenCountChanged(const AID: integer; AMarcado: IMarcadoPlazasCantidadTokens);
 
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion): TWaitResult; overload;
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion; const ATimeOut: Cardinal): TWaitResult; overload;
@@ -60,6 +61,8 @@ type
     procedure Start;
     procedure Stop;
     procedure Reset;
+
+    function LogMarcado: string;
 
     property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
     property Grafo: IModelo read GetGrafo write SetGrafo;
@@ -105,6 +108,7 @@ begin
                                  begin
                                    FNodos[ATransicion.ID] := ATransicion;
                                    FNombresTransiciones[ATransicion.Nombre] := ATransicion.ID;
+                                   ATransicion.OnMarcadoChanged.Add(DoOnTokenCountChanged);
                                  end);
   FGrafo.GetPlazas.ForEach(
                                  procedure (const APlaza: IPlaza)
@@ -112,7 +116,7 @@ begin
                                    FNodos[APlaza.ID] := APlaza;
                                    FMarcado[APlaza.ID] := 0;
                                    FNombresEstados[APlaza.Nombre] := APlaza.ID;
-                                   APlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+                                   //APlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
                                  end);
 end;
 
@@ -148,9 +152,17 @@ begin
   WaitFor;
 end;
 
-procedure TdpnPetriNetCoordinador.DoOnTokenCountChanged(const AID, ACount: Integer);
+procedure TdpnPetriNetCoordinador.DoOnTokenCountChanged(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens);
+var
+  LPlaza: integer;
 begin
-  FMarcado[AID] := ACount;
+  FLock.BeginWrite;
+  try
+    for LPlaza in AMarcado.Marcado.Keys do
+      FMarcado[LPlaza] := AMarcado.Marcado[LPlaza];
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 procedure TdpnPetriNetCoordinador.DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
@@ -239,6 +251,16 @@ begin
                                  begin
                                    ATransicion.OnRequiereEvaluacionChanged.Add(DoOnTransicionRequiereEvaluacion)
                                  end);
+end;
+
+function TdpnPetriNetCoordinador.LogMarcado: string;
+var
+  LPlaza: integer;
+begin
+  for LPlaza in FMarcado.Keys do
+  begin
+    Result := Result + LPlaza.ToString + ' : ' + FMarcado[LPlaza].ToString + #13#10;
+  end;
 end;
 
 procedure TdpnPetriNetCoordinador.Reset;

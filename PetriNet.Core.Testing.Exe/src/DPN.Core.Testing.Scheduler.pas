@@ -25,7 +25,9 @@ uses
   DPN.Core.Scheduler;
 
 type
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_Scheduler = class
   public
     [Test]
@@ -542,7 +544,7 @@ begin
 end;
 
 initialization
-
+{$IFDEF TESTS_HABILITADOS}
 TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Scheduler);
-
+{$ENDIF}
 end.

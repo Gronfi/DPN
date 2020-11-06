@@ -23,6 +23,8 @@ type
   public
     constructor Create; override;
 
+    function LogAsString: string; override;
+
     property Valor: TValue read GetValor write SetValor;
     property OnValueChanged: IEvent<EventoNodoPN_ValorTValue> read GetOnValueChanged;
   end;
@@ -49,6 +51,11 @@ end;
 function TdpnVariable.GetValor: TValue;
 begin
   Result := FValor;
+end;
+
+function TdpnVariable.LogAsString: string;
+begin
+  Result := inherited + '<' + ClassName + '>' + '[Valor]' + Valor.ToString;
 end;
 
 procedure TdpnVariable.SetValor(const Value: TValue);

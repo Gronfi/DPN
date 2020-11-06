@@ -13,24 +13,22 @@ type
   TdpnPlazaStart = class (TdpnPlaza)
   protected
     FEjecutado: Boolean;
+    FGenerarTokenDeSistema: Boolean;
+
+    function GetCapacidad: Integer; override;
+
+    function GetGenerarTokensDeSistema: Boolean;
+    procedure SetGenerarTokensDeSistema(const Value: Boolean);
 
     function GetAceptaArcosOUT: Boolean; override;
     procedure CrearToken;
   public
     constructor Create; override;
 
+    procedure Start; override;
     procedure Reset; override;
 
-    procedure AddToken(AToken: IToken); override;
-    procedure AddTokens(ATokens: TListaTokens); overload; override;
-    procedure AddTokens(ATokens: TArrayTokens); overload; override;
-
-    procedure AddPreCondicion(ACondicion: ICondicion); override;
-    procedure AddPreCondiciones(ACondiciones: TCondiciones); overload; override;
-    procedure AddPreCondiciones(ACondiciones: TArrayCondiciones); overload; override;
-    procedure EliminarPreCondicion(ACondicion: ICondicion); override;
-    procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; override;
-    procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; override;
+    property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
 implementation
@@ -39,36 +37,6 @@ uses
   DPN.TokenSistema;
 
 { TdpnPlazaStart }
-
-procedure TdpnPlazaStart.AddPreCondicion(ACondicion: ICondicion);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.AddPreCondiciones(ACondiciones: TArrayCondiciones);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.AddPreCondiciones(ACondiciones: TCondiciones);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.AddToken(AToken: IToken);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.AddTokens(ATokens: TListaTokens);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.AddTokens(ATokens: TArrayTokens);
-begin
-  ;
-end;
 
 procedure TdpnPlazaStart.CrearToken;
 var
@@ -86,22 +54,7 @@ constructor TdpnPlazaStart.Create;
 begin
   inherited;
   FEjecutado := False;
-  CrearToken;
-end;
-
-procedure TdpnPlazaStart.EliminarPreCondicion(ACondicion: ICondicion);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.EliminarPreCondiciones(ACondiciones: TCondiciones);
-begin
-  ;
-end;
-
-procedure TdpnPlazaStart.EliminarPreCondiciones(ACondiciones: TArrayCondiciones);
-begin
-  ;
+  FGenerarTokenDeSistema := False;
 end;
 
 function TdpnPlazaStart.GetAceptaArcosOut: Boolean;
@@ -109,10 +62,31 @@ begin
   Result := False;
 end;
 
+function TdpnPlazaStart.GetCapacidad: Integer;
+begin
+  Result := 1;
+end;
+
+function TdpnPlazaStart.GetGenerarTokensDeSistema: Boolean;
+begin
+  Result := FGenerarTokenDeSistema
+end;
+
 procedure TdpnPlazaStart.Reset;
 begin
   FEjecutado := False;
   CrearToken;
+end;
+
+procedure TdpnPlazaStart.SetGenerarTokensDeSistema(const Value: Boolean);
+begin
+  FGenerarTokenDeSistema := Value;
+end;
+
+procedure TdpnPlazaStart.Start;
+begin
+  CrearToken;
+  inherited;
 end;
 
 end.

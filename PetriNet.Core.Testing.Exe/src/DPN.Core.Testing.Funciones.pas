@@ -39,7 +39,28 @@ type
     property ValorToSet: TValue read GetValorToSet write SetValorToSet;
   end;
 
+  TdpnAccion_incrementar_tabla_variables = class(TdpnAccion)
+  protected
+    FVariable: IVariable;
+    FValor: TValue;
+
+    function GetDependencias: IList<IBloqueable>; override;
+
+    function GetVariable: IVariable;
+    procedure SetVariable(AVariable: IVariable);
+
+    function GetValorAIncrementar: TValue;
+    procedure SetValorAIncrementar(const AValue: TValue);
+
+  public
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); override;
+
+    property Variable: IVariable read GetVariable write SetVariable;
+    property ValorIncremento: TValue read GetValorAIncrementar write SetValorAIncrementar;
+  end;
+
   TdpnCondicion_es_tabla_variables = class(TdpnCondicion)
+  private
   protected
     FVariable: IVariable;
     FValor: TValue;
@@ -54,10 +75,8 @@ type
 
     procedure DoOnVarChanged(const AID: Integer; const AValue: TValue);
 
-    function EvaluarInterno: Boolean;
-
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
   public
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorToCheck: TValue read GetValorToCheck write SetValorToCheck;
@@ -80,15 +99,18 @@ type
   TdpnCondicion_Evento_Prueba = class(TdpnCondicionBaseEsperaEvento)
   protected
     FNumero: integer;
+
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
   public
     function DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean; override;
     function CrearListenerEvento: IEventEEListener; override;
 
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; overload; override;
     property Numero: integer read FNumero write FNumero;
   end;
 
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_Funciones = class
   private
     FID      : Integer;
@@ -133,18 +155,12 @@ uses
 
 { TdpnCondicion_es_tabla_variables }
 
-function TdpnCondicion_es_tabla_variables.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
-begin
-  //WriteLn('<TdpnCondicion_es_tabla_variables.Evaluar>');
-  Result := EvaluarInterno
-end;
-
 procedure TdpnCondicion_es_tabla_variables.DoOnVarChanged(const AID: Integer; const AValue: TValue);
 begin
   OnContextoCondicionChanged.Invoke(ID);
 end;
 
-function TdpnCondicion_es_tabla_variables.EvaluarInterno: Boolean;
+function TdpnCondicion_es_tabla_variables.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
   Result := (FVariable.Valor.AsInteger = FValor.AsInteger)
 end;
@@ -420,9 +436,8 @@ begin
   Result := TEventoPrueba(AEvento).Numero = FNumero
 end;
 
-function TdpnCondicion_Evento_Prueba.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
+function TdpnCondicion_Evento_Prueba.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
-  //WriteLn('<TdpnCondicion_Evento_Prueba.Evaluar>');
   Result := TEventoPrueba(AEvento).Texto = 'Hola';
 end;
 
@@ -470,7 +485,45 @@ begin
   Result := False;
 end;
 
-initialization
-  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Funciones);
+{ TdpnAccion_incrementar_tabla_variables }
 
+procedure TdpnAccion_incrementar_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE);
+begin
+  FVariable.Valor:= FVariable.Valor.AsInteger + FValor.AsInteger;
+end;
+
+function TdpnAccion_incrementar_tabla_variables.GetDependencias: IList<IBloqueable>;
+begin
+  Result := TCollections.CreateList<IBloqueable>;
+  if Assigned(FVariable) then
+    Result.Add(FVariable);
+end;
+
+function TdpnAccion_incrementar_tabla_variables.GetValorAIncrementar: TValue;
+begin
+  Result := FValor;
+end;
+
+function TdpnAccion_incrementar_tabla_variables.GetVariable: IVariable;
+begin
+  Result := FVariable;
+end;
+
+procedure TdpnAccion_incrementar_tabla_variables.SetValorAIncrementar(const AValue: TValue);
+begin
+  FValor := AValue;
+end;
+
+procedure TdpnAccion_incrementar_tabla_variables.SetVariable(AVariable: IVariable);
+begin
+  if FVariable <> AVariable then
+  begin
+    FVariable := AVariable;
+  end
+end;
+
+initialization
+{$IFDEF TESTS_HABILITADOS}
+  TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Funciones);
+{$ENDIF}
 end.

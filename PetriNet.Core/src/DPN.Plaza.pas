@@ -35,6 +35,9 @@ type
     function GetPreAcciones: IList<IAccion>; virtual;
 
     procedure Reset; override;
+    procedure Start; override;
+
+    function LogAsString: string; override;
 
     procedure AddToken(AToken: IToken); virtual;
     procedure AddTokens(ATokens: TListaTokens); overload; virtual;
@@ -74,6 +77,8 @@ type
 implementation
 
 uses
+  System.SysUtils,
+
   DPN.Core;
 
 { TdpnPlaza }
@@ -235,6 +240,11 @@ begin
   Result := FTokens.AsReadOnly
 end;
 
+function TdpnPlaza.LogAsString: string;
+begin
+  Result := inherited + '<' + ClassName + '>' + '[Capacidad]' + Capacidad.ToString + '[TokenCount]' + TokenCount.ToString;
+end;
+
 procedure TdpnPlaza.Reset;
 begin
   FTokens.Clear;
@@ -245,6 +255,12 @@ procedure TdpnPlaza.SetCapacidad(const Value: integer);
 begin
   Guard.CheckTrue(Value > 0, 'La capacidad debe ser > 0');
   FCapacidad := Value;
+  FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+end;
+
+procedure TdpnPlaza.Start;
+begin
+  inherited;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 

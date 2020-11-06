@@ -41,6 +41,7 @@ type
     FLock: TSpinLock;
     FLockTimer: TSpinLock;
 
+    FMarcadoEstados: IDictionary<integer, integer>;
     FEstadosHabilitacion: IDictionary<integer, boolean>;
     FEstadoCondicionesNoDependenDeToken: IDictionary<integer, boolean>;
 
@@ -54,8 +55,11 @@ type
     FArcosOutPreparadas: IReadOnlyList<IArcoOut>;
 
     FOnRequiereEvaluacion: IEvent<EventoNodoPN_Transicion>;
+    FEventoOnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount>;
 
-    function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>; virtual;
+    function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
+    function GetOnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount>;
+
     function GetIsTransicionDependeDeEvento: Boolean; virtual;
 
     function GetIsHabilitado: Boolean; virtual;
@@ -76,13 +80,16 @@ type
     procedure OnCondicionContextChanged(const AID: integer); virtual;
     procedure OnHabilitacionChanged(const AID: integer; const AValue: boolean); virtual;
 
+    procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer); virtual;
+
     procedure PrepararPreCondicionesSiguientesEstados;
 
-    procedure AgregarDependencia(ADependencia: IBloqueable);
-    procedure AgregarDependencias(ADependencias: IList<IBloqueable>);
-    procedure PreparacionDependencias;
-    procedure CapturarDependencias;
-    procedure LiberarDependencias;
+    procedure AgregarDependencia(ADependencia: IBloqueable); virtual;
+    procedure AgregarDependencias(ADependencias: IList<IBloqueable>); virtual;
+    procedure PreparacionDependencias; virtual;
+    procedure CapturarDependencias; virtual;
+    procedure LiberarDependencias; virtual;
+    procedure AsociacionPlazasTokens; virtual;
 
     procedure IniciarTimerReEvaluacion; virtual;
     procedure DetenerTimerReEvaluacion; virtual;
@@ -118,7 +125,7 @@ type
     procedure Stop; override;
     procedure Reset; override;
 
-    function DebugLog: string;
+    function LogAsString: string; override;
 
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsHabilitadoParcialmente: Boolean read GetIsHabilitadoParcialmente;
@@ -133,6 +140,7 @@ type
     property TransicionesIntentadas: int64 read GetTransicionesIntentadas;
     property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
 
+    property OnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount> read GetOnMarcadoChanged;
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
     property IsTransicionDependeDeEvento: Boolean read GetIsTransicionDependeDeEvento;
   end;
@@ -143,6 +151,7 @@ uses
   System.SysUtils,
   System.Math,
 
+  DPN.MarcadoPlazasCantidadTokens,
   DPN.MarcadoTokens,
   DPN.Core;
 
@@ -236,6 +245,22 @@ begin
     AgregarDependencia(LBloqueable);
 end;
 
+procedure TdpnTransicion.AsociacionPlazasTokens;
+var
+  LArco: IArco;
+begin
+  for LArco in FArcosIN do
+  begin
+    FMarcadoEstados[LArco.ID] := LArco.Plaza.TokenCount;
+    LArco.Plaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+  end;
+  for LArco in FArcosOUT do
+  begin
+    FMarcadoEstados[LArco.ID] := LArco.Plaza.TokenCount;
+    LArco.Plaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+  end;
+end;
+
 procedure TdpnTransicion.CalcularPosibleCambioContexto(const AID: integer);
 begin
   //writeln('<TdpnTransicion.CalcularPosibleCambioContexto> I: ' + FHayAlgunaCondicionDesactivadaQueNoDependeDeToken.ToString);
@@ -278,14 +303,11 @@ begin
   FEstadosHabilitacion := TCollections.CreateDictionary<integer, boolean>;
   FEstadoCondicionesNoDependenDeToken := TCollections.CreateDictionary<integer, boolean>;
   FDependencias := TCollections.CreateList<IBloqueable>;
+  FMarcadoEstados := TCollections.CreateDictionary<integer, integer>;
   FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
+  FEventoOnMarcadoChanged := DPNCore.CrearEvento<EventoNodoPN_MarcadoPlazasTokenCount>;
   FID_TimerReEvaluacion := 0;
   FActivo_TimerReEvaluacion := False;
-end;
-
-function TdpnTransicion.DebugLog: string;
-begin
-  Result := '';
 end;
 
 destructor TdpnTransicion.Destroy;
@@ -306,6 +328,11 @@ begin
   finally
     FLockTimer.Exit;
   end;
+end;
+
+procedure TdpnTransicion.DoOnTokenCountChanged(const AID, ACount: Integer);
+begin
+  FMarcadoEstados[AID] := ACount;
 end;
 
 function TdpnTransicion.EjecutarTransicion: Boolean;
@@ -413,6 +440,7 @@ var
   LResult: Boolean;
   LArcoIn: IArcoIn;
   LArcoOut: IArcoOut;
+  LMarcadoNotificacion: IMarcadoPlazasCantidadTokens;
 begin
   //writeln('<TdpnTransicion.EstrategiaDisparo>');
   Result := False;
@@ -478,6 +506,10 @@ begin
     end;
     LArcoOut.DoOnTransicionando(LTokensOut);
   end;
+  //notificacion de transaccion, cambio de tokens
+  LMarcadoNotificacion := TdpnMarcadoPlazasCantidadTokens.Create;
+  LMarcadoNotificacion.AddTokensPlazas(FMarcadoEstados);
+  FEventoOnMarcadoChanged.Invoke(ID, LMarcadoNotificacion);
 end;
 
 function TdpnTransicion.GetAcciones: IReadOnlyList<IAccion>;
@@ -519,6 +551,11 @@ end;
 function TdpnTransicion.GetIsTransicionDependeDeEvento: Boolean;
 begin
   Result := FIsTransicionDependeDeEvento
+end;
+
+function TdpnTransicion.GetOnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount>;
+begin
+  Result := FEventoOnMarcadoChanged
 end;
 
 function TdpnTransicion.GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
@@ -579,6 +616,12 @@ var
 begin
   for LBloqueable in FDependencias do
     LBloqueable.ReleaseLock;
+end;
+
+function TdpnTransicion.LogAsString: string;
+begin
+  Result := inherited + '<' + ClassName + '>' + '[IsHabilitado]' + IsHabilitado.ToString + '[IsHabilitadoParcialmente]' + IsHabilitadoParcialmente.ToString +
+            '[TiempoEvaluacion]' + TiempoEvaluacion.ToString + '[TransicionesIntentadas]' + TransicionesIntentadas.ToString + '[TransicionesRealizadas]' + TransicionesRealizadas.ToString + '[IsTransicionDependeDeEvento]' + IsTransicionDependeDeEvento.ToString;
 end;
 
 function TdpnTransicion.ObtenerMarcadoTokens: IMarcadoTokens;
@@ -787,6 +830,8 @@ begin
   //Dependencias
   PreparacionDependencias;
 
+  //Asociacion plazas-tokens
+  AsociacionPlazasTokens;
   //Evento?
   FIsTransicionDependeDeEvento := FCondiciones.Any(
                                                      function (const ACondicion: ICondicion): Boolean
