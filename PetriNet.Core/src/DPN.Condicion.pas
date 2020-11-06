@@ -14,6 +14,7 @@ type
   TdpnCondicion = class abstract(TdpnNodoPetriNet, ICondicion)
   protected
     FTransicion: ITransicion;
+    FIsCondicionNegada: Boolean;
     FEventoOnContextoCondicionChanged: IEvent<EventoNodoPN>;
 
     function GetDependencias: IList<IBloqueable>; virtual;
@@ -28,8 +29,13 @@ type
     function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; virtual;
     function GetIsCondicionQueEsperaEvento: Boolean; virtual;
 
+    function GetIsCondicionNegada: boolean; virtual;
+    procedure SetIsCondicionNegada(const Valor: Boolean); virtual;
+
     function GetTransicion: ITransicion; virtual;
     procedure SetTransicion(const Value: ITransicion); virtual;
+
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean; virtual;
 
     procedure DoNotificarOncontextoCondicionChanged; virtual;
   public
@@ -39,7 +45,7 @@ type
     procedure RemovePrimerEvento; virtual;
     function GetPrimerEvento: IEventEE; virtual;
 
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean; virtual;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
 
     property Dependencias: IList<IBloqueable> read GetDependencias;
     property Transicion: ITransicion read GetTransicion write SetTransicion;
@@ -47,6 +53,7 @@ type
     property IsRecursiva: boolean read GetIsRecursiva;
     property IsEvaluacionNoDependeDeTokensOEvento: boolean read GetIsEvaluacionNoDependeDeTokensOEvento;
     property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
+    property IsCondicionNegada: boolean read GetIsCondicionNegada write SetIsCondicionNegada;
     property ListenerEventoHabilitado: Boolean read GetEventoHabilitado write SetEventoHabilitado;
     property EventosCount: integer read GetEventosCount;
   end;
@@ -94,6 +101,7 @@ constructor TdpnCondicion.Create;
 begin
   inherited;
   FEventoOnContextoCondicionChanged := DPNCore.CrearEvento<EventoNodoPN>;
+  FIsCondicionNegada := False;
 end;
 
 procedure TdpnCondicion.DoNotificarOncontextoCondicionChanged;
@@ -102,6 +110,14 @@ begin
 end;
 
 function TdpnCondicion.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
+begin
+  case FIsCondicionNegada of
+    True: Result := not EvaluarInternal(ATokens, AEvento);
+    False: Result := EvaluarInternal(ATokens, AEvento)
+  end;
+end;
+
+function TdpnCondicion.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
 begin
   Result := False;
 end;
@@ -119,6 +135,11 @@ end;
 function TdpnCondicion.GetEventosCount: integer;
 begin
   Result := 0;
+end;
+
+function TdpnCondicion.GetIsCondicionNegada: boolean;
+begin
+  Result := FIsCondicionNegada;
 end;
 
 function TdpnCondicion.GetIsCondicionQueEsperaEvento: Boolean;
@@ -159,7 +180,15 @@ end;
 procedure TdpnCondicion.SetEventoHabilitado(const AValor: Boolean);
 begin
   ;
+end;procedure TdpnCondicion.SetIsCondicionNegada(const Valor: Boolean);
+begin
+  if FIsCondicionNegada <> Valor then
+  begin
+    FIsCondicionNegada := Valor;
+  end;
 end;
+
+
 
 procedure TdpnCondicion.SetTransicion(const Value: ITransicion);
 begin

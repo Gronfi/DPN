@@ -47,6 +47,8 @@ type
     constructor Create; override;
     destructor Destroy; override;
 
+    procedure Start; override;
+
     procedure DoOnTransicionando(ATokens: TListaTokens); overload; virtual; abstract;
     procedure DoOnTransicionando(ATokens: TArrayTokens); overload; virtual; abstract;
 
@@ -176,9 +178,12 @@ begin
   begin
     FPlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
     FPlaza.OnEnabledChanged.Add(DoOnPlazaEnabledChanged);
-    Evaluar(FPlaza.TokenCount);
-    if FPlaza.TokenCount <> 0 then
-      FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+    if Enabled and Plaza.Enabled then
+    begin
+      Evaluar(FPlaza.TokenCount);
+      if FPlaza.TokenCount <> 0 then
+        FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+    end;
   end;
 end;
 
@@ -201,6 +206,20 @@ begin
   FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
   if Assigned(FPlaza) then
     Evaluar(FPlaza.TokenCount);
+end;
+
+procedure TdpnArco.Start;
+begin
+  inherited;
+  if Assigned(FPlaza) then
+  begin
+    if FPlaza.Enabled then
+    begin
+      Evaluar(FPlaza.TokenCount);
+      if FPlaza.TokenCount <> 0 then
+        FEventoOnHabilitacionChanged.Invoke(ID, GetIsHabilitado);
+    end;
+  end;
 end;
 
 end.

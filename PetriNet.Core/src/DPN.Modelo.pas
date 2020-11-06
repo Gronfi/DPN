@@ -42,7 +42,9 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+
+  Event.Engine.Utils;
 
 { TdpnModelo }
 
@@ -207,6 +209,7 @@ begin
   inherited;
   for LNodo in FElementos do
   begin
+    Utils.IdeDebugMsg(LNodo.Nombre);
     LNodo.Start;
   end;
 end;

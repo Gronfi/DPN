@@ -19,7 +19,9 @@ uses
   DPN.Transicion;
 
 type
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_Transicion = class
   public
     [Test]
@@ -1009,6 +1011,7 @@ begin
 end;
 
 initialization
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Transicion);
-
+{$ENDIF}
 end.

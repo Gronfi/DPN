@@ -22,7 +22,9 @@ uses
   DPN.Variable;
 
 type
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_Plazas = class
   private
     FID      : Integer;
@@ -231,5 +233,7 @@ begin
 end;
 
 initialization
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
+{$ENDIF}
 end.

@@ -29,6 +29,7 @@ type
   TAcciones = IList<IAccion>;
   TArrayAcciones = TArray<IAccion>;
 
+  IMarcadoPlazasCantidadTokens = interface;
   IModelo = interface;
 
   IToken = interface;
@@ -43,6 +44,7 @@ type
   EventoNodoPN_ValorString = procedure(const AID: Integer; const AValue: String) of object;
   EventoNodoPN_ValorTValue = procedure(const AID: Integer; const AValue: TValue) of object;
   EventoNodoPN_Transicion = procedure(const AID: Integer; ATransicion: ITransicion) of object;
+  EventoNodoPN_MarcadoPlazasTokenCount = procedure(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens) of object;
 
   IIdentificado = interface
   ['{67839BCB-0819-419C-A78F-CA92566D3491}']
@@ -78,6 +80,8 @@ type
     procedure Stop;
     procedure Start;
     procedure Reset;
+
+    function LogAsString: string;
 
     property Enabled: boolean read GetEnabled;
     property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
@@ -228,6 +232,9 @@ type
     function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean;
     function GetIsCondicionQueEsperaEvento: Boolean;
 
+    function GetIsCondicionNegada: boolean;
+    procedure SetIsCondicionNegada(const Valor: Boolean);
+
     function GetEventoHabilitado: Boolean;
     procedure SetEventoHabilitado(const AValor: Boolean);
 
@@ -249,6 +256,7 @@ type
     property IsEvaluacionNoDependeDeTokensOEvento: boolean read GetIsEvaluacionNoDependeDeTokensOEvento;
 
     property IsCondicionQueEsperaEvento: boolean read GetIsCondicionQueEsperaEvento;
+    property IsCondicionNegada: boolean read GetIsCondicionNegada write SetIsCondicionNegada;
     property ListenerEventoHabilitado: Boolean read GetEventoHabilitado write SetEventoHabilitado;
     property EventosCount: integer read GetEventosCount;
   end;
@@ -280,6 +288,7 @@ type
     function GetTransicionesRealizadas: int64;
 
     function GetOnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion>;
+    function GetOnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount>;
 
     function GetArcosIn: IReadOnlyList<IArcoIn>;
     function GetArcosOut: IReadOnlyList<IArcoOut>;
@@ -301,8 +310,6 @@ type
     procedure AddArcoOut(AArco: IArcoOut);
     procedure EliminarArcoOut(AArco: IArcoOut);
 
-    function DebugLog: string;
-
     property IsHabilitado: Boolean read GetIsHabilitado;
     property IsHabilitadoParcialmente: Boolean read GetIsHabilitadoParcialmente;
     property TiempoEvaluacion: integer read GetTiempoEvaluacion write SetTiempoEvaluacion;
@@ -316,6 +323,7 @@ type
     property TransicionesIntentadas: int64 read GetTransicionesIntentadas;
     property TransicionesRealizadas: int64 read GetTransicionesRealizadas;
 
+    property OnMarcadoChanged: IEvent<EventoNodoPN_MarcadoPlazasTokenCount> read GetOnMarcadoChanged;
     property OnRequiereEvaluacionChanged: IEvent<EventoNodoPN_Transicion> read GetOnRequiereEvaluacionChanged;
     property IsTransicionDependeDeEvento: Boolean read GetIsTransicionDependeDeEvento;
   end;
@@ -359,6 +367,17 @@ type
     procedure Clear;
 
     property Marcado: IDictionary<IPlaza, IList<IToken>> read GetMarcado;
+    property TokenCount: Integer read GetTokenCount;
+  end;
+
+  IMarcadoPlazasCantidadTokens = interface
+    function GetTokenCount: Integer;
+    function GetMarcado: IDictionary<Integer, Integer>;
+
+    procedure AddTokensPlaza(APlazaID: integer; ATokensCount: integer);
+    procedure AddTokensPlazas(AMarcado: IDictionary<Integer, Integer>);
+
+    property Marcado: IDictionary<Integer, Integer> read GetMarcado;
     property TokenCount: Integer read GetTokenCount;
   end;
 

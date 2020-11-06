@@ -12,7 +12,9 @@ uses
   DPN.Variable;
 
 type
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_Variables = class
   private
     FEnabled : IVariable;
@@ -63,6 +65,7 @@ begin
 end;
 
 initialization
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Variables);
-
+{$ENDIF}
 end.

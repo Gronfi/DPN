@@ -1,5 +1,7 @@
 program PetriNetCoreTesting;
 
+{$UNDEF TESTS_HABILITADOS}
+
 {$UNDEF TESTINSIGHT}
 {$UNDEF CI}
 
@@ -47,7 +49,8 @@ uses
   DPN.Plaza.Super in '..\PetriNet.Core\src\DPN.Plaza.Super.pas',
   DPN.Core.Testing.Scheduler in 'src\DPN.Core.Testing.Scheduler.pas',
   DPN.Core.Scheduler in '..\PetriNet.Core\src\DPN.Core.Scheduler.pas',
-  DPN.Plaza.Finish in '..\PetriNet.Core\src\DPN.Plaza.Finish.pas';
+  DPN.Plaza.Finish in '..\PetriNet.Core\src\DPN.Plaza.Finish.pas',
+  DPN.MarcadoPlazasCantidadTokens in '..\PetriNet.Core\src\DPN.MarcadoPlazasCantidadTokens.pas';
 
 var
   runner: ITestRunner;
