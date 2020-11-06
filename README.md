@@ -35,11 +35,13 @@
 * Testeando las partes básicas
 
 ### Caracteristicas
-* Evolución de tokens coloreados y de sistema
+* Partial High Level Petri Net
+* Evolución de tokens coloreados (arrastran valores) y de tokens de sistema (no arrastran valores)
 * Multiples disparos de transiciones concurrentes
 * Transiciones condicionadas, hay condiciones a cumplir y acciones a ejecutar en caso de que la transición se dispare
 * Arcos inhibidores y arcos de reset
 * Superplazas: plazas que contienen a otras plazas y provocan una herencia de comportamientos
+* Capacidad finita de la red de petri
 
 ### Pendiente (mucho)
 * terminar unittesting del core: integración eventos

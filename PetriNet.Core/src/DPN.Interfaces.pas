@@ -54,7 +54,6 @@ type
     property ID: integer read GetID write SetID;
   end;
 
-
   INombrado = interface(IIdentificado)
   ['{73DF6D15-DAB3-459A-9A58-F5D3CD2CA4A5}']
     function GetNombre: string;
