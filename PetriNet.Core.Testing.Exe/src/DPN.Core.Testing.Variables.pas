@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.Variables;
 
 interface

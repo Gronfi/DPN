@@ -79,6 +79,7 @@ implementation
 uses
   System.SysUtils,
 
+  Event.Engine.Utils,
   DPN.Core;
 
 { TdpnPlaza }
@@ -116,12 +117,17 @@ end;
 procedure TdpnPlaza.AddToken(AToken: IToken);
 begin
   FTokens.Add(AToken);
+  AToken.Plaza := Self;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
 procedure TdpnPlaza.AddTokens(ATokens: TArrayTokens);
+var
+  I: Integer;
 begin
   FTokens.AddRange(ATokens);
+  for I := Low(ATokens) to High(ATokens) do
+    ATokens[I].Plaza := Self;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
@@ -232,7 +238,9 @@ end;
 
 function TdpnPlaza.GetTokenCount: Integer;
 begin
-  Result := FTokens.Count
+  if not Enabled then
+    Result := 0
+  else Result := FTokens.Count
 end;
 
 function TdpnPlaza.GetTokens: IReadOnlyList<IToken>;

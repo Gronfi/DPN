@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.PetriNetCoordinador;
 
 interface
@@ -36,42 +37,41 @@ type
       constructor Create(const APlaza: IPlaza);
   end;
 
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-//{$ENDIF}
+{$ENDIF}
   TPetriNetCoreTesting_PetriNet = class
   public
-    //[Test]
+    [Test]
     procedure Test_PetriNet_Arranca_Para_OK;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_Start;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_1_destino;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ASignacionGrafo_TransicionSimple_1_origen_2_destinos_Varios_Tokens;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_CondicionesOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_PrimerToken_CondicionesOK_SegundoToken_CondicionesNoOK_Varios_Eventos_1_Estado_Origen_1_Estado_Destino;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_SuperPlaza_Extrae_Token;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_ArcoReset;
-    //[Test]
+    [Test]
     procedure Test_PetriNet_Nombres;
-    //[Test]
+    (*[Test]*)
     procedure Test_Maps_vs_Diccionarios; //es un test de rendimiento, comparativa de tiempos, no de que funcionen bien
-//    [Test]
-//    [TestCase('Test=1','1')]
-//    [TestCase('Test=5','5')]
-//    [TestCase('Test=10','10')]
-//    [TestCase('Test=100','100')]
-    //[TestCase('Test=1000','1000')]
-    procedure Test_Marcado_Cambiante(const ANoEstados: integer);
+    (*[Test]
+    [TestCase('Test=1','1')]
+    [TestCase('Test=5','5')]
+    [TestCase('Test=10','10')]
+    [TestCase('Test=100','100')]*)
+    procedure Test_Marcado_Cambiante(const ANoEstados: integer); //no es un test real
     [Test]
     [TestCase('Test=2,1','2,1')]
     [TestCase('Test=5,1','5,1')]
@@ -273,6 +273,12 @@ begin
 
     Sleep(1000);
 
+    WriteLn('--ARCOS--');
+    LModelo.GetArcos.ForEach(procedure (const AArco: IArco)
+                              begin
+                                WriteLn(AArco.LogAsString);
+                              end
+                             );
     WriteLn('--PLAZAS--');
     LModelo.GetPlazas.ForEach(procedure (const APlaza: IPlaza)
                               begin
@@ -656,6 +662,14 @@ begin
   LTransicion.AddArcoOut(LArcoO2);
 
   LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LPlazaO2);
+  LModelo.Elementos.Add(LArcoO2);
+
+
   LPNet := TdpnPetriNetCoordinador.Create;
   try
     // LPNet.MultipleEnablednessOfTransitions := False;
@@ -771,7 +785,7 @@ begin
       LPlazaI1.AddToken(LToken);
     end;
 
-    Sleep(200);
+    Sleep(500);
 
     Writeln('Step2 -- > I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString + ' - O2: ' + LPlazaO2.TokenCount.ToString);
     Writeln('Step2 -- > Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
@@ -878,7 +892,7 @@ begin
     TEventoPrueba(LEvento).Texto  := 'Hola';
     LEvento.Post;
 
-    Sleep(10);
+    Sleep(500);
 
     Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString);
     Writeln('Datos: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
@@ -1368,7 +1382,7 @@ begin
 end;
 
 initialization
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
 TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_PetriNet);
-//{$ENDIF}
+{$ENDIF}
 end.

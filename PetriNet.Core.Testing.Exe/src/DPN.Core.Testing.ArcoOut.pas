@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.ArcoOut;
 
 interface
@@ -66,10 +67,13 @@ begin
   FPlaza   := TdpnPlaza.Create;
   FPlaza.Nombre    := 'D';
   FPlaza.Capacidad := 1;
+  FPlaza.Start;
 
   FArco                        := TdpnArcoOut.Create;
+  FArco.Nombre                 := 'ArcoOut';
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
+  FArco.Start;
 
   FArco.OnHabilitacionChanged.Add(DoOnHabilitacionChanged);
 

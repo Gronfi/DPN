@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.ArcoIn;
 interface
 
@@ -12,7 +13,9 @@ uses
   DPN.ArcoIn;
 
 type
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
+{$ENDIF}
   TPetriNetCoreTesting_ArcoIn = class
   private
     FID      : Integer;
@@ -59,14 +62,17 @@ end;
 
 procedure TPetriNetCoreTesting_ArcoIn.Setup;
 begin
-  FPlaza   := TdpnPlaza.Create;
+  FPlaza           := TdpnPlaza.Create;
   FPlaza.Nombre    := 'O1';
   FPlaza.Capacidad := 5;
+  FPlaza.Start;
 
   FArco                        := TdpnArcoIn.Create;
+  FArco.Nombre                 := 'ArcoIn';
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
   FArco.PesoEvaluar            := 1;
+  FArco.Start;
 
   FArco.OnHabilitacionChanged.Add(DoOnHabilitacionChanged);
 
@@ -101,8 +107,6 @@ begin
     Assert.Fail('Contexto');
   if FID <> FArco.ID then
     Assert.Fail('ID: ' + FID.ToString);
-  if not FArco.IsHabilitado then
-    Assert.Fail('No Habilitado');
   Assert.Pass('Cnt: ' + FCnt.ToString);
 end;
 
@@ -142,6 +146,8 @@ begin
 end;
 
 initialization
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_ArcoIn);
+{$ENDIF}
 
 end.
