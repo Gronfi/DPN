@@ -1,7 +1,5 @@
 program PetriNetCoreTesting;
 
-{$UNDEF TESTS_HABILITADOS}
-
 {$UNDEF TESTINSIGHT}
 {$UNDEF CI}
 

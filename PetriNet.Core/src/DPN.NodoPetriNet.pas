@@ -30,6 +30,7 @@ type
     function GetNombre: string; virtual;
     procedure SetNombre(const Valor: string); virtual;
     function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>; virtual;
+    function GetDefaultNombre: String; virtual;
 
     procedure DoOnNombreModeloChanged(const AID: integer; const ANombre: string); virtual;
 
@@ -68,6 +69,7 @@ constructor TdpnNodoPetriNet.Create;
 begin
   inherited;
   FID := DPNCore.GetNuevoID;
+  FNombre := GetDefaultNombre;
   FEnabled := False;
   FIsEnWarning := True;
   FEvento_OnEnabledChanged := DPNCore.CrearEvento<EventoNodoPN_ValorBooleano>;
@@ -83,6 +85,11 @@ end;
 procedure TdpnNodoPetriNet.DoOnNombreModeloChanged(const AID: integer; const ANombre: string);
 begin
 
+end;
+
+function TdpnNodoPetriNet.GetDefaultNombre: String;
+begin
+  Result := ClassName + '_' + ID.ToString;
 end;
 
 function TdpnNodoPetriNet.GetEnabled: Boolean;

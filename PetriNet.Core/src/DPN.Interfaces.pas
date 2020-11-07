@@ -59,6 +59,8 @@ type
     function GetNombre: string;
     procedure SetNombre(const Valor: string);
 
+    function GetDefaultNombre: String;
+
     function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>;
 
     function GetModelo: IModelo;
@@ -335,9 +337,17 @@ type
     function GetPlaza: IPlaza;
     procedure SetPlaza(APlaza: IPlaza);
 
+    function GetCantidadCambiosPlaza: int64;
+
+    function GetMomentoCreacion: int64;
+
+    function GetMomentoCambioPlaza: int64;
+
     property ID: int64 read GetID;
     property Plaza: IPlaza read GetPlaza write SetPlaza;
-    //timestamp cambio estado
+    property CantidadCambiosPlaza: int64 read GetCantidadCambiosPlaza;
+    property MomentoCreacion: int64 read GetMomentoCreacion;
+    property MomentoCambioPlaza: int64 read GetMomentoCambioPlaza;
   end;
 
   ITokenSistema = interface(IToken)

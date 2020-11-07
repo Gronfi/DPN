@@ -218,6 +218,7 @@ end;
 procedure TdpnTransicion.AddArcoIn(AArco: IArcoIn);
 begin
   FArcosIn.Add(AArco);
+  AArco.Transicion := Self;
   AArco.OnHabilitacionChanged.Add(OnHabilitacionChanged);
   ActualizarEstadoHabilitacionPorEstadoArco(AArco.ID, AArco.IsHabilitado);
 end;
@@ -225,6 +226,7 @@ end;
 procedure TdpnTransicion.AddArcoOut(AArco: IArcoOut);
 begin
   FArcosOut.Add(AArco);
+  AArco.Transicion := Self;
   AArco.OnHabilitacionChanged.Add(OnHabilitacionChanged);
   ActualizarEstadoHabilitacionPorEstadoArco(AArco.ID, AArco.IsHabilitado);
 end;
@@ -619,6 +621,8 @@ function TdpnTransicion.LogAsString: string;
 var
   LTexto: string;
 {$ENDIF}
+var
+  I: integer;
 begin
   Result := inherited + '<' + ClassName + '>' + '[IsHabilitado]' + IsHabilitado.ToString + '[IsHabilitadoParcialmente]' + IsHabilitadoParcialmente.ToString +
             '[TiempoEvaluacion]' + TiempoEvaluacion.ToString + '[TransicionesIntentadas]' + TransicionesIntentadas.ToString + '[TransicionesRealizadas]' + TransicionesRealizadas.ToString + '[IsTransicionDependeDeEvento]' + IsTransicionDependeDeEvento.ToString;
@@ -628,6 +632,11 @@ begin
     Result := Result + #13#10 + LTexto;
   end;
 {$ENDIF}
+  Result := Result + #13#10 + '---' + 'Estados habilitacion:';
+  for I in FEstadosHabilitacion.Keys do
+  begin
+    Result := Result + #13#10 + '   |-> ' + I.ToString + ' : ' + FEstadosHabilitacion[I].ToString;
+  end;
 end;
 
 function TdpnTransicion.ObtenerMarcadoTokens: IMarcadoTokens;

@@ -22,6 +22,8 @@ type
     FMultipleEnablednessOfTransitions: Boolean;
     FLock: TLightweightMREW;
     FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
+    FStartedDateTimeAt: TDateTime;
+    FStartedEllapsedAt: int64;
 
     FNodos: IDictionary<Integer, INodoPetriNet>;
     FMarcado: IDictionary<Integer, Integer>;
@@ -56,8 +58,6 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    //function GetTransicionesHabilitadas: I
-
     procedure Start;
     procedure Stop;
     procedure Reset;
@@ -71,6 +71,8 @@ type
     property Nodos: IDictionary<Integer, INodoPetriNet> read FNodos;
     property NombresEstados: IBidiDictionary<String, Integer> read FNombresEstados;
     property NombresTransiciones: IBidiDictionary<String, Integer>read FNombresTransiciones;
+    property StartedDateTimeAt: TDateTime read FStartedDateTimeAt;
+    property StartedEllapsedAt: int64 read FStartedEllapsedAt;
   end;
 
 implementation
@@ -79,6 +81,7 @@ uses
   System.SysUtils,
   System.Threading,
 
+  Event.Engine.Utils,
   DPN.Core;
 
 { TdpnPetriNetCoordinador }
@@ -303,6 +306,8 @@ begin
     AsociacionesPN;
     FGrafo.Start;
     FEstado := EEstadoPetriNet.Iniciada;
+    FStartedDateTimeAt := Now;
+    FStartedEllapsedAt := Utils.ElapsedMiliseconds;
     FEvento_OnEstadoChanged.Invoke(FEstado);
   end;
 end;

@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.Plazas;
 
 interface
@@ -74,12 +75,15 @@ begin
 
   FPlaza   := TdpnPlazaStart.Create;
   FPlaza.Nombre    := 'O1';
+  FPlaza.Start;
+
 
   FArco                        := TdpnArcoIn.Create;
   FArco.OnHabilitacionChanged.Add(DoOnHabilitacionChanged);
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
   FArco.PesoEvaluar            := 1;
+  FArco.Start;
 
   try
     if FPlaza.TokenCount <> 1 then
@@ -89,14 +93,10 @@ begin
     LMarcado.Marcado.TryGetValue(FPlaza, LTokens);
     LToken := LTokens[0];
 
-    if not FArco.IsHabilitado then
-      Assert.Fail('Step2: not Habilitado');
     if not FContextoCambiado then
       Assert.Fail('Contexto');
     if FID <> FArco.ID then
       Assert.Fail('ID: ' + FID.ToString);
-    if not FArco.IsHabilitado then
-      Assert.Fail('No Habilitado');
 
     FArco.DoOnTransicionando([LToken]);
 
@@ -204,11 +204,13 @@ begin
 
   FPlaza   := TdpnPlazaStart.Create;
   FPlaza.Nombre    := 'O1';
+  FPlaza.Start;
 
   FArco                        := TdpnArcoIn.Create;
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
   FArco.PesoEvaluar            := 1;
+  FArco.Start;
 
   try
     if FPlaza.TokenCount <> 1 then

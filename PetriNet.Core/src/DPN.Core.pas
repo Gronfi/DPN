@@ -20,6 +20,7 @@ type
     private
       class var FID: integer;
       class var FTokenID: int64;
+      class var FPnID: integer;
       class var FLock: TSpinLock;
       class var FTokenLock: TSpinLock;
       class var FScheduler: TEventsScheduler;
@@ -28,6 +29,7 @@ type
       class destructor DestroyC;
     public
       class function GetNuevoID: Integer; static;
+      class function GetNuevoPnID: Integer; static;
       class function GetNuevoTokenID: Int64; static;
       class function CrearEvento<T>: IEvent<T>; static;
       class function GenerarNTokensSistema(const ACount: Integer): IList<IToken>; static;
@@ -59,6 +61,7 @@ class constructor DPNCore.CreateC;
 begin
   FID := 0;
   FTokenID := 0;
+  FPnID := 0;
   EventBus.RegisterChannel(CHANNEL_SINGLE_THREADED, 1);
   EventBus.RegisterChannel(CHANNEL_MULTI_THREADED, MAX_MULTITHREADING_POOL);
   FScheduler := TEventsScheduler.Create;
@@ -145,6 +148,17 @@ begin
   try
     Inc(FID);
     Result := FID;
+  finally
+    FLock.Exit;
+  end;
+end;
+
+class function DPNCore.GetNuevoPnID: Integer;
+begin
+  FLock.Enter;
+  try
+    Inc(FPnID);
+    Result := FPnID;
   finally
     FLock.Exit;
   end;

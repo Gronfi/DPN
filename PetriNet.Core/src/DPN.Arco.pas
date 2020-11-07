@@ -1,5 +1,7 @@
 unit DPN.Arco;
 
+{$UNDEF TRAZAS_SECUNDARIAS_TdpnArco}
+
 interface
 
 uses
@@ -21,6 +23,9 @@ type
     FIsForzado: Boolean;
     FValorForzado: Boolean;
     FEventoOnHabilitacionChanged: IEvent<EventoNodoPN_ValorBooleano>;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad: IList<String>;
+{$ENDIF}
 
     function GetOnHabilitacionChanged: IEvent<EventoNodoPN_ValorBooleano>;
 
@@ -49,6 +54,8 @@ type
 
     procedure Start; override;
 
+    function LogAsString: string; override;
+
     procedure DoOnTransicionando(ATokens: TListaTokens); overload; virtual; abstract;
     procedure DoOnTransicionando(ATokens: TArrayTokens); overload; virtual; abstract;
 
@@ -65,6 +72,9 @@ type
 implementation
 
 uses
+  System.SysUtils,
+
+  Event.Engine.Utils,
   DPN.Core;
 
 { TdpnArco }
@@ -78,6 +88,9 @@ begin
   FPlazaIsEnabled    := False;
   FTransicionIsEnabled := False;
   FEventoOnHabilitacionChanged := DPNCore.CrearEvento<EventoNodoPN_ValorBooleano>;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+  FTrazabilidad := TCollections.CreateList<String>;
+{$ENDIF}
 end;
 
 destructor TdpnArco.Destroy;
@@ -91,11 +104,20 @@ end;
 
 procedure TdpnArco.DoOnPlazaEnabledChanged(const AID: integer; const AEnabled: boolean);
 begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnPlazaEnabledChanged> ID: ' + AID.ToString + ' : ' + AEnabled.ToString);
+{$ENDIF}
   if (FPlazaIsEnabled <> AEnabled) then
   begin
     FPlazaIsEnabled := AEnabled;
     if FPlazaIsEnabled then
+    begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+      FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnPlazaEnabledChanged> evaluando');
+{$ENDIF}
       Evaluar(FPlaza.TokenCount);
+      FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
+    end;
   end;
 end;
 
@@ -103,19 +125,36 @@ procedure TdpnArco.DoOnTokenCountChanged(const AID: integer; const ACount: Integ
 var
   LOldValue, LNewValue: Boolean;
 begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnTokenCountChanged> Count: ' + ACount.ToString);
+{$ENDIF}
   LOldValue := IsHabilitado;
   LNewValue := Evaluar(ACount);
   if (LOldValue <> LNewValue) then
-    FEventoOnHabilitacionChanged.Invoke(ID, LNewValue);
+  begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnTokenCountChanged> Invocando evento habilitacion');
+{$ENDIF}
+    FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
+  end;
 end;
 
 procedure TdpnArco.DoOnTransicionEnabledChanged(const AID: integer; const AEnabled: boolean);
 begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+    FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnTransicionEnabledChanged> ID: ' + AID.ToString + ' : ' + AEnabled.ToString);
+{$ENDIF}
   if (FTransicionIsEnabled <> AEnabled) then
   begin
     FTransicionIsEnabled := AEnabled;
     if FTransicionIsEnabled and FPlazaIsEnabled then
+    begin
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+      FTrazabilidad.Add(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnTransicion.DoOnTransicionEnabledChanged> evaluando');
+{$ENDIF}
       Evaluar(FPlaza.TokenCount);
+      FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
+    end;
   end;
 end;
 
@@ -156,6 +195,30 @@ end;
 function TdpnArco.GetValorForzado: Boolean;
 begin
   Result := FValorForzado
+end;
+
+function TdpnArco.LogAsString: string;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+var
+  LTexto: string;
+{$ENDIF}
+var
+  LPlaza, LTransicion: string;
+begin
+  if Assigned(FPlaza) then
+    LPlaza := FPlaza.Nombre
+  else LPlaza := '-';
+  if Assigned(FTransicion) then
+    LTransicion := FTransicion.Nombre
+  else LTransicion := '-';
+  Result := inherited + '<' + ClassName + '>' + '[IsHabilitado]' + IsHabilitado.ToString + '[Peso]' + Peso.ToString + '[IsForzado]' + IsForzado.ToString + '[ValorForzado]' + ValorForzado.ToString +
+            '[Plaza]' + LPlaza + '[Transicion]' + LTransicion;
+{$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
+  for LTexto in FTrazabilidad do
+  begin
+    Result := Result + #13#10 + LTexto;
+  end;
+{$ENDIF}
 end;
 
 procedure TdpnArco.SetIsForzado(const Value: Boolean);

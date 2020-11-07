@@ -1,3 +1,4 @@
+{$I Defines.inc}
 unit DPN.Core.Testing.Scheduler;
 
 interface
@@ -115,7 +116,7 @@ begin
   end;
   if ACnt < 10000 then
     Sleep(1000)
-  else Sleep(5000);
+  else Sleep(10000);
   if LTasks.Values.Any(function (const AData: boolean): boolean
                        begin
                          Result := (AData = False)
