@@ -63,11 +63,7 @@ type
 
     function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>;
 
-    function GetModelo: IModelo;
-    procedure SetModelo(AModelo: IModelo);
-
     property Nombre: string read GetNombre write SetNombre;
-    property Modelo: IModelo read GetModelo write SetModelo;
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
   end;
 
@@ -78,12 +74,16 @@ type
     function GetIsEnWarning: Boolean;
     function GetEnabled: Boolean;
 
+    function GetModelo: IModelo;
+    procedure SetModelo(AModelo: IModelo);
+
     procedure Stop;
     procedure Start;
     procedure Reset;
 
     function LogAsString: string;
 
+    property Modelo: IModelo read GetModelo write SetModelo;
     property Enabled: boolean read GetEnabled;
     property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
     property IsEnWarning: boolean read GetIsEnWarning;
@@ -409,6 +409,11 @@ type
     function GetTipoModelo: string;
     procedure SetTipoModelo(const Valor: string);
 
+    function GetPlazaIn: IPlaza;
+    procedure SetPlazaIn(Value: IPlaza);
+    function GetPlazaOut: IPlaza;
+    procedure SetPlazaOut(Value: IPlaza);
+
     function GetModelos: IReadOnlyList<IModelo>;
     function GetArcos: IReadOnlyList<IArco>;
     function GetPlazas: IReadOnlyList<IPlaza>;
@@ -416,6 +421,13 @@ type
     function GetTokens: IReadOnlyList<IToken>;
     function GetVariables: IReadOnlyList<IVariable>;
 
+    procedure AddArcoEntrada(AArco: IArcoOut);
+    procedure EliminarArcoEntrada(AArco: IArcoOut);
+    procedure AddArcoSalida(AArco: IArcoIn);
+    procedure EliminarArcoSalida(AArco: IArcoIn);
+
+    property PlazaIn: IPlaza read GetPlazaIn write SetPlazaIn;
+    property PlazaOut: IPlaza read GetPlazaOut write SetPlazaOut;
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
   end;
