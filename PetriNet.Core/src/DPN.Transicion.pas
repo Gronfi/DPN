@@ -100,7 +100,7 @@ type
 
     function ObtenerMarcadoTokens: IMarcadotokens;
 
-    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean; virtual;
+    function EstrategiaDisparo(AEvento: IEvento = nil): Boolean; virtual;
 
     procedure EliminarEventosPendientesTransicionSiNecesario;
     function HayEventosPendientesEnTransicion: boolean;
@@ -342,7 +342,7 @@ end;
 
 function TdpnTransicion.EjecutarTransicion: Boolean;
 var
-  LEvento: IEventEE;
+  LEvento: IEvento;
 begin
   Result := False;
   CapturarDependencias; // todas las dependencias son capturadas
@@ -430,7 +430,7 @@ begin
     FCondicionDeEvento.ClearEventos;
 end;
 
-function TdpnTransicion.EstrategiaDisparo(AEvento: IEventEE = nil): boolean;
+function TdpnTransicion.EstrategiaDisparo(AEvento: IEvento = nil): boolean;
 var
   LTokens: IMarcadoTokens;
   LTokensOut: IList<IToken>;

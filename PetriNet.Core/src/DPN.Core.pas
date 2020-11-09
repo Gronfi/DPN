@@ -62,8 +62,8 @@ begin
   FID := 0;
   FTokenID := 0;
   FPnID := 0;
-  EventBus.RegisterChannel(CHANNEL_SINGLE_THREADED, 1);
-  EventBus.RegisterChannel(CHANNEL_MULTI_THREADED, MAX_MULTITHREADING_POOL);
+  EventoBus.RegisterChannel(CHANNEL_SINGLE_THREADED, 1);
+  EventoBus.RegisterChannel(CHANNEL_MULTI_THREADED, MAX_MULTITHREADING_POOL);
   FScheduler := TEventsScheduler.Create;
 end;
 

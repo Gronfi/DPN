@@ -17,8 +17,8 @@ type
   end;
 {$ENDREGION}
 
-{$REGION 'IEvent'}
-  IEventEE = interface(IObject)
+{$REGION 'IEvento'}
+  IEvento = interface(IObject)
     ['{8C6AE8E2-B18D-41B4-AAED-88CF3B110F1D}']
     function GetCreationDateTime: TDateTime;
     function GetSender: TObject;
@@ -32,16 +32,16 @@ type
   end;
 {$ENDREGION}
 
-  TNotifyEvent = procedure(AEvent: IEventEE) of Object;
+  TNotifyEvent = procedure(AEvent: IEvento) of Object;
 
-  TListenerFilter = function(AEvent: IEventEE): Boolean of object;
-  TListenerAction = procedure(AEvent: IEventEE) of object;
+  TListenerFilter = function(AEvent: IEvento): Boolean of object;
+  TListenerAction = procedure(AEvent: IEvento) of object;
 
-{$REGION 'IEventEEListener'}
+{$REGION 'IEventoListener'}
   EEventTypeRestriction = (mtrAllowDescendants, mtrDefinedTypeOnly);
   EDelegatedExecutionMode = (medQueue, medSynchronize, medNewTask, medNormal);
 
-  IEventEEListener = interface(IObject)
+  IEventoListener = interface(IObject)
     ['{ABC992B0-4CB4-470A-BDCE-EBE6651C84DD}']
     function GetIsCodeToExecuteInUIMainThread: Boolean;
     procedure SetIsCodeToExecuteInUIMainThread(const AValue: Boolean);
@@ -59,12 +59,12 @@ type
 
     function GetMessajeClass: TClass;
 
-    function GetConditionsMatch(AEvent: IEventEE): Boolean;
+    function GetConditionsMatch(AEvento: IEvento): Boolean;
 
     procedure Register;
     procedure UnRegister;
 
-    procedure DoOnNewEvent(AEvent: IEventEE);
+    procedure DoOnNewEvento(AEvento: IEvento);
 
     property FilterCondition: TListenerFilter read GetListenerFilter write SetListenerFilter;
     property IsCodeToExecuteInUIMainThread: Boolean read GetIsCodeToExecuteInUIMainThread write SetIsCodeToExecuteInUIMainThread;
@@ -73,13 +73,13 @@ type
     property Channel        : String read GetChannel;
   end;
 {$ENDREGION}
-{$REGION 'IEventEEListener<T: TEvent>'}
-  IEventEEListener<T: IEventEE> = interface(IEventEEListener)
+{$REGION 'IEventoListener<T: TEvent>'}
+  IEventoListener<T: IEvento> = interface(IEventoListener)
     ['{CA3B8245-46E2-4827-B7D4-B3CAA91EE965}']
-    function GetOnEvent: IEvent<TNotifyEvent>;
+    function GetOnEvento: IEvent<TNotifyEvent>;
     function GetMessajeClass: TClass;
 
-    property OnEvent: IEvent<TNotifyEvent> read GetOnEvent;
+    property OnEvento: IEvent<TNotifyEvent> read GetOnEvento;
   end;
 {$ENDREGION}
 

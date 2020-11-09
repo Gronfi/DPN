@@ -20,7 +20,7 @@ type
     FEstado: EEstadoPetriNet;
     FComm: TThreadedQueue<ITransicion>;
     FMultipleEnablednessOfTransitions: Boolean;
-    FLock: TLightweightMREW;
+    FLockMarcado: TLightweightMREW;
     FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
     FStartedDateTimeAt: TDateTime;
     FStartedEllapsedAt: int64;
@@ -159,12 +159,12 @@ procedure TdpnPetriNetCoordinador.DoOnTokenCountChanged(const AID: Integer; AMar
 var
   LPlaza: integer;
 begin
-  FLock.BeginWrite;
+  FLockMarcado.BeginWrite;
   try
     for LPlaza in AMarcado.Marcado.Keys do
       FMarcado[LPlaza] := AMarcado.Marcado[LPlaza];
   finally
-    FLock.EndWrite;
+    FLockMarcado.EndWrite;
   end;
 end;
 

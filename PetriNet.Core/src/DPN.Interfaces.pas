@@ -242,12 +242,12 @@ type
     function GetEventosCount: integer;
     procedure ClearEventos;
     procedure RemovePrimerEvento;
-    function GetPrimerEvento: IEventEE;
+    function GetPrimerEvento: IEvento;
 
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEvento = nil): Boolean;
 
     procedure DoNotificarOncontextoCondicionChanged;
 
@@ -267,7 +267,7 @@ type
     function GetTransicion: ITransicion;
     procedure SetTransicion(const Value: ITransicion);
 
-    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil);
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEvento = nil);
 
     property Transicion: ITransicion read GetTransicion write SetTransicion;
   end;
@@ -297,7 +297,7 @@ type
     function GetCondiciones: IReadOnlyList<ICondicion>;
     function GetAcciones: IReadOnlyList<IAccion>;
 
-    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean;
+    function EstrategiaDisparo(AEvento: IEvento = nil): Boolean;
 
     function EjecutarTransicion: Boolean;
 
@@ -333,6 +333,11 @@ type
   ['{DBC2D293-3584-477D-9EA9-6B75251A4397}']
     function GetID: int64;
 
+    function GetVariable(const AKey: string): TValue;
+    procedure SetVariable(const AKey: string; const AValor: TValue);
+
+    function GetTablaVariables: IDictionary<String, TValue>;
+
     function Clon: IToken;
     function GetPlaza: IPlaza;
     procedure SetPlaza(APlaza: IPlaza);
@@ -343,8 +348,12 @@ type
 
     function GetMomentoCambioPlaza: int64;
 
+    function LogAsString: string;
+
     property ID: int64 read GetID;
     property Plaza: IPlaza read GetPlaza write SetPlaza;
+    property Variable[const AKey: string]: TValue read GetVariable write SetVariable; default;
+    property TablaVariables: IDictionary<String, TValue> read GetTablaVariables;
     property CantidadCambiosPlaza: int64 read GetCantidadCambiosPlaza;
     property MomentoCreacion: int64 read GetMomentoCreacion;
     property MomentoCambioPlaza: int64 read GetMomentoCambioPlaza;

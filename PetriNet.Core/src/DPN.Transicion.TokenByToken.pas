@@ -11,7 +11,7 @@ uses
 type
   TdpnTransicion_TokenByToken = class(TdpnTransicion)
   protected
-    function EstrategiaDisparo(AEvento: IEventEE = nil): Boolean; override;
+    function EstrategiaDisparo(AEvento: IEvento = nil): Boolean; override;
   end;
 
 implementation
@@ -26,7 +26,7 @@ uses
 
 
 { TdpnTransicion_TokenByToken }
-function TdpnTransicion_TokenByToken.EstrategiaDisparo(AEvento: IEventEE = nil): Boolean;
+function TdpnTransicion_TokenByToken.EstrategiaDisparo(AEvento: IEvento = nil): Boolean;
 var
   LTokens: IMarcadoTokens;
   LTokenSeleccionado: IMarcadoTokens;

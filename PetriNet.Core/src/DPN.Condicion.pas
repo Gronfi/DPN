@@ -35,7 +35,7 @@ type
     function GetTransicion: ITransicion; virtual;
     procedure SetTransicion(const Value: ITransicion); virtual;
 
-    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean; virtual;
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento = nil): Boolean; virtual;
 
     procedure DoNotificarOncontextoCondicionChanged; virtual;
   public
@@ -43,9 +43,9 @@ type
 
     procedure ClearEventos; virtual;
     procedure RemovePrimerEvento; virtual;
-    function GetPrimerEvento: IEventEE; virtual;
+    function GetPrimerEvento: IEvento; virtual;
 
-    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
+    function Evaluar(ATokens: IMarcadoTokens; AEvento: IEvento = nil): Boolean;
 
     property Dependencias: IList<IBloqueable> read GetDependencias;
     property Transicion: ITransicion read GetTransicion write SetTransicion;
@@ -60,8 +60,8 @@ type
 
   TdpnCondicionBaseEsperaEvento = class abstract(TdpnCondicion)
   protected
-    FListenerEvento: IEventEEListener;
-    FListaEventosRecibidos: IList<IEventEE>;
+    FListenerEvento: IEventoListener;
+    FListaEventosRecibidos: IList<IEvento>;
 
     function GetEventoHabilitado: Boolean; override;
     procedure SetEventoHabilitado(const AValor: Boolean); override;
@@ -70,10 +70,10 @@ type
 
     function GetEventosCount: integer; override;
 
-    function DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean; virtual; abstract;
-    procedure DoOnEventoRecibido(AEvento: IEventEE); virtual;
+    function DoOnEventoRequiereFiltrado(AEvento: IEvento): Boolean; virtual; abstract;
+    procedure DoOnEventoRecibido(AEvento: IEvento); virtual;
 
-    function CrearListenerEvento: IEventEEListener; virtual; abstract;
+    function CrearListenerEvento: IEventoListener; virtual; abstract;
 
     function GetIsCondicionQueEsperaEvento: Boolean; override;
   public
@@ -82,7 +82,7 @@ type
 
     procedure ClearEventos; override;
     procedure RemovePrimerEvento; override;
-    function GetPrimerEvento: IEventEE; override;
+    function GetPrimerEvento: IEvento; override;
   end;
 
 implementation
@@ -109,7 +109,7 @@ begin
   FEventoOnContextoCondicionChanged.Invoke(ID);
 end;
 
-function TdpnCondicion.Evaluar(ATokens: IMarcadoTokens; AEvento: IEventEE = nil): Boolean;
+function TdpnCondicion.Evaluar(ATokens: IMarcadoTokens; AEvento: IEvento = nil): Boolean;
 begin
   case FIsCondicionNegada of
     True: Result := not EvaluarInternal(ATokens, AEvento);
@@ -117,7 +117,7 @@ begin
   end;
 end;
 
-function TdpnCondicion.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
+function TdpnCondicion.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
   Result := False;
 end;
@@ -162,7 +162,7 @@ begin
   Result := FEventoOnContextoCondicionChanged;
 end;
 
-function TdpnCondicion.GetPrimerEvento: IEventEE;
+function TdpnCondicion.GetPrimerEvento: IEvento;
 begin
   Result := nil
 end;
@@ -206,7 +206,7 @@ constructor TdpnCondicionBaseEsperaEvento.Create;
 begin
   inherited;
   FListenerEvento        := CrearListenerEvento;
-  FListaEventosRecibidos := TCollections.CreateList<IEventEE>;
+  FListaEventosRecibidos := TCollections.CreateList<IEvento>;
 end;
 
 destructor TdpnCondicionBaseEsperaEvento.Destroy;
@@ -217,7 +217,7 @@ begin
   inherited;
 end;
 
-procedure TdpnCondicionBaseEsperaEvento.DoOnEventoRecibido(AEvento: IEventEE);
+procedure TdpnCondicionBaseEsperaEvento.DoOnEventoRecibido(AEvento: IEvento);
 begin
   FListaEventosRecibidos.Add(AEvento);
   FEventoOnContextoCondicionChanged.Invoke(ID)
@@ -243,7 +243,7 @@ begin
   Result := False;
 end;
 
-function TdpnCondicionBaseEsperaEvento.GetPrimerEvento: IEventEE;
+function TdpnCondicionBaseEsperaEvento.GetPrimerEvento: IEvento;
 begin
   if FListaEventosRecibidos.Count > 0 then
     Result := FListaEventosRecibidos[0]
