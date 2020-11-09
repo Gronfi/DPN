@@ -53,11 +53,11 @@
 
 Es un bus de mensajes (eventos) basado en el patrón publicador/subscriptor
 
-![overview bus de mensajes](Overview-Bus-Mensajes.png)
+![overview bus de mensajes](Overview-EventoBus.png)
 
 ### Caracteristicas
 
-* Basado en interfaces. Todos los mensajes implementan la interface **IMessage**. Lo normal es que los nuevos mensajes hereden de **TMessage**
+* Basado en interfaces. Todos los mensajes implementan la interface **IEvento**. Lo normal es que los nuevos mensajes hereden de **TEvento**
 * No se realiza clonación de los mensajes al estar basado en interfaces, ni requiere de una destrucción explícita de los mismos.
 * Thread Safe
 * Qué es el **canal**:
@@ -82,24 +82,24 @@ Es un bus de mensajes (eventos) basado en el patrón publicador/subscriptor
 * Uso:
 	1. Registrar un canal nuevo: 
 	   ```delphi
-	   MessageBus.RegisterChannel('Channel 1', 2);  // con 2 threads de trabajo
+	   EventoBus.RegisterChannel('Channel 1', 2);  // con 2 threads de trabajo
 	   ```
 	2. Publicar un mensaje:
 	   ```delphi
-        // Definir mensaje, en este caso transporta un integer
-		TTestMessageInteger = class(TMessage)
+        // Definir evento, en este caso transporta un integer
+		TTestEventoInteger = class(TEvento)
 		public
-		Valor: Integer;
+		  Valor: Integer;
 
-		constructor Create(const AValue: Integer); overload;
+		  constructor Create(const AValue: Integer); overload;
 		end;
 		
 		//en codigo
 		procedure TForm2.Button1Click(Sender: TObject);
 		var
-		  LMsg: IMessage;
+		  LMsg: IEvento;
 		begin
-		  LMsg := TTestMessageInteger.Create(5);
+		  LMsg := TTestEventoInteger.Create(5);
 		  LMsg.Post;
 		end;
 		```
@@ -109,16 +109,20 @@ Es un bus de mensajes (eventos) basado en el patrón publicador/subscriptor
 		TForm2 = class(TForm)
 		private
 		  ...
-		  FListenerInteger  : IMessageListener<TTestMessageInteger>; //interface que define un subscriptor a ese tipo de mensaje
+		  FListenerInteger  : IMessageListener; //interface que define un subscriptor
 		  ... 
 		//en el create de la clase
-		FListenerInteger := TMessageListener<TTestMessageInteger>.Create;  //implementacion de listener genérico si no hay necesidad de filtros
+		FListenerInteger := TEventoListener<TTestMessageInteger>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_SINGLE_THREADED);
 		FListenerInteger.IsCodeToExecuteInUIMainThread := True; //se va a ejecutar en el main thread
-		FListenerInteger.OnMessage.Add(OnTestMessageInteger); //asignamos el metodo
 		
-		//en la clase tendremos el método así
-		procedure TForm2.OnTestMessageInteger(AMsg: IMessage);
+		//en la clase tendremos estos métodos
+		procedure TForm2.DoOnEventoRecibido(AMsg: IMessage);
 		begin
-		  Memo1.Lines.Add(LogTime + 'Integer: ' + TTestMessageInteger(AMsg).Valor.ToString)
+		  Memo1.Lines.Add(LogTime + 'Integer: ' + TTestEventoInteger(AMsg).Valor.ToString)
+		end;
+		
+		function TForm2.DoOnEventoRequiereFiltrado(AMsg: IMessage): boolean;
+		begin
+		  Result := (TTestEventoInteger(AMsg).Valor > 0)
 		end;
 		```

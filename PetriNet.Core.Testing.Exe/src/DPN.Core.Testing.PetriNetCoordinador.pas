@@ -61,6 +61,8 @@ type
     [Test]
     procedure Test_PetriNet_SuperPlaza_Extrae_Token;
     [Test]
+    procedure Test_PetriNet_SuperPlaza_Evolucion_Natural;
+    [Test]
     procedure Test_PetriNet_ArcoReset;
     [Test]
     procedure Test_PetriNet_Nombres;
@@ -384,7 +386,6 @@ var
   LThreadsWrite: TArray<TThread>;
   I: integer;
   LModelo: IModelo;
-  LPNet: TdpnPetriNetCoordinador;
   LPlaza: IPlaza;
 begin
   Randomize;
@@ -822,7 +823,7 @@ var
   LEnabled : IVariable;
   LFuncionE: ICondicion;
 
-  LEvento: IEventEE;
+  LEvento: IEvento;
 
   LTransicion: ITransicion;
 begin
@@ -935,7 +936,7 @@ var
   LEnabled : IVariable;
   LFuncionE: ICondicion;
 
-  LEvento: IEventEE;
+  LEvento: IEvento;
 
   LTransicion: ITransicion;
 begin
@@ -1084,7 +1085,7 @@ var
   LFuncionE: ICondicion;
   LAccion  : IAccion;
 
-  LEvento: IEventEE;
+  LEvento: IEvento;
 
   LTransicion: ITransicion;
 begin
@@ -1188,6 +1189,162 @@ begin
   end;
 end;
 
+procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_SuperPlaza_Evolucion_Natural;
+var
+  LPNet: TdpnPetriNetCoordinador;
+
+  LModelo: IModelo;
+  LToken : IToken;
+  I      : Integer;
+
+  LArcoI1 : IArcoIn;
+  LPlazaI1: IPlaza;
+
+  LArcoO1 : IArcoOut;
+  LPlazaO1: IPlaza;
+
+  LFuncion : ICondicion;
+  LEnabled : IVariable;
+
+  LTransicion: ITransicion;
+
+  LArcoI2      : IArcoIn;
+  LSuperPlazaI2: IPlaza;
+
+  LArcoO2 : IArcoOut;
+  LPlazaO2: IPlaza;
+
+  LFuncion2   : ICondicion;
+  LTransicion2: ITransicion;
+begin
+  LEnabled        := TdpnVariable.Create;
+  LEnabled.Nombre := 'Enabled';
+  LEnabled.Valor  := 0;
+
+  LFuncion                                                := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(LFuncion).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncion).ValorToCheck := 5;
+
+  LFuncion2                                                := TdpnCondicion_es_tabla_variables.Create;
+  TdpnCondicion_es_tabla_variables(LFuncion2).Variable     := LEnabled;
+  TdpnCondicion_es_tabla_variables(LFuncion2).ValorToCheck := 3;
+
+  LModelo := TdpnModelo.Create;
+
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 2;
+
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
+
+  LPlazaO1           := TdpnPlaza.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.Capacidad := 2;
+
+  LArcoO1       := TdpnArcoOut.Create;
+  LArcoO1.Plaza := LPlazaO1;
+  LArcoO1.Peso  := 1;
+
+  LTransicion := TdpnTransicion.Create;
+  Writeln('Transicion: ' + LTransicion.ID.ToString);
+  LTransicion.AddArcoIn(LArcoI1);
+  LTransicion.AddArcoOut(LArcoO1);
+  LTransicion.AddCondicion(LFuncion);
+
+  LModelo.Elementos.Add(LTransicion);
+  LModelo.Elementos.Add(LPlazaI1);
+  LModelo.Elementos.Add(LArcoI1);
+  LModelo.Elementos.Add(LPlazaO1);
+  LModelo.Elementos.Add(LEnabled);
+  LModelo.Elementos.Add(LArcoO1);
+  LModelo.Elementos.Add(LFuncion);
+
+  LSuperPlazaI2 := TdpnPlazaSuper.Create;
+  TdpnPlazaSuper(LSuperPlazaI2).AddPlaza(LPlazaI1);
+  TdpnPlazaSuper(LSuperPlazaI2).AddPlaza(LPlazaO1);
+  LPlazaI1.Nombre    := 'I2';
+  LPlazaI1.Capacidad := 2;
+
+  LArcoI2             := TdpnArcoIn.Create;
+  LArcoI2.Plaza       := LSuperPlazaI2;
+  LArcoI2.Peso        := 1;
+  LArcoI2.PesoEvaluar := 1;
+
+  LPlazaO2           := TdpnPlaza.Create;
+  LPlazaO2.Nombre    := 'O2';
+  LPlazaO2.Capacidad := 2;
+
+  LArcoO2       := TdpnArcoOut.Create;
+  LArcoO2.Plaza := LPlazaO2;
+  LArcoO2.Peso  := 1;
+
+  LTransicion2 := TdpnTransicion.Create;
+  Writeln('Transicion2: ' + LTransicion2.ID.ToString);
+  LTransicion2.AddArcoIn(LArcoI2);
+  LTransicion2.AddArcoOut(LArcoO2);
+  LTransicion2.AddCondicion(LFuncion2);
+
+  LModelo.Elementos.Add(LTransicion2);
+  LModelo.Elementos.Add(LSuperPlazaI2);
+  LModelo.Elementos.Add(LArcoI2);
+  LModelo.Elementos.Add(LPlazaO2);
+  LModelo.Elementos.Add(LArcoO2);
+  LModelo.Elementos.Add(LFuncion2);
+
+  LPNet := TdpnPetriNetCoordinador.Create;
+  try
+    LPNet.Grafo := LModelo;
+    LPNet.Start;
+
+    for I := 1 to 1 do
+    begin
+      LToken := TdpnTokenColoreado.Create;
+      LPlazaI1.AddToken(LToken);
+    end;
+
+    Sleep(100);
+
+    if not((LPlazaI1.TokenCount = 1) and (LPlazaO1.TokenCount = 0) and (LPlazaO2.TokenCount = 0)) then
+      Assert.Fail('no va bien (1)');
+
+    LEnabled.Valor := 5;
+
+    Sleep(100);
+
+    if not((LPlazaI1.TokenCount = 0) and (LPlazaO1.TokenCount = 1) and (LPlazaO2.TokenCount = 0)) then
+      Assert.Fail('no va bien (2)');
+
+    LEnabled.Valor := 3;
+
+    Sleep(100);
+
+    if not((LPlazaI1.TokenCount = 0) and (LPlazaO1.TokenCount = 0) and (LPlazaO2.TokenCount = 1)) then
+      Assert.Fail('no va bien (2)');
+
+    Writeln('I1: ' + LPlazaI1.TokenCount.ToString + ' - O1: ' + LPlazaO1.TokenCount.ToString + ' - O2: ' + LPlazaO2.TokenCount.ToString);
+    Writeln('Datos1: ' + LTransicion.TransicionesRealizadas.ToString + '/' + LTransicion.TransicionesIntentadas.ToString);
+    Writeln('Datos2: ' + LTransicion2.TransicionesRealizadas.ToString + '/' + LTransicion2.TransicionesIntentadas.ToString);
+
+    WriteLn('PN: ' + LPNet.LogMarcado);
+    Assert.Pass;
+  finally
+    LEnabled    := nil;
+    LFuncion    := nil;
+    LFuncion2   := nil;
+    LModelo     := nil;
+    LPlazaI1    := nil;
+    LArcoI1     := nil;
+    LPlazaO1    := nil;
+    LArcoO1     := nil;
+    LTransicion := nil;
+    LPNet.Destroy;
+  end;
+
+end;
+
 procedure TPetriNetCoreTesting_PetriNet.Test_PetriNet_SuperPlaza_Extrae_Token;
 var
   LPNet: TdpnPetriNetCoordinador;
@@ -1207,7 +1364,7 @@ var
   LFuncionE: ICondicion;
   LAccion  : IAccion;
 
-  LEvento: IEventEE;
+  LEvento: IEvento;
 
   LTransicion: ITransicion;
 

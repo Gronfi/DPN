@@ -49,7 +49,8 @@ uses
   DPN.Core.Scheduler in '..\PetriNet.Core\src\DPN.Core.Scheduler.pas',
   DPN.Plaza.Finish in '..\PetriNet.Core\src\DPN.Plaza.Finish.pas',
   DPN.MarcadoPlazasCantidadTokens in '..\PetriNet.Core\src\DPN.MarcadoPlazasCantidadTokens.pas',
-  DPN.Core.Testing.Modelos in 'src\DPN.Core.Testing.Modelos.pas';
+  DPN.Core.Testing.Modelos in 'src\DPN.Core.Testing.Modelos.pas',
+  DPN.Core.Testing.Token in 'src\DPN.Core.Testing.Token.pas';
 
 var
   runner: ITestRunner;

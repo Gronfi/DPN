@@ -22,7 +22,7 @@ type
   public
     constructor Create; override;
 
-    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); virtual;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEvento = nil); virtual;
 
     property Dependencias: IList<IBloqueable> read GetDependencias;
     property Transicion: ITransicion read GetTransicion write SetTransicion;
@@ -40,7 +40,7 @@ begin
   inherited;
 end;
 
-procedure TdpnAccion.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil);
+procedure TdpnAccion.Execute(ATokens: IMarcadoTokens; AEvento: IEvento = nil);
 begin
   ;
 end;

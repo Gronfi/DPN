@@ -3,6 +3,10 @@ unit DPN.Token;
 interface
 
 uses
+  System.Rtti,
+
+  Spring.Collections,
+
   DPN.Interfaces;
 
 type
@@ -11,11 +15,18 @@ type
     FID: int64;
     FPlaza: IPlaza;
 
+    FTablaVariables: IDictionary<String, TValue>;
+
     FCantidadCambiosPlaza: int64;
     FMomentoCreacion: int64;
     FMomentoCambioPlaza: int64;
 
     function GetID: int64;
+
+    function GetVariable(const AKey: string): TValue; virtual;
+    procedure SetVariable(const AKey: string; const AValor: TValue); virtual;
+
+    function GetTablaVariables: IDictionary<String, TValue>; virtual;
 
     function GetCantidadCambiosPlaza: int64;
 
@@ -31,8 +42,12 @@ type
 
     function Clon: IToken;
 
+    function LogAsString: string; virtual;
+
     property ID: int64 read GetID;
     property Plaza: IPlaza read GetPlaza write SetPlaza;
+    property Variable[const AKey: string]: TValue read GetVariable write SetVariable; default;
+    property TablaVariables: IDictionary<String, TValue> read GetTablaVariables;
     property CantidadCambiosPlaza: int64 read GetCantidadCambiosPlaza;
     property MomentoCreacion: int64 read GetMomentoCreacion;
     property MomentoCambioPlaza: int64 read GetMomentoCambioPlaza;
@@ -41,6 +56,8 @@ type
 implementation
 
 uses
+  System.SysUtils,
+
   Event.Engine.Utils,
   DPN.Core;
 
@@ -58,6 +75,7 @@ begin
   FMomentoCreacion       := Utils.ElapsedMiliseconds;
   FMomentoCambioPlaza    := Utils.ElapsedMiliseconds;
   FCantidadCambiosPlaza  := 0;
+  FTablaVariables        := TCollections.CreateDictionary<String, TValue>;
 end;
 
 destructor TdpnToken.Destroy;
@@ -90,6 +108,27 @@ begin
   Result := FPlaza;
 end;
 
+function TdpnToken.GetTablaVariables: IDictionary<String, TValue>;
+begin
+  Result := FTablaVariables
+end;
+
+function TdpnToken.GetVariable(const AKey: string): TValue;
+begin
+  FTablaVariables.TryGetValue(AKey, Result)
+end;
+
+function TdpnToken.LogAsString: string;
+var
+  LKey: string;
+begin
+  Result := '[ID]' + ID.ToString + '[Plaza]' + Plaza.Nombre + '[CantidadCambiosPlaza]' + CantidadCambiosPlaza.ToString + '[MomentoCreacion]' + MomentoCreacion.ToString +
+            '[MomentoCambioPlaza]' + MomentoCambioPlaza.ToString;
+  Result := Result + #13#10 + '---TablaVariables:';
+  for LKey in TablaVariables.Keys do
+    Result := Result + #13#10 + '  |--' + LKey + ': ' + TablaVariables[LKey].ToString;
+end;
+
 procedure TdpnToken.SetPlaza(APlaza: IPlaza);
 begin
   FPlaza := APlaza;
@@ -98,6 +137,11 @@ begin
     FMomentoCambioPlaza := Utils.ElapsedMiliseconds;
     Inc(FCantidadCambiosPlaza);
   end;
+end;
+
+procedure TdpnToken.SetVariable(const AKey: string; const AValor: TValue);
+begin
+  FTablaVariables[AKey] := AValor;
 end;
 
 end.

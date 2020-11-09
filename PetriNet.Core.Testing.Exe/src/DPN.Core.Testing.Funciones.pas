@@ -34,7 +34,7 @@ type
     procedure SetValorToSet(const AValue: TValue);
 
   public
-    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); override;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEvento = nil); override;
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorToSet: TValue read GetValorToSet write SetValorToSet;
@@ -54,7 +54,7 @@ type
     procedure SetValorAIncrementar(const AValue: TValue);
 
   public
-    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEventEE = nil); override;
+    procedure Execute(ATokens: IMarcadoTokens; AEvento: IEvento = nil); override;
 
     property Variable: IVariable read GetVariable write SetVariable;
     property ValorIncremento: TValue read GetValorAIncrementar write SetValorAIncrementar;
@@ -76,7 +76,7 @@ type
 
     procedure DoOnVarChanged(const AID: Integer; const AValue: TValue);
 
-    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean; override;
   public
 
     property Variable: IVariable read GetVariable write SetVariable;
@@ -88,7 +88,7 @@ type
     function GetIsEvaluacionNoDependeDeTokensOEvento: Boolean; override;
   end;
 
-  TEventoPrueba = class(TEventEE)
+  TEventoPrueba = class(TEvento)
   protected
     FNumero: integer;
     FTexto : string;
@@ -101,10 +101,10 @@ type
   protected
     FNumero: integer;
 
-    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean; override;
+    function EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean; override;
   public
-    function DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean; override;
-    function CrearListenerEvento: IEventEEListener; override;
+    function DoOnEventoRequiereFiltrado(AEvento: IEvento): Boolean; override;
+    function CrearListenerEvento: IEventoListener; override;
 
     property Numero: integer read FNumero write FNumero;
   end;
@@ -161,7 +161,7 @@ begin
   OnContextoCondicionChanged.Invoke(ID);
 end;
 
-function TdpnCondicion_es_tabla_variables.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
+function TdpnCondicion_es_tabla_variables.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
   Result := (FVariable.Valor.AsInteger = FValor.AsInteger)
 end;
@@ -240,7 +240,7 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_NoAceptado;
 var
   LFuncion : ICondicion;
-  LEvento  : IEventEE;
+  LEvento  : IEvento;
 begin
   LFuncion := TdpnCondicion_Evento_Prueba.Create;
   try
@@ -262,12 +262,12 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_NoOK;
 var
   LFuncion : ICondicion;
-  LEvento  : IEventEE;
+  LEvento  : IEvento;
   LRes     : boolean;
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
   LToken   : IToken;
-  LEventoR : IEventEE;
+  LEventoR : IEvento;
 begin
   LFuncion := TdpnCondicion_Evento_Prueba.Create;
   try
@@ -299,12 +299,12 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_1_Evento_OK;
 var
   LFuncion : ICondicion;
-  LEvento  : IEventEE;
+  LEvento  : IEvento;
   LRes     : boolean;
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
   LToken   : IToken;
-  LEventoR : IEventEE;
+  LEventoR : IEvento;
 begin
   LFuncion := TdpnCondicion_Evento_Prueba.Create;
   try
@@ -336,12 +336,12 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Test_2_Eventos_1_OK_2_NoOK;
 var
   LFuncion : ICondicion;
-  LEvento  : IEventEE;
+  LEvento  : IEvento;
   LRes     : boolean;
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
   LToken   : IToken;
-  LEventoR : IEventEE;
+  LEventoR : IEvento;
 begin
   LFuncion := TdpnCondicion_Evento_Prueba.Create;
   try
@@ -427,24 +427,24 @@ end;
 
 { TdpnCondicion_Evento_Prueba }
 
-function TdpnCondicion_Evento_Prueba.CrearListenerEvento: IEventEEListener;
+function TdpnCondicion_Evento_Prueba.CrearListenerEvento: IEventoListener;
 begin
-  Result := TEventListener<TEventoPrueba>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_SINGLE_THREADED);
+  Result := TEventoListener<TEventoPrueba>.Create(DoOnEventoRecibido, DoOnEventoRequiereFiltrado, DPNCore.CHANNEL_SINGLE_THREADED);
 end;
 
-function TdpnCondicion_Evento_Prueba.DoOnEventoRequiereFiltrado(AEvento: IEventEE): Boolean;
+function TdpnCondicion_Evento_Prueba.DoOnEventoRequiereFiltrado(AEvento: IEvento): Boolean;
 begin
   Result := TEventoPrueba(AEvento).Numero = FNumero
 end;
 
-function TdpnCondicion_Evento_Prueba.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEventEE): Boolean;
+function TdpnCondicion_Evento_Prueba.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
   Result := TEventoPrueba(AEvento).Texto = 'Hola';
 end;
 
 { TdpnAccion_tabla_variables }
 
-procedure TdpnAccion_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE);
+procedure TdpnAccion_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEvento);
 begin
   FVariable.Valor:= FValor;
 end;
@@ -488,7 +488,7 @@ end;
 
 { TdpnAccion_incrementar_tabla_variables }
 
-procedure TdpnAccion_incrementar_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEventEE);
+procedure TdpnAccion_incrementar_tabla_variables.Execute(ATokens: IMarcadoTokens; AEvento: IEvento);
 begin
   FVariable.Valor:= FVariable.Valor.AsInteger + FValor.AsInteger;
 end;

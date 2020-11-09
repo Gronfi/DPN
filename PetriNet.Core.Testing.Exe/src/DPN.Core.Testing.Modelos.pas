@@ -23,9 +23,9 @@ uses
   DPN.Variable;
 
 type
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-//{$ENDIF}
+{$ENDIF}
   TPetriNetCoreTesting_Modelos = class
   private
   protected
@@ -261,7 +261,7 @@ begin
 end;
 
 initialization
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Modelos);
-//{$ENDIF}
+{$ENDIF}
 end.

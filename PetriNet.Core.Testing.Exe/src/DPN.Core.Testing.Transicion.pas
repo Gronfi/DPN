@@ -691,8 +691,8 @@ var
   LEnabled : IVariable;
   LFuncionE: ICondicion;
 
-  LEvento  : IEventEE;
-  LEventoR : IEventEE;
+  LEvento  : IEvento;
+  LEventoR : IEvento;
 
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
@@ -799,8 +799,8 @@ var
   LEnabled : IVariable;
   LFuncionE: ICondicion;
 
-  LEvento  : IEventEE;
-  LEventoR : IEventEE;
+  LEvento  : IEvento;
+  LEventoR : IEvento;
 
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
@@ -913,8 +913,8 @@ var
   LEnabled : IVariable;
   LFuncionE: ICondicion;
 
-  LEvento  : IEventEE;
-  LEventoR : IEventEE;
+  LEvento  : IEvento;
+  LEventoR : IEvento;
 
   LPlaza   : IPlaza;
   LMarcado : IMarcadoTokens;
