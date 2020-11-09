@@ -17,10 +17,21 @@ type
     FTipoModelo: string;
     FElementos: IList<INodoPetriNet>;
 
-    function GetElementos: IList<INodoPetriNet>;
+    FArcosIn: IList<IArcoIn>;
+    FArcosOut: IList<IArcoOut>;
 
-    function GetTipoModelo: string;
-    procedure SetTipoModelo(const Valor: string);
+    FPlazaIn: IPlaza;
+    FPlazaOut: IPlaza;
+
+    function GetElementos: IList<INodoPetriNet>; virtual;
+
+    function GetPlazaIn: IPlaza; virtual;
+    procedure SetPlazaIn(Value: IPlaza); virtual;
+    function GetPlazaOut: IPlaza; virtual;
+    procedure SetPlazaOut(Value: IPlaza); virtual;
+
+    function GetTipoModelo: string; virtual;
+    procedure SetTipoModelo(const Valor: string); virtual;
   public
     constructor Create; override;
 
@@ -35,6 +46,13 @@ type
     function GetTokens: IReadOnlyList<IToken>; virtual;
     function GetVariables: IReadOnlyList<IVariable>; virtual;
 
+    procedure AddArcoEntrada(AArco: IArcoOut); virtual;
+    procedure EliminarArcoEntrada(AArco: IArcoOut); virtual;
+    procedure AddArcoSalida(AArco: IArcoIn); virtual;
+    procedure EliminarArcoSalida(AArco: IArcoIn); virtual;
+
+    property PlazaIn: IPlaza read GetPlazaIn write SetPlazaIn;
+    property PlazaOut: IPlaza read GetPlazaOut write SetPlazaOut;
     property Elementos: IList<INodoPetriNet> read GetElementos;
     property TipoModelo: string read GetTipoModelo write SetTipoModelo;
   end;
@@ -48,10 +66,35 @@ uses
 
 { TdpnModelo }
 
+procedure TdpnModelo.AddArcoEntrada(AArco: IArcoOut);
+begin
+  Guard.CheckTrue(Assigned(FPlazaIN), 'La plaza IN debe estar asignada');
+  AArco.Plaza := FPlazaIN;
+end;
+
+procedure TdpnModelo.AddArcoSalida(AArco: IArcoIn);
+begin
+  Guard.CheckTrue(Assigned(FPlazaOut), 'La plaza OUT debe estar asignada');
+  AArco.Plaza := FPlazaOut;
+end;
+
 constructor TdpnModelo.Create;
 begin
   inherited;
   FElementos := TCollections.CreateList<INodoPetriNet>;
+
+  FPlazaIn := nil;
+  FPlazaOut := nil;
+end;
+
+procedure TdpnModelo.EliminarArcoEntrada(AArco: IArcoOut);
+begin
+  AArco.Plaza := nil;
+end;
+
+procedure TdpnModelo.EliminarArcoSalida(AArco: IArcoIn);
+begin
+  AArco.Plaza := nil;
 end;
 
 function TdpnModelo.GetArcos: IReadOnlyList<IArco>;
@@ -95,6 +138,16 @@ begin
     end
   end;
   Result := LResult.AsReadOnly;
+end;
+
+function TdpnModelo.GetPlazaIn: IPlaza;
+begin
+  Result := FPlazaIn;
+end;
+
+function TdpnModelo.GetPlazaOut: IPlaza;
+begin
+  Result := FPlazaOut;
 end;
 
 function TdpnModelo.GetPlazas: IReadOnlyList<IPlaza>;
@@ -190,6 +243,38 @@ begin
   for LNodo in FElementos do
   begin
     LNodo.Reset;
+  end;
+end;
+
+procedure TdpnModelo.SetPlazaIn(Value: IPlaza);
+var
+  LRes: boolean;
+begin
+  FPlazaIN := Value;
+  if Assigned(FPlazaIN) then
+  begin
+    LRes := GetPlazas.Any(function (const APlaza: IPlaza): boolean
+                          begin
+                            Result := (APlaza.ID = Value.ID);
+                          end
+                         );
+    Guard.CheckTrue(LRes, 'La plaza IN debe existir en el modelo')
+  end;
+end;
+
+procedure TdpnModelo.SetPlazaOut(Value: IPlaza);
+var
+  LRes: boolean;
+begin
+  FPlazaOut := Value;
+  if Assigned(FPlazaOut) then
+  begin
+    LRes := GetPlazas.Any(function (const APlaza: IPlaza): boolean
+                          begin
+                            Result := (APlaza.ID = Value.ID);
+                          end
+                         );
+    Guard.CheckTrue(LRes, 'La plaza OUT debe existir en el modelo')
   end;
 end;
 
