@@ -23,9 +23,9 @@ uses
   DPN.Variable;
 
 type
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-{$ENDIF}
+//{$ENDIF}
   TPetriNetCoreTesting_Plazas = class
   private
     FID      : Integer;
@@ -39,6 +39,8 @@ type
   public
     [Test]
     procedure Test_Transicionado_Arco_En_Plaza_Start;
+    [Test]
+    procedure Test_Transicionado_Arco_En_Plaza_Start_Varios;
     [Test]
     procedure Test_Cambio_En_PlazaStart_Notifica_A_Arco;
     [Test]
@@ -234,8 +236,52 @@ begin
   end;
 end;
 
+procedure TPetriNetCoreTesting_Plazas.Test_Transicionado_Arco_En_Plaza_Start_Varios;
+var
+  LMarcado: IMarcadoTokens;
+  LTokens: IList<IToken>;
+  LToken: IToken;
+begin
+  FID := 0;
+  FContextoCambiado := False;
+  FValor := False;
+  FCnt := 0;
+
+  FPlaza   := TdpnPlazaStart.Create;
+  TdpnPlazaStart(FPlaza).GeneracionContinua := True;
+  FPlaza.Nombre    := 'O1';
+  FPlaza.Start;
+
+  FArco                        := TdpnArcoIn.Create;
+  FArco.Plaza                  := FPlaza;
+  FArco.Peso                   := 1;
+  FArco.PesoEvaluar            := 1;
+  FArco.Start;
+
+  try
+    if FPlaza.TokenCount <> 1 then
+      Assert.Fail('Step1: TokenCount <> 1');
+
+    LMarcado := FArco.ObtenerTokensEvaluacion;
+    LMarcado.Marcado.TryGetValue(FPlaza, LTokens);
+    LToken := LTokens[0];
+
+    FArco.DoOnTransicionando([LToken]);
+
+    if FPlaza.TokenCount = 1 then //tenemos otro preparado
+      Assert.Pass
+    else
+      Assert.Fail('Step2: TokenCount <> 0');
+  finally
+      FArco.OnHabilitacionChanged.Remove(DoOnHabilitacionChanged);
+      FArco.PLaza := nil;
+      FArco       := nil;
+      FPlaza      := nil;
+  end;
+end;
+
 initialization
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Plazas);
-{$ENDIF}
+//{$ENDIF}
 end.

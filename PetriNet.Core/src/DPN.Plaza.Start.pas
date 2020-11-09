@@ -13,27 +13,39 @@ type
   TdpnPlazaStart = class (TdpnPlaza)
   protected
     FEjecutado: Boolean;
+    FGeneracionContinua: Boolean;
     FGenerarTokenDeSistema: Boolean;
 
     function GetCapacidad: Integer; override;
 
-    function GetGenerarTokensDeSistema: Boolean;
-    procedure SetGenerarTokensDeSistema(const Value: Boolean);
+    function GetGeneracionContinua: boolean; virtual;
+    procedure SetGeneracionContinua(const AValor: boolean); virtual;
+
+    function GetGenerarTokensDeSistema: Boolean; virtual;
+    procedure SetGenerarTokensDeSistema(const Value: Boolean); virtual;
 
     function GetAceptaArcosOUT: Boolean; override;
     procedure CrearToken;
   public
     constructor Create; override;
 
+    procedure EliminarToken(AToken: IToken); override;
+    procedure EliminarTokens(ATokens: TListaTokens); overload; override;
+    procedure EliminarTokens(ATokens: TArrayTokens); overload; override;
+    procedure EliminarTokens(const ACount: integer); overload; override;
+    procedure EliminarTodosTokens; virtual;
+
     procedure Start; override;
     procedure Reset; override;
 
+    property GeneracionContinua: boolean read GetGeneracionContinua write SetGeneracionContinua;
     property GenerarTokensDeSistema: boolean read GetGenerarTokensDeSistema write SetGenerarTokensDeSistema;
   end;
 
 implementation
 
 uses
+  DPN.TokenColoreado,
   DPN.TokenSistema;
 
 { TdpnPlazaStart }
@@ -44,9 +56,13 @@ var
 begin
   if (FTokens.Count = 0) and (FEjecutado = false) then
   begin
-    LToken := TdpnTokenSistema.Create;
+    case GenerarTokensDeSistema of
+      False: LToken := TdpnTokenColoreado.Create;
+      True: LToken := TdpnTokenSistema.Create;
+    end;
     FTokens.Add(LToken);
-    FEjecutado := True;
+    if not GeneracionContinua then
+      FEjecutado := True;
   end;
 end;
 
@@ -55,6 +71,37 @@ begin
   inherited;
   FEjecutado := False;
   FGenerarTokenDeSistema := False;
+  FGeneracionContinua := False;
+end;
+
+procedure TdpnPlazaStart.EliminarTodosTokens;
+begin
+  inherited;
+  CrearToken;
+end;
+
+procedure TdpnPlazaStart.EliminarToken(AToken: IToken);
+begin
+  inherited;
+  CrearToken;
+end;
+
+procedure TdpnPlazaStart.EliminarTokens(ATokens: TListaTokens);
+begin
+  inherited;
+  CrearToken;
+end;
+
+procedure TdpnPlazaStart.EliminarTokens(ATokens: TArrayTokens);
+begin
+  inherited;
+  CrearToken;
+end;
+
+procedure TdpnPlazaStart.EliminarTokens(const ACount: integer);
+begin
+  inherited;
+  CrearToken;
 end;
 
 function TdpnPlazaStart.GetAceptaArcosOut: Boolean;
@@ -67,6 +114,11 @@ begin
   Result := 1;
 end;
 
+function TdpnPlazaStart.GetGeneracionContinua: boolean;
+begin
+  Result := FGeneracionContinua
+end;
+
 function TdpnPlazaStart.GetGenerarTokensDeSistema: Boolean;
 begin
   Result := FGenerarTokenDeSistema
@@ -76,6 +128,11 @@ procedure TdpnPlazaStart.Reset;
 begin
   FEjecutado := False;
   CrearToken;
+end;
+
+procedure TdpnPlazaStart.SetGeneracionContinua(const AValor: boolean);
+begin
+  FGeneracionContinua := AValor
 end;
 
 procedure TdpnPlazaStart.SetGenerarTokensDeSistema(const Value: Boolean);

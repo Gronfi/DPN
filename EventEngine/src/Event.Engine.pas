@@ -58,7 +58,6 @@ type
 
   TEventListener = class abstract(TInterfacedObject, IEventEEListener, IObject)
   private
-    FRegistered                   : Boolean;
     FIsCodeToExecuteInUIMainThread: Boolean;
     FChannelName                  : String;
     FChannel                      : TEventChannel;
@@ -82,6 +81,8 @@ type
   protected
     function GetDefaultTypeRestriction: EEventTypeRestriction; virtual;
     function GetDefaultEnabled: Boolean; virtual;
+
+    procedure DoOnNewEvent(AEvent: IEventEE); virtual;
   public
     procedure AfterConstruction; override;
 
@@ -98,8 +99,6 @@ type
     procedure UnRegister;
 
     function GetAsObject: TObject;
-
-    procedure DoOnNewEvent(AEvent: IEventEE); virtual;
 
     property IsCodeToExecuteInUIMainThread: Boolean read GetIsCodeToExecuteInUIMainThread write SetIsCodeToExecuteInUIMainThread;
     property FilterCondition: TListenerFilter read GetListenerFilter write SetListenerFilter;

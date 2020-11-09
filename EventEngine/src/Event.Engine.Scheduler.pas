@@ -27,8 +27,6 @@ type
 
     FTaskListToRemove: IList<ISchedulerTask>;
 
-    procedure Execute; override;
-
     function Checks: Boolean;
     procedure RecalcScheduling;
     function GetIndex: Int64;
@@ -38,6 +36,8 @@ type
     function GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask): TWaitResult; overload;
     function GetNewTask(out AQueueSize: Integer; out ATask: ISchedulerTask; const ATimeOut: Cardinal): TWaitResult; overload;
 
+  protected
+    procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -171,7 +171,6 @@ end;
 procedure TEventsScheduler.DoScheduling;
 var
   LTarea               : ISchedulerTask;
-  LNoTarea             : Int64;
   LTimeToSleep         : Int64;
   LWaitingTask         : ISchedulerTask;
   LRes                 : TWaitResult;
@@ -179,6 +178,7 @@ var
   LRecalcChecks        : Boolean;
 begin
   LRecalcChecks := False;
+  LRes := TWaitResult.wrTimeout;
   while not(Terminated) do
   begin
     repeat
@@ -239,8 +239,6 @@ begin
 end;
 
 procedure TEventsScheduler.RecalcScheduling;
-var
-  LComparison: TComparison<ISchedulerTask>;
 begin
   if (FTaskList.Count > 1) then
   begin
