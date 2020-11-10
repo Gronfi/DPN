@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.JSon,
 
   Event.Engine.Interfaces,
 
@@ -46,7 +47,12 @@ type
   EventoNodoPN_Transicion = procedure(const AID: Integer; ATransicion: ITransicion) of object;
   EventoNodoPN_MarcadoPlazasTokenCount = procedure(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens) of object;
 
-  IIdentificado = interface
+  IObjeto = interface
+    ['{89BD3FEE-9EF2-4ADE-BBA3-FECBF6F2251B}']
+    function GetAsObject: TObject;
+  end;
+
+  IIdentificado = interface(IObjeto)
   ['{67839BCB-0819-419C-A78F-CA92566D3491}']
     function GetID: integer;
     procedure SetID(const Value: integer);
@@ -67,7 +73,17 @@ type
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
   end;
 
-  INodoPetriNet = interface(INombrado)
+  ISerializable = interface(INombrado)
+    ['{965202FB-0847-413D-B21F-A4A86C67CB1C}']
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject);
+
+    Function FormatoJSON: TJSONObject; overload;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload;
+
+    function Clon: ISerializable;
+  end;
+
+  INodoPetriNet = interface(ISerializable)
   ['{B713E58D-4060-49D0-B377-AA929E274A8D}']
     function GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
 

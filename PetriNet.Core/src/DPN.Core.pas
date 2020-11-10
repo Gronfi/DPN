@@ -4,6 +4,7 @@ interface
 
 uses
   System.SyncObjs,
+  System.JSON,
 
   Spring,
   Spring.Collections,
@@ -35,12 +36,21 @@ type
       class function GenerarNTokensSistema(const ACount: Integer): IList<IToken>; static;
       class function GenerarTokensAdecuados(AMarcado: IMarcadoTokens; const ACount: Integer): IList<IToken>; static;
 
+      class function CrearInstancia(const typeInfo: PTypeInfo): TValue; overload; static;
+      class function CrearInstancia(const NodoJSON: TJSonObject): TValue; overload; static;
+      class function CrearInstancia(const ADescriptorCualificado: string): TValue; overload; static;
+
+      class function CrearNodoJSONObjeto(Objeto: TObject): TJSONObject; static;
+      class procedure CargarCampoDeNodo<T>(var AObjetoJSON: TJSONObject; const ACampo, AErrorMsg: string; var ADato: T); overload; static;
+      class procedure CargarCampoDeNodo<T>(var AObjetoJSON: TJSONObject; const ACampo, AErrorMsg: string; var ADato: T; const ADefault: T); overload; static;
+
       class property TaskScheduler: TEventsScheduler read FScheduler;
   end;
 
 implementation
 
 uses
+  System.RTTI,
   System.SysUtils,
 
   DPN.TokenColoreado,
@@ -50,11 +60,65 @@ uses
 
 { DPN }
 
+class procedure DPNCore.CargarCampoDeNodo<T>(var AObjetoJSON: TJSONObject; const ACampo, AErrorMsg: string; var ADato: T; const ADefault: T);
+var
+  DatoTmp: T;
+begin
+  if not AObjetoJSON.TryGetValue<T>(ACampo, DatoTmp) then
+  begin
+    DatoTmp := ADefault;
+  end;
+  ADato := DatoTmp;
+end;
+
+class procedure DPNCore.CargarCampoDeNodo<T>(var AObjetoJSON: TJSONObject; const ACampo, AErrorMsg: string; var ADato: T);
+var
+  DatoTmp: T;
+begin
+  if not AObjetoJSON.TryGetValue<T>(ACampo, DatoTmp) then
+    raise Exception.Create(AErrorMsg + ' - No se encuentra el campo: ' + ACampo);
+  ADato := DatoTmp;
+end;
+
 class function DPNCore.CrearEvento<T>: IEvent<T>;
 var
   LEvento: Event<T>;
 begin
   Result := LEvento;
+end;
+
+class function DPNCore.CrearInstancia(const ADescriptorCualificado: string): TValue;
+begin
+  Result := TActivator.CreateInstance(ADescriptorCualificado);
+end;
+
+class function DPNCore.CrearInstancia(const typeInfo: PTypeInfo): TValue;
+begin
+  Result := CrearInstancia(typeInfo.TypeData.ClassType.QualifiedClassName);
+end;
+
+class function DPNCore.CrearInstancia(const NodoJSON: TJSonObject): TValue;
+var
+  LNombreCualificado: string;
+begin
+  // Se obtiene la informacion de la clase desde el nodo
+  LNombreCualificado := NodoJSON.GetValue('Clase').Value;
+  // Creamos la instacia.
+  Result := CrearInstancia(LNombreCualificado);
+end;
+
+class function DPNCore.CrearNodoJSONObjeto(Objeto: TObject): TJSONObject;
+var
+  LNodo: TJSONObject;
+  LType: TRttiType;
+  LCtx : TRttiContext;
+begin
+  LNodo := TJSONObject.Create;
+  LNodo.AddPair('Clase', TJSONString.Create(Objeto.QualifiedClassName));
+  LCtx := TRttiContext.Create;
+  LType := LCtx.GetType(Objeto.ClassInfo);
+  LNodo.AddPair('Package', TJSONString.Create(ExtractFileName(LType.Package.Name)));
+  Result := LNodo;
 end;
 
 class constructor DPNCore.CreateC;

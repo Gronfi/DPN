@@ -3,6 +3,8 @@ unit DPN.ArcoIn;
 interface
 
 uses
+  System.JSON,
+
   DPN.Interfaces,
   DPN.Arco;
 
@@ -20,6 +22,9 @@ type
     procedure SetPlaza(APlaza: IPlaza); override;
   public
     constructor Create; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
     function Evaluar(const ATokenCount: Integer): Boolean; override;
 
@@ -41,13 +46,22 @@ uses
   Spring,
   Spring.Collections,
 
+  DPN.Core,
   DPN.MarcadoTokens;
 
 { TdpnArcoIn }
 
+procedure TdpnArcoIn.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<integer>(NodoJson_IN, 'PesoEvaluar', ClassName, FPesoEvaluar);
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'IsInhibidor', ClassName, FIsInhibidor);
+end;
+
 constructor TdpnArcoIn.Create;
 begin
   inherited;
+  FPesoEvaluar       := 0;
   FIsInhibidor       := False;
 end;
 
@@ -74,6 +88,13 @@ begin
     False: FIsHabilitado := (ATokenCount >= Peso);
   end;
   Result := FIsHabilitado;
+end;
+
+procedure TdpnArcoIn.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('PesoEvaluar', TJSONNumber.Create(PesoEvaluar));
+  NodoJson_IN.AddPair('IsInhibidor', TJSONBool.Create(IsInhibidor));
 end;
 
 function TdpnArcoIn.GetIsInhibidor: Boolean;

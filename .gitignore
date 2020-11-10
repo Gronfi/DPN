@@ -21,3 +21,7 @@
 /EventEngine/src/__history
 /PetriNet.Core.Testing.Exe/*.identcache
 /EventEngine/*.identcache
+/PetriNet.Funciones.Basicas/*.local
+/PetriNet.Funciones.Basicas/*.res
+/PetriNet.Funciones.Basicas/__history
+/PetriNet.Funciones.Basicas/src/__history

@@ -3,12 +3,14 @@ unit DPN.NodoPetriNet;
 interface
 
 uses
+  System.JSON,
+
   Spring,
 
   DPN.Interfaces;
 
 type
-  TdpnNodoPetriNet = class abstract(TInterfacedObject, INodoPetriNet, INombrado, IIdentificado)
+  TdpnNodoPetriNet = class abstract(TInterfacedObject, INodoPetriNet)
   protected
     FID: integer;
     FModelo: IModelo;
@@ -46,6 +48,13 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); virtual;
+    Function FormatoJSON: TJSONObject; overload; virtual;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; virtual;
+    function Clon: ISerializable; virtual;
+
+    function GetAsObject: TObject;
+
     property ID: integer read GetID write SetID;
     property Nombre: string read GetNombre write SetNombre;
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
@@ -64,6 +73,26 @@ uses
   DPN.Core;
 
 { TdpnObjetoBasico }
+
+procedure TdpnNodoPetriNet.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Nombre', ClassName, FNombre);
+end;
+
+function TdpnNodoPetriNet.Clon: ISerializable;
+var
+  LNew: ISerializable;
+  OJSon: TJSONObject;
+begin
+  OJSon := Self.FormatoJSON;
+  try
+    LNew := DPNCore.CrearInstancia(OJSon).AsType<ISerializable>;
+    LNew.CargarDeJSON(OJSon);
+  finally
+    OJSon.Destroy;
+  end;
+  Result := LNew;
+end;
 
 constructor TdpnNodoPetriNet.Create;
 begin
@@ -84,7 +113,23 @@ end;
 
 procedure TdpnNodoPetriNet.DoOnNombreModeloChanged(const AID: integer; const ANombre: string);
 begin
+  FEvento_OnNombreChanged.Invoke(ID, Nombre);
+end;
 
+function TdpnNodoPetriNet.FormatoJSON: TJSONObject;
+begin
+  Result := DPNCore.CrearNodoJSONObjeto(Self);
+  FormatoJSON(Result);
+end;
+
+procedure TdpnNodoPetriNet.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(FNombre));
+end;
+
+function TdpnNodoPetriNet.GetAsObject: TObject;
+begin
+  Result := Self
 end;
 
 function TdpnNodoPetriNet.GetDefaultNombre: String;

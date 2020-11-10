@@ -135,6 +135,8 @@ type
     [TestCase('Test-Check=10,10,TRUE','10,10,TRUE')]
     procedure Test_Valor_Cambiado(const AValue : Integer; const ACheck: Integer; const AResult : Boolean);
     [Test]
+    procedure Test_Valores_Tipos_Distintos;
+    [Test]
     procedure Test_Evaluacion_Y_Cambio_Contexto_Posterior;
     [Test]
     procedure Test_1_Evento_OK;
@@ -163,6 +165,8 @@ end;
 
 function TdpnCondicion_es_tabla_variables.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
+  if FVariable.Valor.Kind <> FValor.Kind then
+    Exit(False);
   Result := (FVariable.Valor.AsInteger = FValor.AsInteger)
 end;
 
@@ -405,6 +409,16 @@ begin
   if not FContextoCambiado then
     Assert.Fail('Contexto');
   Assert.Pass;
+end;
+
+procedure TPetriNetCoreTesting_Funciones.Test_Valores_Tipos_Distintos;
+begin
+  try
+    FEnabled.Valor  := 'hola';
+  except
+    Assert.Pass;
+  end;
+  Assert.Fail;
 end;
 
 procedure TPetriNetCoreTesting_Funciones.Test_Valor_Cambiado(const AValue: Integer; const ACheck: Integer; const AResult : Boolean);

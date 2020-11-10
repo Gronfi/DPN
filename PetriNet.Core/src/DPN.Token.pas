@@ -122,7 +122,7 @@ function TdpnToken.LogAsString: string;
 var
   LKey: string;
 begin
-  Result := '[ID]' + ID.ToString + '[Plaza]' + Plaza.Nombre + '[CantidadCambiosPlaza]' + CantidadCambiosPlaza.ToString + '[MomentoCreacion]' + MomentoCreacion.ToString +
+  Result := '[ID]' + ID.ToString + '[ClassName]' + ClassName + '[Plaza]' + Plaza.Nombre + '[CantidadCambiosPlaza]' + CantidadCambiosPlaza.ToString + '[MomentoCreacion]' + MomentoCreacion.ToString +
             '[MomentoCambioPlaza]' + MomentoCambioPlaza.ToString;
   Result := Result + #13#10 + '---TablaVariables:';
   for LKey in TablaVariables.Keys do

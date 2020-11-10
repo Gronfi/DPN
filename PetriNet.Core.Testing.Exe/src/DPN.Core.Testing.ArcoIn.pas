@@ -13,9 +13,9 @@ uses
   DPN.ArcoIn;
 
 type
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-{$ENDIF}
+//{$ENDIF}
   TPetriNetCoreTesting_ArcoIn = class
   private
     FID      : Integer;
@@ -33,6 +33,8 @@ type
     procedure TearDown;
     [Test]
     procedure Test_Transicionado_Arco;
+    [Test]
+    procedure Test_Serializable;
     [Test]
     [TestCase('Test-TokenCount=2,1,1,FALSE','2,1,1,FALSE')]
     [TestCase('Test-TokenCount=2,1,2,TRUE','2,1,2,TRUE')]
@@ -130,6 +132,14 @@ begin
     Assert.Fail;
 end;
 
+procedure TPetriNetCoreTesting_ArcoIn.Test_Serializable;
+var
+  LTmp: string;
+begin
+  LTmp := FArco.FormatoJSON.ToString;
+  WriteLn(LTmp);
+end;
+
 procedure TPetriNetCoreTesting_ArcoIn.Test_Transicionado_Arco;
 var
   LToken: IToken;
@@ -146,8 +156,8 @@ begin
 end;
 
 initialization
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_ArcoIn);
-{$ENDIF}
+//{$ENDIF}
 
 end.

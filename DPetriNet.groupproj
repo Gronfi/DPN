@@ -15,6 +15,9 @@
         <Projects Include="PetriNet.Core\PetriNet.Core.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="PetriNet.Funciones.Basicas\PetriNet.Funciones.Basicas.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj">
             <Dependencies/>
         </Projects>
@@ -62,6 +65,15 @@
     <Target Name="PetriNet_Core:Make">
         <MSBuild Projects="PetriNet.Core\PetriNet.Core.dproj" Targets="Make"/>
     </Target>
+    <Target Name="PetriNet_Funciones_Basicas">
+        <MSBuild Projects="PetriNet.Funciones.Basicas\PetriNet.Funciones.Basicas.dproj"/>
+    </Target>
+    <Target Name="PetriNet_Funciones_Basicas:Clean">
+        <MSBuild Projects="PetriNet.Funciones.Basicas\PetriNet.Funciones.Basicas.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PetriNet_Funciones_Basicas:Make">
+        <MSBuild Projects="PetriNet.Funciones.Basicas\PetriNet.Funciones.Basicas.dproj" Targets="Make"/>
+    </Target>
     <Target Name="PetriNetCoreTesting">
         <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj"/>
     </Target>
@@ -72,13 +84,13 @@
         <MSBuild Projects="PetriNet.Core.Testing.Exe\PetriNetCoreTesting.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Spring_Base;Spring_Core;EventEngine;PetriNet_Core;PetriNetCoreTesting"/>
+        <CallTarget Targets="Spring_Base;Spring_Core;EventEngine;PetriNet_Core;PetriNet_Funciones_Basicas;PetriNetCoreTesting"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Spring_Base:Clean;Spring_Core:Clean;EventEngine:Clean;PetriNet_Core:Clean;PetriNetCoreTesting:Clean"/>
+        <CallTarget Targets="Spring_Base:Clean;Spring_Core:Clean;EventEngine:Clean;PetriNet_Core:Clean;PetriNet_Funciones_Basicas:Clean;PetriNetCoreTesting:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Spring_Base:Make;Spring_Core:Make;EventEngine:Make;PetriNet_Core:Make;PetriNetCoreTesting:Make"/>
+        <CallTarget Targets="Spring_Base:Make;Spring_Core:Make;EventEngine:Make;PetriNet_Core:Make;PetriNet_Funciones_Basicas:Make;PetriNetCoreTesting:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

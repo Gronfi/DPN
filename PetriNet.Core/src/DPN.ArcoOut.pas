@@ -3,6 +3,8 @@ unit DPN.ArcoOut;
 interface
 
 uses
+  System.JSON,
+
   Spring.Collections,
 
   DPN.Interfaces,
@@ -22,6 +24,10 @@ type
     procedure SetPlaza(APlaza: IPlaza); override;
   public
     constructor Create; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     function Evaluar(const ATokenCount: Integer): Boolean; override;
 
     procedure DoOnTransicionando(ATokens: TListaTokens); overload; override;
@@ -35,7 +41,9 @@ type
 implementation
 
 uses
-  Spring;
+  Spring,
+
+  DPN.Core;
 
 { TdpnArcoOut }
 
@@ -43,6 +51,18 @@ function TdpnArcoOut.Evaluar(const ATokenCount: Integer): Boolean;
 begin
   FIsHabilitado := (Plaza.TokenCount + Peso <= Plaza.Capacidad);
   Result        := FIsHabilitado;
+end;
+
+procedure TdpnArcoOut.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'GenerarTokensDeSistema', ClassName, FGenerarTokensDeSistema);
+end;
+
+procedure TdpnArcoOut.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('GenerarTokensDeSistema', TJSONBool.Create(GenerarTokensDeSistema));
 end;
 
 function TdpnArcoOut.GetGenerarTokensDeSistema: Boolean;

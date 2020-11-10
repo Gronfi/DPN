@@ -5,6 +5,8 @@ unit DPN.Arco;
 interface
 
 uses
+  System.JSON,
+
   Spring,
   Spring.Collections,
 
@@ -52,6 +54,9 @@ type
     constructor Create; override;
     destructor Destroy; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     procedure Start; override;
 
     function LogAsString: string; override;
@@ -79,9 +84,16 @@ uses
 
 { TdpnArco }
 
+procedure TdpnArco.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<integer>(NodoJson_IN, 'Peso', ClassName, FPeso);
+end;
+
 constructor TdpnArco.Create;
 begin
   inherited;
+  FPeso              := 0;
   FIsHabilitado      := False;
   FIsForzado         := False;
   FValorForzado      := True;
@@ -156,6 +168,12 @@ begin
       FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
     end;
   end;
+end;
+
+procedure TdpnArco.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('Peso', TJSONNumber.Create(Peso));
 end;
 
 function TdpnArco.GetIsForzado: Boolean;
