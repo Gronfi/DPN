@@ -99,6 +99,7 @@ type
     procedure Stop;
     procedure Start;
     procedure Reset;
+    procedure Setup;
 
     function LogAsString: string;
 
@@ -448,6 +449,14 @@ type
     function GetTransiciones: IReadOnlyList<ITransicion>;
     function GetTokens: IReadOnlyList<IToken>;
     function GetVariables: IReadOnlyList<IVariable>;
+
+    procedure AddElementoNodo(AElemento: INodoPetriNet);
+    procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload;
+    procedure AddElementosNodos(AElementos: IList<INodoPetriNet>); overload;
+    procedure ClearElementos;
+    procedure EliminarElementoNodo(AElemento: INodoPetriNet);
+    procedure EliminarElementosNodos(AElementos: TArray<INodoPetriNet>); overload;
+    procedure EliminarElementosNodos(AElementos: IList<INodoPetriNet>); overload;
 
     procedure AddArcoEntrada(AArco: IArcoOut);
     procedure EliminarArcoEntrada(AArco: IArcoOut);

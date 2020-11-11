@@ -23,13 +23,15 @@ uses
   DPN.Variable;
 
 type
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-{$ENDIF}
+//{$ENDIF}
   TPetriNetCoreTesting_Modelos = class
   private
   protected
   public
+    [Test]
+    procedure Test_Serializable;
     [Test]
     procedure Test_Submodelo_Simple;
     [Test]
@@ -39,11 +41,63 @@ type
 implementation
 
 uses
+  System.JSON,
   System.SysUtils,
 
+  DPN.Core,
   DPN.TokenColoreado;
 
 { TPetriNetCoreTesting_Modelos }
+
+procedure TPetriNetCoreTesting_Modelos.Test_Serializable;
+var
+  LModelo: IModelo;
+  LModelo2: IModelo;
+  LPlazaI1: IPlaza;
+  LPlazaO1: IPlaza;
+  LArcoI1 : IArcoIn;
+  LArcoO1 : IArcoOut;
+  LTransicion1: ITransicion;
+  LTmp: string;
+  LJSon: TJSOnObject;
+begin
+  LModelo := TdpnModelo.Create;
+  LModelo.Nombre := 'Modelo test';
+
+  LPlazaI1           := TdpnPlaza.Create;
+  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.Capacidad := 1;
+
+  LArcoI1             := TdpnArcoIn.Create;
+  LArcoI1.Plaza       := LPlazaI1;
+  LArcoI1.Peso        := 1;
+  LArcoI1.PesoEvaluar := 1;
+
+  LArcoO1             := TdpnArcoOut.Create;
+  LArcoO1.Peso        := 1;
+
+  LPlazaO1           := TdpnPlazaFinish.Create;
+  LPlazaO1.Nombre    := 'O1';
+  LArcoO1.Plaza      := LPlazaO1;
+
+  LTransicion1 := TdpnTransicion.Create;
+  LTransicion1.AddArcoIn(LArcoI1);
+  LTransicion1.AddArcoOut(LArcoO1);
+
+  LModelo.AddElementoNodo(LPlazaI1);
+  LModelo.AddElementoNodo(LArcoI1);
+  LModelo.AddElementoNodo(LArcoO1);
+  LModelo.AddElementoNodo(LPlazaO1);
+  LModelo.AddElementoNodo(LTransicion1);
+
+  LJSon := LModelo.FormatoJSON;
+  LTmp := LJSON.ToString;
+  WriteLn('Json: ' + LTmp);
+  LModelo2 := DPNCore.CrearInstancia(LJSon).AsType<IModelo>;
+  LModelo2.CargarDeJSON(LJSon);
+  WriteLn(LModelo2.LogAsString);
+  WriteLn(LModelo2.FormatoJSON.ToJSON);
+end;
 
 procedure TPetriNetCoreTesting_Modelos.Test_Submodelo_IN_OUT;
 var
@@ -261,7 +315,7 @@ begin
 end;
 
 initialization
-{$IFDEF TESTS_HABILITADOS}
+//{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_Modelos);
-{$ENDIF}
+//{$ENDIF}
 end.

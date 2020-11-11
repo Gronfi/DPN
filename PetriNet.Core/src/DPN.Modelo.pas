@@ -4,6 +4,7 @@ interface
 
 uses
   System.Rtti,
+  System.JSON,
 
   Spring,
   Spring.Collections,
@@ -23,6 +24,9 @@ type
     FPlazaIn: IPlaza;
     FPlazaOut: IPlaza;
 
+    FNombrePlazaIn: string;
+    FNombrePlazaOut: string;
+
     function GetElementos: IList<INodoPetriNet>; virtual;
 
     function GetPlazaIn: IPlaza; virtual;
@@ -35,9 +39,20 @@ type
   public
     constructor Create; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     procedure Start; override;
     procedure Stop; override;
     procedure Reset; override;
+
+    procedure AddElementoNodo(AElemento: INodoPetriNet); virtual;
+    procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload; virtual;
+    procedure AddElementosNodos(AElementos: IList<INodoPetriNet>); overload; virtual;
+    procedure ClearElementos; virtual;
+    procedure EliminarElementoNodo(AElemento: INodoPetriNet); virtual;
+    procedure EliminarElementosNodos(AElementos: TArray<INodoPetriNet>); overload; virtual;
+    procedure EliminarElementosNodos(AElementos: IList<INodoPetriNet>); overload; virtual;
 
     function GetPlazas: IReadOnlyList<IPlaza>; virtual;
     function GetTransiciones: IReadOnlyList<ITransicion>; virtual;
@@ -62,7 +77,8 @@ implementation
 uses
   System.SysUtils,
 
-  Event.Engine.Utils;
+  Event.Engine.Utils,
+  DPN.Core;
 
 { TdpnModelo }
 
@@ -76,6 +92,59 @@ procedure TdpnModelo.AddArcoSalida(AArco: IArcoIn);
 begin
   Guard.CheckTrue(Assigned(FPlazaOut), 'La plaza OUT debe estar asignada');
   AArco.Plaza := FPlazaOut;
+end;
+
+procedure TdpnModelo.AddElementoNodo(AElemento: INodoPetriNet);
+begin
+  AElemento.Modelo := Self;
+  Elementos.Add(AElemento);
+end;
+
+procedure TdpnModelo.AddElementosNodos(AElementos: TArray<INodoPetriNet>);
+var
+  LNodo: INodoPetriNet;
+begin
+  for LNodo in AElementos do
+    AddElementoNodo(LNodo);
+end;
+
+procedure TdpnModelo.AddElementosNodos(AElementos: IList<INodoPetriNet>);
+var
+  LNodo: INodoPetriNet;
+begin
+  for LNodo in AElementos do
+    AddElementoNodo(LNodo);
+end;
+
+procedure TdpnModelo.CargarDeJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LNodoJSon: TJSONObject;
+  LNodo: INodoPetriNet;
+  I: integer;
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'TipoModelo', ClassName, FTipoModelo);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'PlazaIn', ClassName, FNombrePlazaIn);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'PlazaOut', ClassName, FNombrePlazaOut);
+  if NodoJson_IN.TryGetValue<TJSONArray>('Elementos', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONObject;
+      LNodo := DPNCore.CrearInstancia(LNodoJSon).AsType<INodoPetriNet>;
+      LNodo.CargarDeJSON(LNodoJSon);
+      AddElementoNodo(LNodo);
+    end;
+  end;
+end;
+
+procedure TdpnModelo.ClearElementos;
+var
+  LNodo: INodoPetriNet;
+begin
+  for LNodo in Elementos do
+    EliminarElementoNodo(LNodo);
 end;
 
 constructor TdpnModelo.Create;
@@ -95,6 +164,49 @@ end;
 procedure TdpnModelo.EliminarArcoSalida(AArco: IArcoIn);
 begin
   AArco.Plaza := nil;
+end;
+
+procedure TdpnModelo.EliminarElementoNodo(AElemento: INodoPetriNet);
+begin
+  AElemento.Modelo := nil;
+  Elementos.Remove(AElemento);
+end;
+
+procedure TdpnModelo.EliminarElementosNodos(AElementos: TArray<INodoPetriNet>);
+var
+  LNodo: INodoPetriNet;
+begin
+  for LNodo in AElementos do
+    EliminarElementoNodo(LNodo);
+end;
+
+procedure TdpnModelo.EliminarElementosNodos(AElementos: IList<INodoPetriNet>);
+begin
+  EliminarElementosNodos(AElementos.ToArray);
+end;
+
+procedure TdpnModelo.FormatoJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  I: integer;
+  LNombre: string;
+begin
+  inherited;
+  NodoJson_IN.AddPair('TipoModelo', TJsonString.Create(TipoModelo));
+  LNombre := '';
+  if Assigned(PlazaIn) then
+    LNombre := PlazaIn.Nombre;
+  NodoJson_IN.AddPair('PlazaIn', TJsonString.Create(LNombre));
+  LNombre := '';
+  if Assigned(PlazaOut) then
+    LNombre := PlazaOut.Nombre;
+  NodoJson_IN.AddPair('PlazaOut', TJsonString.Create(LNombre));
+  LDatos := TJSONArray.Create;
+  for I := 0 to Elementos.Count - 1 do
+  begin
+    LDatos.AddElement(Elementos[I].FormatoJSon);
+  end;
+  NodoJson_IN.AddPair('Elementos', LDatos);
 end;
 
 function TdpnModelo.GetArcos: IReadOnlyList<IArco>;

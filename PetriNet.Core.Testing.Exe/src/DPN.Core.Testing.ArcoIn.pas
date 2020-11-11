@@ -13,9 +13,9 @@ uses
   DPN.ArcoIn;
 
 type
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
   [TestFixture]
-//{$ENDIF}
+{$ENDIF}
   TPetriNetCoreTesting_ArcoIn = class
   private
     FID      : Integer;
@@ -156,8 +156,8 @@ begin
 end;
 
 initialization
-//{$IFDEF TESTS_HABILITADOS}
+{$IFDEF TESTS_HABILITADOS}
   TDUnitX.RegisterTestFixture(TPetriNetCoreTesting_ArcoIn);
-//{$ENDIF}
+{$ENDIF}
 
 end.

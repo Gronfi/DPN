@@ -4,6 +4,7 @@ interface
 
 uses
   System.Rtti,
+  System.JSON,
 
   Spring,
 
@@ -23,6 +24,12 @@ type
   public
     constructor Create; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; override;
+
     function LogAsString: string; override;
 
     property Valor: TValue read GetValor write SetValor;
@@ -37,10 +44,40 @@ uses
 
 { TdpnVariable }
 
+procedure TdpnVariable.CargarDeJSON(NodoJson_IN: TJSONObject);
+var
+  LTmp: string;
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Valor', ClassName, LTmp);
+  FValor := TValue.From(LTmp);
+end;
+
+procedure TdpnVariable.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+var
+  LTmp: string;
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Valor', ClassName, LTmp);
+  FValor := TValue.From(LTmp);
+end;
+
 constructor TdpnVariable.Create;
 begin
   inherited;
   FEventoOnValueChanged := DPNCore.CrearEvento<EventoNodoPN_ValorTValue>;
+end;
+
+procedure TdpnVariable.FormatoEstado(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('Valor', TJSONString.Create(FValor.ToString));
+end;
+
+procedure TdpnVariable.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('Valor', TJSONString.Create(FValor.ToString));
 end;
 
 function TdpnVariable.GetOnValueChanged: IEvent<EventoNodoPN_ValorTValue>;

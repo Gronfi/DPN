@@ -15,6 +15,7 @@ type
     FID: integer;
     FModelo: IModelo;
     FNombre: string;
+    FNombreModelo: string;
     FEvento_OnNombreChanged:  IEvent<EventoNodoPN_ValorString>;
     FIsEnWarning: Boolean;
     FEnabled: Boolean;
@@ -40,13 +41,14 @@ type
     procedure SetModelo(AModelo: IModelo); virtual;
 
     function LogAsString: string; virtual;
+  public
+    constructor Create; virtual;
+    destructor Destroy; override;
 
     procedure Stop; virtual;
     procedure Start; virtual;
     procedure Reset; virtual;
-  public
-    constructor Create; virtual;
-    destructor Destroy; override;
+    procedure Setup; virtual;
 
     function GetAsObject: TObject;
 
@@ -81,6 +83,7 @@ uses
 procedure TdpnNodoPetriNet.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
   DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Nombre', ClassName, FNombre);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Modelo', ClassName, FNombreModelo);
 end;
 
 procedure TdpnNodoPetriNet.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
@@ -108,6 +111,7 @@ begin
   inherited;
   FID := DPNCore.GetNuevoID;
   FNombre := GetDefaultNombre;
+  FNombreModelo := '';
   FEnabled := False;
   FIsEnWarning := True;
   FEvento_OnEnabledChanged := DPNCore.CrearEvento<EventoNodoPN_ValorBooleano>;
@@ -145,8 +149,14 @@ begin
 end;
 
 procedure TdpnNodoPetriNet.FormatoJSON(NodoJson_IN: TJSONObject);
+var
+  LModelo: string;
 begin
-  NodoJson_IN.AddPair('Nombre', TJsonString.Create(FNombre));
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(Nombre)); //para asociar
+  if Assigned(FModelo) then
+    LModelo := FModelo.Nombre
+  else LModelo := ''; //es el caso del modelo de mas alto nivel, no tiene padre
+  NodoJson_IN.AddPair('Modelo', TJsonString.Create(LModelo)); //para asociar
 end;
 
 function TdpnNodoPetriNet.GetAsObject: TObject;
@@ -239,6 +249,11 @@ begin
     FNombre := Valor;
     FEvento_OnNombreChanged.Invoke(ID, Nombre);
   end;
+end;
+
+procedure TdpnNodoPetriNet.Setup;
+begin
+
 end;
 
 procedure TdpnNodoPetriNet.Start;

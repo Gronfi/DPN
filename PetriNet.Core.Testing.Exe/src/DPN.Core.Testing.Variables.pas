@@ -27,7 +27,8 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-
+    [Test]
+    procedure Test_Serializable;
     [Test]
     [TestCase('Test-Cambiar-Valor=1','1')]
     [TestCase('Test-Cambiar-Valor=2','2')]
@@ -37,6 +38,9 @@ type
   end;
 
 implementation
+
+uses
+  System.JSON;
 
 procedure TPetriNetCoreTesting_Variables.DoOnVarChanged(const AID: Integer; const AValue: TValue);
 begin
@@ -55,6 +59,26 @@ procedure TPetriNetCoreTesting_Variables.TearDown;
 begin
   FEnabled.OnValueChanged.Remove(DoOnVarChanged);
   FEnabled := nil;
+end;
+
+procedure TPetriNetCoreTesting_Variables.Test_Serializable;
+var
+  LTmp: string;
+  LJSon: TJSOnObject;
+  LValorInicio : integer;
+begin
+  LValorInicio := FEnabled.Valor.AsInteger;
+  WriteLn('I: ' + FEnabled.Valor.ToString);
+  LJSon := FEnabled.FormatoJSON;
+  LTmp := LJSON.ToString;
+  WriteLn('Json: ' + LTmp);
+  FEnabled.Valor  := 5;
+  WriteLn('1: ' + FEnabled.Valor.ToString);
+  FEnabled.CargarDeJSON(LJSon);
+  WriteLn('F: ' + FEnabled.Valor.ToString);
+  if FEnabled.Valor.AsInteger = LValorInicio then
+    Assert.Pass
+  else Assert.Fail;
 end;
 
 procedure TPetriNetCoreTesting_Variables.Test_Valor_Cambiado(const AValue : Integer);
