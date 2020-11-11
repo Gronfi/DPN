@@ -76,9 +76,12 @@ type
   ISerializable = interface(INombrado)
     ['{965202FB-0847-413D-B21F-A4A86C67CB1C}']
     Procedure CargarDeJSON(NodoJson_IN: TJSONObject);
-
     Function FormatoJSON: TJSONObject; overload;
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload;
+
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+    Function FormatoEstadoJSON: TJSONObject; overload;
+    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload;
 
     function Clon: ISerializable;
   end;

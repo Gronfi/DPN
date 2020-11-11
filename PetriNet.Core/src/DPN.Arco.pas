@@ -57,6 +57,9 @@ type
     Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; override;
+
     procedure Start; override;
 
     function LogAsString: string; override;
@@ -88,6 +91,13 @@ procedure TdpnArco.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
   inherited;
   DPNCore.CargarCampoDeNodo<integer>(NodoJson_IN, 'Peso', ClassName, FPeso);
+end;
+
+procedure TdpnArco.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'IsForzado', ClassName, FIsForzado);
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'ValorForzado', ClassName, FValorForzado);
 end;
 
 constructor TdpnArco.Create;
@@ -168,6 +178,13 @@ begin
       FEventoOnHabilitacionChanged.Invoke(ID, IsHabilitado);
     end;
   end;
+end;
+
+procedure TdpnArco.FormatoEstado(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('IsForzado', TJSONBool.Create(IsForzado));
+  NodoJson_IN.AddPair('ValorForzado', TJSONBool.Create(ValorForzado));
 end;
 
 procedure TdpnArco.FormatoJSON(NodoJson_IN: TJSONObject);

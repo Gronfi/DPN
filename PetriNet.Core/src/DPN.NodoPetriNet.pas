@@ -48,12 +48,16 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
+    function GetAsObject: TObject;
+
     Procedure CargarDeJSON(NodoJson_IN: TJSONObject); virtual;
     Function FormatoJSON: TJSONObject; overload; virtual;
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; virtual;
     function Clon: ISerializable; virtual;
 
-    function GetAsObject: TObject;
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); virtual;
+    Function FormatoEstadoJSON: TJSONObject; overload; virtual;
+    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; virtual;
 
     property ID: integer read GetID write SetID;
     property Nombre: string read GetNombre write SetNombre;
@@ -77,6 +81,11 @@ uses
 procedure TdpnNodoPetriNet.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
   DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Nombre', ClassName, FNombre);
+end;
+
+procedure TdpnNodoPetriNet.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+begin
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'Enabled', ClassName, FEnabled);
 end;
 
 function TdpnNodoPetriNet.Clon: ISerializable;
@@ -103,6 +112,7 @@ begin
   FIsEnWarning := True;
   FEvento_OnEnabledChanged := DPNCore.CrearEvento<EventoNodoPN_ValorBooleano>;
   FEvento_OnNombreChanged  := DPNCore.CrearEvento<EventoNodoPN_ValorString>;
+  FEvento_OnReseted := DPNCore.CrearEvento<EventoNodoPN>;
 end;
 
 destructor TdpnNodoPetriNet.Destroy;
@@ -117,6 +127,18 @@ begin
 end;
 
 function TdpnNodoPetriNet.FormatoJSON: TJSONObject;
+begin
+  Result := DPNCore.CrearNodoJSONObjeto(Self);
+  FormatoJSON(Result);
+end;
+
+procedure TdpnNodoPetriNet.FormatoEstado(NodoJson_IN: TJSONObject);
+begin
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(Nombre)); //completo
+  NodoJson_IN.AddPair('Enabled', TJSONBool.Create(Enabled));
+end;
+
+function TdpnNodoPetriNet.FormatoEstadoJSON: TJSONObject;
 begin
   Result := DPNCore.CrearNodoJSONObjeto(Self);
   FormatoJSON(Result);
@@ -186,7 +208,7 @@ end;
 
 procedure TdpnNodoPetriNet.Reset;
 begin
-  ;
+  FEvento_OnReseted.Invoke(ID);
 end;
 
 procedure TdpnNodoPetriNet.SetID(const Value: integer);
