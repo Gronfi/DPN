@@ -19,6 +19,8 @@ type
     FPeso: Integer;
     FPlaza: IPlaza;
     FTransicion: ITransicion;
+    FNombrePlaza: string;
+    FNombreTransicion: string;
     FIsHabilitado: Boolean;
     FPlazaIsEnabled: Boolean;
     FTransicionIsEnabled: Boolean;
@@ -61,6 +63,8 @@ type
     Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; override;
 
     procedure Start; override;
+    procedure Setup; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     function LogAsString: string; override;
 
@@ -91,6 +95,8 @@ procedure TdpnArco.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
   inherited;
   DPNCore.CargarCampoDeNodo<integer>(NodoJson_IN, 'Peso', ClassName, FPeso);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombrePlaza', ClassName, FNombrePlaza);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreTransicion', ClassName, FNombreTransicion);
 end;
 
 procedure TdpnArco.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
@@ -98,6 +104,16 @@ begin
   inherited;
   DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'IsForzado', ClassName, FIsForzado);
   DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'ValorForzado', ClassName, FValorForzado);
+end;
+
+function TdpnArco.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if Nombre.IsEmpty then
+  begin
+    Result := False;
+    AListaErrores.Add('Nombre is Empty');
+  end;
 end;
 
 constructor TdpnArco.Create;
@@ -191,6 +207,10 @@ procedure TdpnArco.FormatoJSON(NodoJson_IN: TJSONObject);
 begin
   inherited;
   NodoJson_IN.AddPair('Peso', TJSONNumber.Create(Peso));
+  NodoJson_IN.AddPair('NombrePlaza', TJSONString.Create(Plaza.Nombre));
+  NodoJson_IN.AddPair('NombreTransicion', TJSONString.Create(Transicion.Nombre));
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombrePlaza', ClassName, FNombrePlaza);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreTransicion', ClassName, FNombreTransicion);
 end;
 
 function TdpnArco.GetIsForzado: Boolean;
@@ -306,6 +326,34 @@ begin
     FTransicionIsEnabled := FTransicion.Enabled;
   end
   else FTransicionIsEnabled := False;
+end;
+
+procedure TdpnArco.Setup;
+var
+  LPlaza: IPlaza;
+  LTransicion: ITransicion;
+begin
+  inherited;
+  if not FNombrePlaza.IsEmpty then
+  begin
+    LPlaza := PetriNetController.Grafo.GetPlazas.First(function (const AElemento: IPlaza): boolean
+                                                       begin
+                                                         Result := (AElemento.Nombre = FNombrePlaza)
+                                                       end
+                                                      );
+    if Assigned(LPlaza) then
+      Plaza := LPlaza;
+  end;
+  if not FNombreTransicion.IsEmpty then
+  begin
+    LTransicion := PetriNetController.Grafo.GetTransiciones.First(function (const AElemento: ITransicion): boolean
+                                                                  begin
+                                                                    Result := (AElemento.Nombre = FNombreTransicion)
+                                                                  end
+                                                                 );
+    if Assigned(LTransicion) then
+      Transicion := LTransicion;
+  end;
 end;
 
 procedure TdpnArco.SetValorForzado(const Value: Boolean);

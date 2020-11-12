@@ -3,6 +3,8 @@ unit DPN.Interfaces;
 interface
 
 uses
+  System.SyncObjs,
+  System.Classes,
   System.SysUtils,
   System.JSon,
 
@@ -46,6 +48,8 @@ type
   EventoNodoPN_ValorTValue = procedure(const AID: Integer; const AValue: TValue) of object;
   EventoNodoPN_Transicion = procedure(const AID: Integer; ATransicion: ITransicion) of object;
   EventoNodoPN_MarcadoPlazasTokenCount = procedure(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens) of object;
+
+  TdpnPetriNetCoordinadorBase = class;
 
   IObjeto = interface
     ['{89BD3FEE-9EF2-4ADE-BBA3-FECBF6F2251B}']
@@ -96,13 +100,18 @@ type
     function GetModelo: IModelo;
     procedure SetModelo(AModelo: IModelo);
 
+    function GetPetriNetController: TdpnPetriNetCoordinadorBase;
+    procedure SetPetriNetController(APetriNetController: TdpnPetriNetCoordinadorBase);
+
     procedure Stop;
     procedure Start;
     procedure Reset;
     procedure Setup;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean;
 
     function LogAsString: string;
 
+    property PetriNetController: TdpnPetriNetCoordinadorBase read GetPetriNetController write SetPetriNetController;
     property Modelo: IModelo read GetModelo write SetModelo;
     property Enabled: boolean read GetEnabled;
     property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
@@ -472,9 +481,79 @@ type
   TListaModelos = IList<IModelo>;
   TArrayModelos = TArray<IModelo>;
 
-  EEstadoPetriNet = (Iniciada, Detenida, GrafoNoAsignado);
+  EEstadoPetriNet = (Iniciada, Detenida, GrafoNoAsignado, GrafoSinSetup);
 
   EventoEstadoPN = procedure(const AEstado: EEstadoPetriNet) of object;
+
+  TdpnPetriNetCoordinadorBase = class abstract(TThread)
+  protected
+    FGrafo: IModelo;
+    FEstado: EEstadoPetriNet;
+    FMultipleEnablednessOfTransitions: Boolean;
+    FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
+    FStartedDateTimeAt: TDateTime;
+    FStartedEllapsedAt: int64;
+
+    FNodos: IDictionary<Integer, INodoPetriNet>;
+    FMarcado: IDictionary<Integer, Integer>;
+    FNombresPlazas: IBidiDictionary<String, Integer>;
+    FNombresTransiciones: IBidiDictionary<String, Integer>;
+    FNombresArcos: IBidiDictionary<String, Integer>;
+    FNombresModelos: IBidiDictionary<String, Integer>;
+
+    function GetMultipleEnablednessOfTransitions: Boolean; virtual;
+    procedure SetMultipleEnablednessOfTransitions(const Value: Boolean); virtual;
+
+    function GetGrafo: IModelo; virtual;
+    procedure SetGrafo(AGrafo: IModelo); virtual;
+
+    function ChequearIntegridadDeLaRed(out AListaErrores: IList<string>) : boolean;
+
+    function GetEstado: EEstadoPetriNet; virtual;
+    function GetOnEstadoChanged: IEvent<EventoEstadoPN>; virtual;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); virtual;
+    Function FormatoJSON: TJSONObject; overload; virtual;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; virtual;
+
+    procedure AsociacionesPN; virtual;
+
+    procedure Start; virtual;
+    procedure Stop; virtual;
+    procedure Reset; virtual;
+    procedure Setup; virtual;
+
+    function LogMarcado: string; virtual;
+
+    function GetPlaza(const AID: integer): IPlaza; overload; virtual;
+    function GetPlaza(const ANombre: string): IPlaza; overload; virtual;
+    //function GetNombrePlaza(const AID: integer): string;
+
+    function GetArco(const AID: integer): IArco; overload; virtual;
+    function GetArco(const ANombre: string): IArco; overload; virtual;
+
+    function GetTransicion(const AID: integer): ITransicion; overload; virtual;
+    function GetTransicion(const ANombre: string): ITransicion; overload; virtual;
+
+    function GetModelo(const AID: integer): IModelo; overload; virtual;
+    function GetModelo(const ANombre: string): IModelo; overload; virtual;
+
+    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
+    property Grafo: IModelo read GetGrafo write SetGrafo;
+    property Estado: EEstadoPetriNet read GetEstado;
+    property OnEstadoChanged: IEvent<EventoEstadoPN> read GetOnEstadoChanged;
+    property Nodos: IDictionary<Integer, INodoPetriNet> read FNodos;
+    property NombresPlazas: IBidiDictionary<String, Integer> read FNombresPlazas;
+    property NombresTransiciones: IBidiDictionary<String, Integer>read FNombresTransiciones;
+    property NombresArcos: IBidiDictionary<String, Integer>read FNombresArcos;
+    property NombresModelos: IBidiDictionary<String, Integer>read FNombresModelos;
+    property StartedDateTimeAt: TDateTime read FStartedDateTimeAt;
+    property StartedEllapsedAt: int64 read FStartedEllapsedAt;
+  end;
+
 
 {$REGION 'Scheduling'}
   TCallBackTimer = reference to procedure(const ATaskID: int64);
@@ -502,5 +581,264 @@ type
 {$ENDREGION}
 
 implementation
+
+uses
+  Event.Engine.Utils,
+  DPN.Core;
+
+{ TdpnPetriNetCoordinadorBase }
+
+procedure TdpnPetriNetCoordinadorBase.AsociacionesPN;
+begin
+  // asociar el controlador a cada elemento
+  FGrafo.Elementos.ForEach(procedure (const ANodo: INodoPetriNet)
+                           begin
+                             ANodo.PetriNetController := Self;
+                           end
+                          );
+end;
+
+procedure TdpnPetriNetCoordinadorBase.CargarDeJSON(NodoJson_IN: TJSONObject);
+var
+  LJSon: TJSONObject;
+  LListaErrores: IList<string>;
+begin
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'MultiplesDisparosDeTransiciones', ClassName, FMultipleEnablednessOfTransitions);
+  if NodoJson_IN.TryGetValue('Grafo', LJSon) then
+  begin
+    Grafo := DPNCore.CrearInstancia(LJSon).AsType<IModelo>;
+    Grafo.CargarDeJSON(LJSon);
+    FEstado := EEstadoPetriNet.GrafoSinSetup;
+    AsociacionesPN;
+    if not ChequearIntegridadDeLaRed(LListaErrores) then
+    begin
+      // log?
+      raise Exception.Create('Hay problemas de integridad en la red');
+    end;
+    Setup;
+    Start;
+  end;
+end;
+
+function TdpnPetriNetCoordinadorBase.ChequearIntegridadDeLaRed(out AListaErrores: IList<string>): boolean;
+var
+  LResTotal: boolean;
+  LLocal: IList<string>;
+begin
+  LResTotal := True;
+  LLocal := TCollections.CreateList<string>;
+  AListaErrores := TCollections.CreateList<string>;
+  FGrafo.Elementos.ForEach(procedure (const ANodo: INodoPetriNet)
+                           var
+                             LRes: Boolean;
+                             LListaErrores: IList<string>;
+                           begin
+                             LRes := ANodo.CheckIsOK(LListaErrores);
+                             if not LRes then
+                             begin
+                               LResTotal := False;
+                               LLocal.AddRange(LListaErrores.ToArray)
+                             end;
+                           end
+                          );
+  Result := LResTotal;
+  AListaErrores.AddRange(LLocal.ToArray)
+end;
+
+constructor TdpnPetriNetCoordinadorBase.Create;
+begin
+  inherited Create(False);
+  FEstado                           := EEstadoPetriNet.GrafoNoAsignado;
+  FMultipleEnablednessOfTransitions := True;
+
+  FNodos := TCollections.CreateDictionary<Integer, INodoPetriNet>;
+  FMarcado := TCollections.CreateDictionary<Integer, Integer>;
+  FNombresPlazas := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresTransiciones := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresArcos := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresModelos := TCollections.CreateBidiDictionary<String, Integer>;
+end;
+
+destructor TdpnPetriNetCoordinadorBase.Destroy;
+begin
+  FEstado := EEstadoPetriNet.Detenida;
+  Terminate;
+  WaitFor;
+end;
+
+function TdpnPetriNetCoordinadorBase.FormatoJSON: TJSONObject;
+begin
+  Result := DPNCore.CrearNodoJSONObjeto(Self);
+  FormatoJSON(Result);
+end;
+
+procedure TdpnPetriNetCoordinadorBase.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  NodoJson_IN.AddPair('MultiplesDisparosDeTransiciones', TJSONBool.Create(FMultipleEnablednessOfTransitions));
+  if Assigned(Grafo) then
+    NodoJson_IN.AddPair('Grafo', Grafo.FormatoJSON);
+end;
+
+function TdpnPetriNetCoordinadorBase.GetArco(const ANombre: string): IArco;
+var
+  LValor: integer;
+begin
+  if FNombresArcos.TryGetValue(ANombre, LValor) then
+    Result := GetArco(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetArco(const AID: integer): IArco;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IArco
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetEstado: EEstadoPetriNet;
+begin
+  Result := FEstado;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetGrafo: IModelo;
+begin
+  Result := FGrafo;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetModelo(const ANombre: string): IModelo;
+var
+  LValor: integer;
+begin
+  if FNombresModelos.TryGetValue(ANombre, LValor) then
+    Result := GetModelo(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetModelo(const AID: integer): IModelo;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IModelo
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetMultipleEnablednessOfTransitions: Boolean;
+begin
+  Result := FMultipleEnablednessOfTransitions
+end;
+
+function TdpnPetriNetCoordinadorBase.GetOnEstadoChanged: IEvent<EventoEstadoPN>;
+begin
+  Result := FEvento_OnEstadoChanged
+end;
+
+function TdpnPetriNetCoordinadorBase.GetPlaza(const ANombre: string): IPlaza;
+var
+  LValor: integer;
+begin
+  if FNombresPlazas.TryGetValue(ANombre, LValor) then
+    Result := GetPlaza(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetPlaza(const AID: integer): IPlaza;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IPlaza
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetTransicion(const ANombre: string): ITransicion;
+var
+  LValor: integer;
+begin
+  if FNombresModelos.TryGetValue(ANombre, LValor) then
+    Result := GetTransicion(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetTransicion(const AID: integer): ITransicion;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as ITransicion
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.LogMarcado: string;
+var
+  LPlaza: integer;
+begin
+  for LPlaza in FMarcado.Keys do
+  begin
+    Result := Result + LPlaza.ToString + ' : ' + FMarcado[LPlaza].ToString + #13#10;
+  end;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.Reset;
+begin
+  if Assigned(FGrafo) then
+  begin
+    FGrafo.Reset;
+  end;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.SetGrafo(AGrafo: IModelo);
+begin
+  FGrafo := AGrafo;
+  if Assigned(FGrafo) then
+  begin
+    FEstado := EEstadoPetriNet.Detenida;
+  end
+  else FEstado := EEstadoPetriNet.GrafoNoAsignado;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.SetMultipleEnablednessOfTransitions(const Value: Boolean);
+begin
+  FMultipleEnablednessOfTransitions := Value;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.Setup;
+begin
+  if Assigned(FGrafo) then
+  begin
+    FGrafo.Setup;
+    FEstado := EEstadoPetriNet.Detenida;
+    FEvento_OnEstadoChanged.Invoke(FEstado);
+  end;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.Start;
+begin
+  FMarcado.Clear;
+  FNodos.Clear;
+  FNombresPlazas.Clear;
+  FNombresTransiciones.Clear;
+  if Assigned(FGrafo) then
+  begin
+    AsociacionesPN;
+    FGrafo.Start;
+    FEstado := EEstadoPetriNet.Iniciada;
+    FStartedDateTimeAt := Now;
+    FStartedEllapsedAt := Utils.ElapsedMiliseconds;
+    FEvento_OnEstadoChanged.Invoke(FEstado);
+  end;
+end;
+
+procedure TdpnPetriNetCoordinadorBase.Stop;
+begin
+  if Assigned(FGrafo) then
+  begin
+    FEstado := EEstadoPetriNet.Detenida;
+    FGrafo.Stop;
+    FEvento_OnEstadoChanged.Invoke(FEstado);
+  end;
+end;
 
 end.

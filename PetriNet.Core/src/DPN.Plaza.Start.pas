@@ -33,7 +33,7 @@ type
     procedure EliminarTokens(ATokens: TListaTokens); overload; override;
     procedure EliminarTokens(ATokens: TArrayTokens); overload; override;
     procedure EliminarTokens(const ACount: integer); overload; override;
-    procedure EliminarTodosTokens; virtual;
+    procedure EliminarTodosTokens; override;
 
     procedure Start; override;
     procedure Reset; override;

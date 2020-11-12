@@ -45,6 +45,7 @@ type
     procedure Start; override;
     procedure Stop; override;
     procedure Reset; override;
+    procedure Setup; override;
 
     procedure AddElementoNodo(AElemento: INodoPetriNet); virtual;
     procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload; virtual;
@@ -396,6 +397,33 @@ begin
   if FTipoModelo <> Valor then
   begin
     FTipoModelo := Valor;
+  end;
+end;
+
+procedure TdpnModelo.Setup;
+var
+  LPlazaIn, LPlazaOut: IPlaza;
+begin
+  inherited;
+  if not FNombrePlazaIn.IsEmpty then
+  begin
+    LPlazaIn := GetPlazas.First(function (const AElemento: IPlaza): boolean
+                    begin
+                      Result := (AElemento.Nombre = FNombrePlazaIn)
+                    end
+                   );
+    if Assigned(LPlazaIn) then
+      PlazaIn := LPlazaIn;
+  end;
+  if not FNombrePlazaOut.IsEmpty then
+  begin
+    LPlazaOut := GetPlazas.First(function (const AElemento: IPlaza): boolean
+                    begin
+                      Result := (AElemento.Nombre = FNombrePlazaOut)
+                    end
+                   );
+    if Assigned(LPlazaOut) then
+      PlazaOut := LPlazaOut;
   end;
 end;
 

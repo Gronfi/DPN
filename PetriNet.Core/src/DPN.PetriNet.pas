@@ -3,6 +3,7 @@ unit DPN.PetriNet;
 interface
 
 uses
+  System.JSON,
   System.SyncObjs,
   System.Classes,
   System.Types,
@@ -14,43 +15,19 @@ uses
   DPN.Interfaces;
 
 type
-  TdpnPetriNetCoordinador = class(TThread)
+  TdpnPetriNetCoordinador = class(TdpnPetriNetCoordinadorBase)
   protected
-    FGrafo: IModelo;
-    FEstado: EEstadoPetriNet;
     FComm: TThreadedQueue<ITransicion>;
-    FMultipleEnablednessOfTransitions: Boolean;
     FLockMarcado: TLightweightMREW;
-    FEvento_OnEstadoChanged: IEvent<EventoEstadoPN>;
-    FStartedDateTimeAt: TDateTime;
-    FStartedEllapsedAt: int64;
-
-    FNodos: IDictionary<Integer, INodoPetriNet>;
-    FMarcado: IDictionary<Integer, Integer>;
-    FNombresEstados: IBidiDictionary<String, Integer>;
-    FNombresTransiciones: IBidiDictionary<String, Integer>;
-
-    function GetMultipleEnablednessOfTransitions: Boolean;
-    procedure SetMultipleEnablednessOfTransitions(const Value: Boolean);
-
-    function GetGrafo: IModelo;
-    procedure SetGrafo(AGrafo: IModelo);
-
-    function GetEstado: EEstadoPetriNet;
-    function GetOnEstadoChanged: IEvent<EventoEstadoPN>;
 
     procedure DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
-    procedure DoOnTokenCountChanged(const AID: integer; AMarcado: IMarcadoPlazasCantidadTokens);
+    procedure DoOnMarcadoPlazasCantidadTokensChanged(const AID: integer; AMarcado: IMarcadoPlazasCantidadTokens);
+    procedure DoOnTokensPlazaChanged(const AID: integer; const ACantidadTokens: integer);
 
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion): TWaitResult; overload;
     function GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion; const ATimeOut: Cardinal): TWaitResult; overload;
 
     procedure AddTransicionAEvaluar(ATransicion: ITransicion);
-
-    procedure LinkarTransicionesAlCoordinador;
-    procedure DeslinkarTransicionesAlCoordinador;
-
-    procedure AsociacionesPN;
 
     procedure EjecutarTransicionEnTask(ATransicion: ITransicion);
     procedure Execute; override;
@@ -58,21 +35,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Start;
-    procedure Stop;
-    procedure Reset;
-
-    function LogMarcado: string;
-
-    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
-    property Grafo: IModelo read GetGrafo write SetGrafo;
-    property Estado: EEstadoPetriNet read GetEstado;
-    property OnEstadoChanged: IEvent<EventoEstadoPN> read GetOnEstadoChanged;
-    property Nodos: IDictionary<Integer, INodoPetriNet> read FNodos;
-    property NombresEstados: IBidiDictionary<String, Integer> read FNombresEstados;
-    property NombresTransiciones: IBidiDictionary<String, Integer>read FNombresTransiciones;
-    property StartedDateTimeAt: TDateTime read FStartedDateTimeAt;
-    property StartedEllapsedAt: int64 read FStartedEllapsedAt;
+    procedure AsociacionesPN; override;
   end;
 
 implementation
@@ -111,51 +74,47 @@ begin
                                  begin
                                    FNodos[ATransicion.ID] := ATransicion;
                                    FNombresTransiciones[ATransicion.Nombre] := ATransicion.ID;
-                                   ATransicion.OnMarcadoChanged.Add(DoOnTokenCountChanged);
+                                   ATransicion.OnMarcadoChanged.Add(DoOnMarcadoPlazasCantidadTokensChanged);
+                                   ATransicion.OnRequiereEvaluacionChanged.Add(DoOnTransicionRequiereEvaluacion);
                                  end);
+
   FGrafo.GetPlazas.ForEach(
                                  procedure (const APlaza: IPlaza)
                                  begin
                                    FNodos[APlaza.ID] := APlaza;
                                    FMarcado[APlaza.ID] := 0;
-                                   FNombresEstados[APlaza.Nombre] := APlaza.ID;
-                                   //APlaza.OnTokenCountChanged.Add(DoOnTokenCountChanged);
+                                   FNombresPlazas[APlaza.Nombre] := APlaza.ID;
+                                   APlaza.OnTokenCountChanged.Add(DoOnTokensPlazaChanged);
+                                 end);
+
+  FGrafo.GetArcos.ForEach(
+                                 procedure (const AArco: IArco)
+                                 begin
+                                   FNodos[AArco.ID] := AArco;
+                                   FNombresArcos[AArco.Nombre] := AArco.ID;
+                                 end);
+
+  FGrafo.GetModelos.ForEach(
+                                 procedure (const AModelo: IModelo)
+                                 begin
+                                   FNodos[AModelo.ID] := AModelo;
+                                   FNombresModelos[AModelo.Nombre] := AModelo.ID;
                                  end);
 end;
 
 constructor TdpnPetriNetCoordinador.Create;
 begin
-  inherited Create(False);
-  FEstado                           := EEstadoPetriNet.GrafoNoAsignado;
-  FMultipleEnablednessOfTransitions := True;
-  FComm                             := TThreadedQueue<ITransicion>.Create(10, 100, Cardinal.MaxValue);
-
-  FNodos := TCollections.CreateDictionary<Integer, INodoPetriNet>;
-  FMarcado := TCollections.CreateDictionary<Integer, Integer>;
-  FNombresEstados     := TCollections.CreateBidiDictionary<String, Integer>;
-  FNombresTransiciones:= TCollections.CreateBidiDictionary<String, Integer>;
-
-  FEvento_OnEstadoChanged := DPNCore.CrearEvento<EventoEstadoPN>;
-end;
-
-procedure TdpnPetriNetCoordinador.DeslinkarTransicionesAlCoordinador;
-begin
-  FGrafo.GetTransiciones.ForEach(
-                                 procedure (const ATransicion: ITransicion)
-                                 begin
-                                   ATransicion.OnRequiereEvaluacionChanged.Remove(DoOnTransicionRequiereEvaluacion)
-                                 end);
+  inherited;
+  FComm := TThreadedQueue<ITransicion>.Create(10, 100, Cardinal.MaxValue);
 end;
 
 destructor TdpnPetriNetCoordinador.Destroy;
 begin
-  FEstado := EEstadoPetriNet.Detenida;
-  Terminate;
   FComm.DoShutDown;
-  WaitFor;
+  inherited;
 end;
 
-procedure TdpnPetriNetCoordinador.DoOnTokenCountChanged(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens);
+procedure TdpnPetriNetCoordinador.DoOnMarcadoPlazasCantidadTokensChanged(const AID: Integer; AMarcado: IMarcadoPlazasCantidadTokens);
 var
   LPlaza: integer;
 begin
@@ -166,6 +125,11 @@ begin
   finally
     FLockMarcado.EndWrite;
   end;
+end;
+
+procedure TdpnPetriNetCoordinador.DoOnTokensPlazaChanged(const AID, ACantidadTokens: integer);
+begin
+  //
 end;
 
 procedure TdpnPetriNetCoordinador.DoOnTransicionRequiereEvaluacion(const AID: integer; ATransicion: ITransicion);
@@ -222,105 +186,14 @@ begin
   end;
 end;
 
-function TdpnPetriNetCoordinador.GetEstado: EEstadoPetriNet;
-begin
-  Result := FEstado;
-end;
-
-function TdpnPetriNetCoordinador.GetGrafo: IModelo;
-begin
-  Result := FGrafo;
-end;
-
-function TdpnPetriNetCoordinador.GetMultipleEnablednessOfTransitions: Boolean;
-begin
-  Result := FMultipleEnablednessOfTransitions
-end;
-
-function TdpnPetriNetCoordinador.GetOnEstadoChanged: IEvent<EventoEstadoPN>;
-begin
-  Result := FEvento_OnEstadoChanged
-end;
-
 function TdpnPetriNetCoordinador.GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion; const ATimeOut: Cardinal): TWaitResult;
 begin
   Result := FComm.PopItem(AQueueSize, ATransicion, ATimeout);
 end;
 
-procedure TdpnPetriNetCoordinador.LinkarTransicionesAlCoordinador;
-begin
-  FGrafo.GetTransiciones.ForEach(
-                                 procedure (const ATransicion: ITransicion)
-                                 begin
-                                   ATransicion.OnRequiereEvaluacionChanged.Add(DoOnTransicionRequiereEvaluacion)
-                                 end);
-end;
-
-function TdpnPetriNetCoordinador.LogMarcado: string;
-var
-  LPlaza: integer;
-begin
-  for LPlaza in FMarcado.Keys do
-  begin
-    Result := Result + LPlaza.ToString + ' : ' + FMarcado[LPlaza].ToString + #13#10;
-  end;
-end;
-
-procedure TdpnPetriNetCoordinador.Reset;
-begin
-  if Assigned(FGrafo) then
-  begin
-    FGrafo.Reset;
-  end;
-end;
-
 function TdpnPetriNetCoordinador.GetSiguientePeticionDeTransicion(out AQueueSize: Integer; out ATransicion: ITransicion): TWaitResult;
 begin
   Result := FComm.PopItem(AQueueSize, ATransicion);
-end;
-
-procedure TdpnPetriNetCoordinador.SetGrafo(AGrafo: IModelo);
-begin
-  FGrafo := AGrafo;
-  if Assigned(FGrafo) then
-  begin
-    FEstado := EEstadoPetriNet.Detenida;
-  end
-  else FEstado := EEstadoPetriNet.GrafoNoAsignado;
-end;
-
-procedure TdpnPetriNetCoordinador.SetMultipleEnablednessOfTransitions(const Value: Boolean);
-begin
-  FMultipleEnablednessOfTransitions := Value;
-end;
-
-procedure TdpnPetriNetCoordinador.Start;
-begin
-  FMarcado.Clear;
-  FNodos.Clear;
-  FNombresEstados.Clear;
-  FNombresTransiciones.Clear;
-  if Assigned(FGrafo) then
-  begin
-    LinkarTransicionesAlCoordinador;
-    AsociacionesPN;
-    FGrafo.Start;
-    FEstado := EEstadoPetriNet.Iniciada;
-    FStartedDateTimeAt := Now;
-    FStartedEllapsedAt := Utils.ElapsedMiliseconds;
-    FEvento_OnEstadoChanged.Invoke(FEstado);
-  end;
-end;
-
-procedure TdpnPetriNetCoordinador.Stop;
-begin
-  if Assigned(FGrafo) then
-  begin
-    FEstado := EEstadoPetriNet.Detenida;
-    DeslinkarTransicionesAlCoordinador;
-    FGrafo.Stop;
-    FEvento_OnEstadoChanged.Invoke(FEstado);
-  end;
 end;
 
 end.

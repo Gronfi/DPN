@@ -6,6 +6,7 @@ uses
   System.JSON,
 
   Spring,
+  Spring.Collections,
 
   DPN.Interfaces;
 
@@ -13,6 +14,7 @@ type
   TdpnNodoPetriNet = class abstract(TInterfacedObject, INodoPetriNet)
   protected
     FID: integer;
+    FPetriNetController: TdpnPetriNetCoordinadorBase;
     FModelo: IModelo;
     FNombre: string;
     FNombreModelo: string;
@@ -40,6 +42,9 @@ type
     function GetModelo: IModelo; virtual;
     procedure SetModelo(AModelo: IModelo); virtual;
 
+    function GetPetriNetController: TdpnPetriNetCoordinadorBase; virtual;
+    procedure SetPetriNetController(APetriNetController: TdpnPetriNetCoordinadorBase); virtual;
+
     function LogAsString: string; virtual;
   public
     constructor Create; virtual;
@@ -49,6 +54,7 @@ type
     procedure Start; virtual;
     procedure Reset; virtual;
     procedure Setup; virtual;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; virtual;
 
     function GetAsObject: TObject;
 
@@ -64,6 +70,7 @@ type
     property ID: integer read GetID write SetID;
     property Nombre: string read GetNombre write SetNombre;
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
+    property PetriNetController: TdpnPetriNetCoordinadorBase read GetPetriNetController write SetPetriNetController;
     property Modelo: IModelo read GetModelo write SetModelo;
     property Enabled: boolean read GetEnabled;
     property OnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano> read GetOnEnabledChanged;
@@ -89,6 +96,32 @@ end;
 procedure TdpnNodoPetriNet.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
 begin
   DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'Enabled', ClassName, FEnabled);
+end;
+
+function TdpnNodoPetriNet.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := True;
+  AListaErrores := TCollections.CreateList<string>;
+  if ID <= 0 then
+  begin
+    Result := False;
+    AListaErrores.Add('ID <= 0');
+  end;
+  if Nombre.IsEmpty then
+  begin
+    Result := False;
+    AListaErrores.Add('Nombre is Empty');
+  end;
+  if not Assigned(PetriNetController) then
+  begin
+    Result := False;
+    AListaErrores.Add('PetriNetController = nil');
+  end;
+  if not Assigned(Modelo) then
+  begin
+    Result := False;
+    AListaErrores.Add('Modelo = nil');
+  end;
 end;
 
 function TdpnNodoPetriNet.Clon: ISerializable;
@@ -211,6 +244,11 @@ begin
   Result := FEvento_OnReseted;
 end;
 
+function TdpnNodoPetriNet.GetPetriNetController: TdpnPetriNetCoordinadorBase;
+begin
+  Result := FPetriNetController
+end;
+
 function TdpnNodoPetriNet.LogAsString: string;
 begin
   Result := '<Nodo>' + '[ID]' + ID.ToString + '[Nombre]' + Nombre + '[Enabled]' + Enabled.ToString;
@@ -251,9 +289,17 @@ begin
   end;
 end;
 
+procedure TdpnNodoPetriNet.SetPetriNetController(APetriNetController: TdpnPetriNetCoordinadorBase);
+begin
+  if FPetriNetController <> APetriNetController then
+  begin
+    FPetriNetController := APetriNetController;
+  end;
+end;
+
 procedure TdpnNodoPetriNet.Setup;
 begin
-
+  inherited;
 end;
 
 procedure TdpnNodoPetriNet.Start;
