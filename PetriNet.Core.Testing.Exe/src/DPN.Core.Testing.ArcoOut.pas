@@ -67,12 +67,12 @@ end;
 procedure TPetriNetCoreTesting_ArcoOut.Setup;
 begin
   FPlaza   := TdpnPlaza.Create;
-  FPlaza.Nombre    := 'D';
+  FPlaza.NombreReducido    := 'D';
   FPlaza.Capacidad := 1;
   FPlaza.Start;
 
   FArco                        := TdpnArcoOut.Create;
-  FArco.Nombre                 := 'ArcoOut';
+  FArco.NombreReducido                 := 'ArcoOut';
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
   FArco.Start;

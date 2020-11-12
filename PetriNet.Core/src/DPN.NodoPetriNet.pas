@@ -16,7 +16,7 @@ type
     FID: integer;
     FPetriNetController: TdpnPetriNetCoordinadorBase;
     FModelo: IModelo;
-    FNombre: string;
+    FNombreReducido: string;
     FNombreModelo: string;
     FEvento_OnNombreChanged:  IEvent<EventoNodoPN_ValorString>;
     FIsEnWarning: Boolean;
@@ -33,7 +33,8 @@ type
     function GetEnabled: Boolean; virtual;
 
     function GetNombre: string; virtual;
-    procedure SetNombre(const Valor: string); virtual;
+    function GetNombreReducido: string; virtual;
+    procedure SetNombreReducido(const Valor: string); virtual;
     function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>; virtual;
     function GetDefaultNombre: String; virtual;
 
@@ -68,7 +69,8 @@ type
     Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; virtual;
 
     property ID: integer read GetID write SetID;
-    property Nombre: string read GetNombre write SetNombre;
+    property Nombre: string read GetNombre;
+    property NombreReducido: string read GetNombreReducido write SetNombreReducido;
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
     property PetriNetController: TdpnPetriNetCoordinadorBase read GetPetriNetController write SetPetriNetController;
     property Modelo: IModelo read GetModelo write SetModelo;
@@ -89,7 +91,7 @@ uses
 
 procedure TdpnNodoPetriNet.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
-  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Nombre', ClassName, FNombre);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Nombre', ClassName, FNombreReducido);
   DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'Modelo', ClassName, FNombreModelo);
 end;
 
@@ -107,7 +109,7 @@ begin
     Result := False;
     AListaErrores.Add('ID <= 0');
   end;
-  if Nombre.IsEmpty then
+  if NombreReducido.IsEmpty then
   begin
     Result := False;
     AListaErrores.Add('Nombre is Empty');
@@ -143,7 +145,7 @@ constructor TdpnNodoPetriNet.Create;
 begin
   inherited;
   FID := DPNCore.GetNuevoID;
-  FNombre := GetDefaultNombre;
+  FNombreReducido := GetDefaultNombre;
   FNombreModelo := '';
   FEnabled := False;
   FIsEnWarning := True;
@@ -171,7 +173,7 @@ end;
 
 procedure TdpnNodoPetriNet.FormatoEstado(NodoJson_IN: TJSONObject);
 begin
-  NodoJson_IN.AddPair('Nombre', TJsonString.Create(Nombre)); //completo
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(NombreReducido)); //completo
   NodoJson_IN.AddPair('Enabled', TJSONBool.Create(Enabled));
 end;
 
@@ -185,7 +187,7 @@ procedure TdpnNodoPetriNet.FormatoJSON(NodoJson_IN: TJSONObject);
 var
   LModelo: string;
 begin
-  NodoJson_IN.AddPair('Nombre', TJsonString.Create(Nombre)); //para asociar
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(NombreReducido)); //para asociar
   if Assigned(FModelo) then
     LModelo := FModelo.Nombre
   else LModelo := ''; //es el caso del modelo de mas alto nivel, no tiene padre
@@ -225,8 +227,13 @@ end;
 function TdpnNodoPetriNet.GetNombre: string;
 begin
   if Assigned(FModelo) then
-    Result := FModelo.Nombre + SEPARADOR_NOMBRES + FNombre
-  else Result := FNombre;
+    Result := FModelo.Nombre + SEPARADOR_NOMBRES + FNombreReducido
+  else Result := FNombreReducido;
+end;
+
+function TdpnNodoPetriNet.GetNombreReducido: string;
+begin
+  Result := FNombreReducido;
 end;
 
 function TdpnNodoPetriNet.GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
@@ -279,12 +286,12 @@ begin
   end;
 end;
 
-procedure TdpnNodoPetriNet.SetNombre(const Valor: string);
+procedure TdpnNodoPetriNet.SetNombreReducido(const Valor: string);
 begin
   Guard.CheckFalse(Valor.IsEmpty, 'El nombre no puede ser nul');
-  if (FNombre <> Valor) then
+  if (FNombreReducido <> Valor) then
   begin
-    FNombre := Valor;
+    FNombreReducido := Valor;
     FEvento_OnNombreChanged.Invoke(ID, Nombre);
   end;
 end;
@@ -304,7 +311,7 @@ end;
 
 procedure TdpnNodoPetriNet.Start;
 begin
-  Guard.CheckFalse(FNombre.IsEmpty, 'Debe tener un nombre asignado, clase:' + QualifiedClassName);
+  Guard.CheckFalse(FNombreReducido.IsEmpty, 'Debe tener un nombre asignado, clase:' + QualifiedClassName);
   if not FEnabled then
   begin
     FEnabled := True;

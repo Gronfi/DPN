@@ -128,6 +128,7 @@ type
     procedure Start; override;
     procedure Stop; override;
     procedure Reset; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     function LogAsString: string; override;
 
@@ -287,6 +288,21 @@ var
 begin
   for LBloqueable in FDependencias do
     LBloqueable.AdquireLock;
+end;
+
+function TdpnTransicion.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if FArcosIn.Count = 0 then
+  begin
+    Result := False;
+    AListaErrores.Add('No tiene arcos IN asignados');
+  end;
+  if FArcosOut.Count = 0 then
+  begin
+    Result := False;
+    AListaErrores.Add('No tiene arcos OUT asignados');
+  end;
 end;
 
 constructor TdpnTransicion.Create;

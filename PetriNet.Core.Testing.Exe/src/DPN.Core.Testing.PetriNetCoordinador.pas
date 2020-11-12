@@ -128,27 +128,27 @@ var
   LAccion  : IAccion;
 begin
   LModelo        := TdpnModelo.Create;
-  LModelo.Nombre := 'Prueba.Bucle';
+  LModelo.NombreReducido := 'Prueba.Bucle';
 
   //funciones y acciones
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LModelo.Elementos.Add(LEnabled);
 
   LAccion                                                         := TdpnAccion_incrementar_tabla_variables.Create;
-  LAccion.Nombre                                                  := 'Accion_' + LAccion.ID.ToString;
+  LAccion.NombreReducido                                                  := 'Accion_' + LAccion.ID.ToString;
   TdpnAccion_incrementar_tabla_variables(LAccion).Variable        := LEnabled;
   TdpnAccion_incrementar_tabla_variables(LAccion).ValorIncremento := 1;
 
   LFuncionF                                                := TdpnCondicion_es_tabla_variables.Create;
-  LFuncionF.Nombre                                         := 'Funcion_' + LFuncionF.ID.ToString;
+  LFuncionF.NombreReducido                                         := 'Funcion_' + LFuncionF.ID.ToString;
   TdpnCondicion_es_tabla_variables(LFuncionF).Variable     := LEnabled;
   TdpnCondicion_es_tabla_variables(LFuncionF).ValorToCheck := ANoCiclosEjecutar;
 
   LFuncionNF                                                := TdpnCondicion_es_tabla_variables.Create;
-  LFuncionNF.Nombre                                         := 'Funcion_' + LFuncionNF.ID.ToString;
+  LFuncionNF.NombreReducido                                         := 'Funcion_' + LFuncionNF.ID.ToString;
   LFuncionNF.IsCondicionNegada                              := True;
   TdpnCondicion_es_tabla_variables(LFuncionNF).Variable     := LEnabled;
   TdpnCondicion_es_tabla_variables(LFuncionNF).ValorToCheck := ANoCiclosEjecutar;
@@ -159,20 +159,20 @@ begin
 
   //START
   LPlazaStart           := TdpnPlazaStart.Create;
-  LPlazaStart.Nombre    := 'PlazaStart';
+  LPlazaStart.NombreReducido    := 'PlazaStart';
 
   LArcoStartI             := TdpnArcoIn.Create;
-  LArcoStartI.Nombre      := 'ArcoStartI';
+  LArcoStartI.NombreReducido      := 'ArcoStartI';
   LArcoStartI.Plaza       := LPlazaStart;
   LArcoStartI.Peso        := 1;
   LArcoStartI.PesoEvaluar := 1;
 
   LArcoStartO           := TdpnArcoOut.Create;
-  LArcoStartO.Nombre    := 'ArcoStartO';
+  LArcoStartO.NombreReducido    := 'ArcoStartO';
   LArcoStartO.Peso      := 1;
 
   LTransicionStart           := TdpnTransicion.Create;
-  LTransicionStart.Nombre    := 'TransicionStart';
+  LTransicionStart.NombreReducido    := 'TransicionStart';
   LTransicionStart.AddArcoIn(LArcoStartI);
   LTransicionStart.AddArcoOut(LArcoStartO);
 
@@ -184,21 +184,21 @@ begin
   //FIN
   LPlazaFin           := TdpnPlaza.Create;
   LPlazaFin.Capacidad := 1;
-  LPlazaFin.Nombre    := 'PlazaFin';
+  LPlazaFin.NombreReducido    := 'PlazaFin';
 
   LArcoFinI             := TdpnArcoIn.Create;
-  LArcoFinI.Nombre      := 'ArcoFinI';
+  LArcoFinI.NombreReducido      := 'ArcoFinI';
   //LArcoFinI.Plaza       := LPlazaFin;
   LArcoFinI.Peso        := 1;
   LArcoFinI.PesoEvaluar := 1;
 
   LArcoFinO           := TdpnArcoOut.Create;
-  LArcoFinO.Nombre    := 'ArcoFinO';
+  LArcoFinO.NombreReducido    := 'ArcoFinO';
   LArcoFinO.Plaza     := LPlazaFin;
   LArcoFinO.Peso      := 1;
 
   LTransicionFin           := TdpnTransicion.Create;
-  LTransicionFin.Nombre    := 'TransicionFin';
+  LTransicionFin.NombreReducido    := 'TransicionFin';
   LTransicionFin.AddArcoIn(LArcoFinI);
   LTransicionFin.AddArcoOut(LArcoFinO);
   LTransicionFin.AddCondicion(LFuncionF);
@@ -213,20 +213,20 @@ begin
   begin
     LPlaza           := TdpnPlaza.Create;
     LPlaza.Capacidad := 1;
-    LPlaza.Nombre    := 'Plaza' + I.ToString;
+    LPlaza.NombreReducido    := 'Plaza' + I.ToString;
 
     LArcoI             := TdpnArcoIn.Create;
-    LArcoI.Nombre      := 'ArcoI' + I.ToString;
+    LArcoI.NombreReducido      := 'ArcoI' + I.ToString;
     LArcoI.Plaza       := LPlaza;
     LArcoI.Peso        := 1;
     LArcoI.PesoEvaluar := 1;
 
     LArcoO           := TdpnArcoOut.Create;
-    LArcoO.Nombre    := 'ArcoO' + I.ToString;
+    LArcoO.NombreReducido    := 'ArcoO' + I.ToString;
     LArcoO.Peso      := 1;
 
     LTransicion := TdpnTransicion.Create;
-    LTransicion.Nombre := 'Transicion' + I.ToString;
+    LTransicion.NombreReducido := 'Transicion' + I.ToString;
     LTransicion.AddArcoIn(LArcoI);
     LTransicion.AddArcoOut(LArcoO);
 
@@ -395,7 +395,7 @@ begin
   for I := 0 to ANoEstados - 1 do
   begin
     LPlaza           := TdpnPlaza.Create;
-    LPlaza.Nombre    := 'I' + I.ToString;
+    LPlaza.NombreReducido    := 'I' + I.ToString;
     LPlaza.Capacidad := 1;
     LModelo.Elementos.Add(LPlaza);
     LThreadsWrite[I] := TThreadTestModificaPlaza.Create(LPlaza);
@@ -427,7 +427,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -436,7 +436,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 2;
 
   LArcoO1       := TdpnArcoReset.Create;
@@ -554,7 +554,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -563,7 +563,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -633,7 +633,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -642,7 +642,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -650,7 +650,7 @@ begin
   LArcoO1.Peso  := 1;
 
   LPlazaO2           := TdpnPlaza.Create;
-  LPlazaO2.Nombre    := 'O2';
+  LPlazaO2.NombreReducido    := 'O2';
   LPlazaO2.Capacidad := 1;
 
   LArcoO2       := TdpnArcoOut.Create;
@@ -724,7 +724,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -733,7 +733,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 5;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -741,7 +741,7 @@ begin
   LArcoO1.Peso  := 1;
 
   LPlazaO2           := TdpnPlaza.Create;
-  LPlazaO2.Nombre    := 'O2';
+  LPlazaO2.NombreReducido    := 'O2';
   LPlazaO2.Capacidad := 5;
 
   LArcoO2       := TdpnArcoOut.Create;
@@ -828,7 +828,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncionE                                     := TdpnCondicion_Evento_Prueba.Create;
@@ -841,7 +841,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 2;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -850,7 +850,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -941,7 +941,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncionE                                     := TdpnCondicion_Evento_Prueba.Create;
@@ -954,7 +954,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 2;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -963,7 +963,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 2;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -1042,21 +1042,21 @@ var
   LPlazaI1: IPlaza;
 begin
   LModelo := TdpnModelo.Create;
-  LModelo.Nombre := NOMBRE_MODELO;
+  LModelo.NombreReducido := NOMBRE_MODELO;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := NOMBRE_PLAZA;
+  LPlazaI1.NombreReducido    := NOMBRE_PLAZA;
   LPlazaI1.Modelo    := LModelo;
 
   try
-    Writeln('Plaza(1): ' + LPlazaI1.Nombre);
-    if not(LPlazaI1.Nombre = NOMBRE_MODELO + SEPARADOR_NOMBRES + NOMBRE_PLAZA) then
+    Writeln('Plaza(1): ' + LPlazaI1.NombreReducido);
+    if not(LPlazaI1.NombreReducido = NOMBRE_MODELO + SEPARADOR_NOMBRES + NOMBRE_PLAZA) then
       Assert.Fail('mal el nombre (1)');
 
     LPlazaI1.Modelo := nil;
 
-    Writeln('Plaza(2): ' + LPlazaI1.Nombre);
-    if not(LPlazaI1.Nombre = NOMBRE_PLAZA) then
+    Writeln('Plaza(2): ' + LPlazaI1.NombreReducido);
+    if not(LPlazaI1.NombreReducido = NOMBRE_PLAZA) then
       Assert.Fail('mal el nombre (2)');
 
     Assert.Pass;
@@ -1090,7 +1090,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LAccion                                        := TdpnAccion_tabla_variables.Create;
@@ -1107,7 +1107,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 2;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -1116,7 +1116,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 2;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -1218,7 +1218,7 @@ var
   LTransicion2: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncion                                                := TdpnCondicion_es_tabla_variables.Create;
@@ -1232,7 +1232,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 2;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -1241,7 +1241,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 2;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -1265,7 +1265,7 @@ begin
   LSuperPlazaI2 := TdpnPlazaSuper.Create;
   TdpnPlazaSuper(LSuperPlazaI2).AddPlaza(LPlazaI1);
   TdpnPlazaSuper(LSuperPlazaI2).AddPlaza(LPlazaO1);
-  LPlazaI1.Nombre    := 'I2';
+  LPlazaI1.NombreReducido    := 'I2';
   LPlazaI1.Capacidad := 2;
 
   LArcoI2             := TdpnArcoIn.Create;
@@ -1274,7 +1274,7 @@ begin
   LArcoI2.PesoEvaluar := 1;
 
   LPlazaO2           := TdpnPlaza.Create;
-  LPlazaO2.Nombre    := 'O2';
+  LPlazaO2.NombreReducido    := 'O2';
   LPlazaO2.Capacidad := 2;
 
   LArcoO2       := TdpnArcoOut.Create;
@@ -1378,7 +1378,7 @@ var
   LTransicion2: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncionE                                     := TdpnCondicion_Evento_Prueba.Create;
@@ -1395,7 +1395,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 2;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -1404,7 +1404,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 2;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -1430,7 +1430,7 @@ begin
 
   LSuperPlazaI2 := TdpnPlazaSuper.Create;
   TdpnPlazaSuper(LSuperPlazaI2).AddPlaza(LPlazaI1);
-  LPlazaI1.Nombre    := 'I2';
+  LPlazaI1.NombreReducido    := 'I2';
   LPlazaI1.Capacidad := 2;
 
   LArcoI2             := TdpnArcoIn.Create;
@@ -1439,7 +1439,7 @@ begin
   LArcoI2.PesoEvaluar := 1;
 
   LPlazaO2           := TdpnPlaza.Create;
-  LPlazaO2.Nombre    := 'O2';
+  LPlazaO2.NombreReducido    := 'O2';
   LPlazaO2.Capacidad := 2;
 
   LArcoO2       := TdpnArcoOut.Create;

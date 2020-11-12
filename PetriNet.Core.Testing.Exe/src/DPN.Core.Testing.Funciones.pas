@@ -221,7 +221,7 @@ end;
 procedure TPetriNetCoreTesting_Funciones.Setup;
 begin
   FEnabled := TdpnVariable.Create;
-  FEnabled.Nombre := 'Enabled';
+  FEnabled.NombreReducido := 'Enabled';
   FEnabled.Valor  := 0;
   FEnabled.OnValueChanged.Add(DoOnVarChanged);
 

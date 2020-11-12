@@ -39,7 +39,7 @@ var
   LPlazaI1: IPlaza;
 begin
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LToken := TdpnTokenSistema.Create;

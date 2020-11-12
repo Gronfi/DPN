@@ -62,10 +62,10 @@ var
   LJSon: TJSOnObject;
 begin
   LModelo := TdpnModelo.Create;
-  LModelo.Nombre := 'Modelo test';
+  LModelo.NombreReducido := 'Modelo test';
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -77,7 +77,7 @@ begin
   LArcoO1.Peso        := 1;
 
   LPlazaO1           := TdpnPlazaFinish.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LArcoO1.Plaza      := LPlazaO1;
 
   LTransicion1 := TdpnTransicion.Create;
@@ -134,7 +134,7 @@ begin
   LSubModelo := TdpnModelo.Create;
 
   LPlazaISub           := TdpnPlaza.Create;
-  LPlazaISub.Nombre    := 'I2';
+  LPlazaISub.NombreReducido    := 'I2';
   LPlazaISub.Capacidad := 1;
 
   LArcoISub             := TdpnArcoIn.Create;
@@ -143,7 +143,7 @@ begin
   LArcoISub.PesoEvaluar := 1;
 
   LPlazaOSub           := TdpnPlaza.Create;
-  LPlazaOSub.Nombre    := 'O2';
+  LPlazaOSub.NombreReducido    := 'O2';
   LPlazaOSub.Capacidad := 1;
 
   LArcoOSub       := TdpnArcoOut.Create;
@@ -169,7 +169,7 @@ begin
   LModelo.Elementos.Add(LSubModelo);
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -181,7 +181,7 @@ begin
   LArcoO1.Peso        := 1;
 
   LPlazaO1           := TdpnPlazaFinish.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
 
   LArcoO2             := TdpnArcoOut.Create;
   LArcoO2.Plaza       := LPlazaO1;
@@ -256,7 +256,7 @@ begin
   LSubModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -265,7 +265,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlazaFinish.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;

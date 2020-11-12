@@ -28,6 +28,7 @@ type
     constructor Create; override;
 
     procedure Start; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     procedure AddPlaza(APlaza: IPlaza); virtual;
     procedure RemovePlaza(APlaza: IPlaza); virtual;
@@ -94,6 +95,16 @@ end;
 procedure TdpnPlazaSuper.AddTokens(ATokens: TArrayTokens);
 begin
   ;
+end;
+
+function TdpnPlazaSuper.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if FListaPlazas.Count = 0 then
+  begin
+    Result := False;
+    AListaErrores.Add('No se han configurado plazas');
+  end;
 end;
 
 constructor TdpnPlazaSuper.Create;

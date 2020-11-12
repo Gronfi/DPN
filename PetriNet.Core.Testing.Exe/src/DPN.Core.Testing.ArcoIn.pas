@@ -65,12 +65,12 @@ end;
 procedure TPetriNetCoreTesting_ArcoIn.Setup;
 begin
   FPlaza           := TdpnPlaza.Create;
-  FPlaza.Nombre    := 'O1';
+  FPlaza.NombreReducido    := 'O1';
   FPlaza.Capacidad := 5;
   FPlaza.Start;
 
   FArco                        := TdpnArcoIn.Create;
-  FArco.Nombre                 := 'ArcoIn';
+  FArco.NombreReducido                 := 'ArcoIn';
   FArco.Plaza                  := FPlaza;
   FArco.Peso                   := 1;
   FArco.PesoEvaluar            := 1;

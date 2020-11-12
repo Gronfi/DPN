@@ -67,13 +67,16 @@ type
   INombrado = interface(IIdentificado)
   ['{73DF6D15-DAB3-459A-9A58-F5D3CD2CA4A5}']
     function GetNombre: string;
-    procedure SetNombre(const Valor: string);
+
+    function GetNombreReducido: string;
+    procedure SetNombreReducido(const Valor: string);
 
     function GetDefaultNombre: String;
 
     function GetOnNombreChanged: IEvent<EventoNodoPN_ValorString>;
 
-    property Nombre: string read GetNombre write SetNombre;
+    property Nombre: string read GetNombre;
+    property NombreReducido: string read GetNombreReducido write SetNombreReducido;
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
   end;
 
@@ -530,7 +533,6 @@ type
 
     function GetPlaza(const AID: integer): IPlaza; overload; virtual;
     function GetPlaza(const ANombre: string): IPlaza; overload; virtual;
-    //function GetNombrePlaza(const AID: integer): string;
 
     function GetArco(const AID: integer): IArco; overload; virtual;
     function GetArco(const ANombre: string): IArco; overload; virtual;
@@ -541,7 +543,8 @@ type
     function GetModelo(const AID: integer): IModelo; overload; virtual;
     function GetModelo(const ANombre: string): IModelo; overload; virtual;
 
-    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
+    function CambiarNombreNodo(const AID: integer; const ANombreNuevo: string; const AFullNombreNuevo: string): boolean; virtual;
+
     property Grafo: IModelo read GetGrafo write SetGrafo;
     property Estado: EEstadoPetriNet read GetEstado;
     property OnEstadoChanged: IEvent<EventoEstadoPN> read GetOnEstadoChanged;
@@ -552,6 +555,7 @@ type
     property NombresModelos: IBidiDictionary<String, Integer>read FNombresModelos;
     property StartedDateTimeAt: TDateTime read FStartedDateTimeAt;
     property StartedEllapsedAt: int64 read FStartedEllapsedAt;
+    property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
   end;
 
 
@@ -596,6 +600,51 @@ begin
                              ANodo.PetriNetController := Self;
                            end
                           );
+end;
+
+function TdpnPetriNetCoordinadorBase.CambiarNombreNodo(const AID: integer; const ANombreNuevo: string; const AFullNombreNuevo: string): boolean;
+var
+  LNodo: INodoPetriNet;
+  LNombre: string;
+begin
+  Result := False;
+  LNombre := AFullNombreNuevo.ToUpper;
+  LNodo := Nodos.Values.First(function (const ANodo: INodoPetriNet): boolean
+                        begin
+                          Result := (ANodo.Nombre.ToUpper = LNombre);
+                        end
+                       );
+  if Assigned(LNodo) then
+  begin
+    Exit(False);
+  end;
+  LNodo := Nodos[AID];
+  LNombre := LNodo.Nombre;
+  LNodo.NombreReducido := ANombreNuevo;
+  if Supports(LNodo, IPlaza) then
+  begin
+    NombresPlazas.Remove(LNombre);
+    NombresPlazas.Add(LNodo.Nombre, LNodo.ID);
+    Exit(True);
+  end;
+  if Supports(LNodo, ITransicion) then
+  begin
+    NombresTransiciones.Remove(LNombre);
+    NombresTransiciones.Add(LNodo.Nombre, LNodo.ID);
+    Exit(True);
+  end;
+  if Supports(LNodo, IArco) then
+  begin
+    NombresArcos.Remove(LNombre);
+    NombresArcos.Add(LNodo.Nombre, LNodo.ID);
+    Exit(True);
+  end;
+  if Supports(LNodo, IModelo) then
+  begin
+    NombresModelos.Remove(LNombre);
+    NombresModelos.Add(LNodo.Nombre, LNodo.ID);
+    Exit(True);
+  end;
 end;
 
 procedure TdpnPetriNetCoordinadorBase.CargarDeJSON(NodoJson_IN: TJSONObject);

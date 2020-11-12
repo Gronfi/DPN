@@ -146,7 +146,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncion                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
@@ -156,7 +156,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -165,7 +165,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -244,7 +244,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncion                                                := TdpnCondicion_es_tabla_variables.Create;
@@ -254,7 +254,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -263,7 +263,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -342,7 +342,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
@@ -356,7 +356,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -365,7 +365,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -447,7 +447,7 @@ var
   LTransicion: ITransicion;
 begin
   LEnabled        := TdpnVariable.Create;
-  LEnabled.Nombre := 'Enabled';
+  LEnabled.NombreReducido := 'Enabled';
   LEnabled.Valor  := 0;
 
   LFuncion1                                                        := TdpnCondicion_es_tabla_variables_trucada.Create;
@@ -461,7 +461,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -470,7 +470,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlaza.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;

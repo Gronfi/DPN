@@ -109,10 +109,15 @@ end;
 function TdpnArco.CheckIsOK(out AListaErrores: IList<string>): boolean;
 begin
   Result := inherited;
-  if Nombre.IsEmpty then
+  if not Assigned(Plaza) then
   begin
     Result := False;
-    AListaErrores.Add('Nombre is Empty');
+    AListaErrores.Add('Plaza = nil');
+  end;
+  if not Assigned(Transicion) then
+  begin
+    Result := False;
+    AListaErrores.Add('Transicion = nil');
   end;
 end;
 
@@ -209,8 +214,6 @@ begin
   NodoJson_IN.AddPair('Peso', TJSONNumber.Create(Peso));
   NodoJson_IN.AddPair('NombrePlaza', TJSONString.Create(Plaza.Nombre));
   NodoJson_IN.AddPair('NombreTransicion', TJSONString.Create(Transicion.Nombre));
-  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombrePlaza', ClassName, FNombrePlaza);
-  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreTransicion', ClassName, FNombreTransicion);
 end;
 
 function TdpnArco.GetIsForzado: Boolean;
@@ -336,21 +339,13 @@ begin
   inherited;
   if not FNombrePlaza.IsEmpty then
   begin
-    LPlaza := PetriNetController.Grafo.GetPlazas.First(function (const AElemento: IPlaza): boolean
-                                                       begin
-                                                         Result := (AElemento.Nombre = FNombrePlaza)
-                                                       end
-                                                      );
+    LPlaza := PetriNetController.GetPlaza(FNombrePlaza);
     if Assigned(LPlaza) then
       Plaza := LPlaza;
   end;
   if not FNombreTransicion.IsEmpty then
   begin
-    LTransicion := PetriNetController.Grafo.GetTransiciones.First(function (const AElemento: ITransicion): boolean
-                                                                  begin
-                                                                    Result := (AElemento.Nombre = FNombreTransicion)
-                                                                  end
-                                                                 );
+    LTransicion := PetriNetController.GetTransicion(FNombreTransicion);
     if Assigned(LTransicion) then
       Transicion := LTransicion;
   end;

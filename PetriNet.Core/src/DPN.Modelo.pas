@@ -407,21 +407,13 @@ begin
   inherited;
   if not FNombrePlazaIn.IsEmpty then
   begin
-    LPlazaIn := GetPlazas.First(function (const AElemento: IPlaza): boolean
-                    begin
-                      Result := (AElemento.Nombre = FNombrePlazaIn)
-                    end
-                   );
+    LPlazaIn := PetriNetController.GetPlaza(FNombrePlazaIn);
     if Assigned(LPlazaIn) then
       PlazaIn := LPlazaIn;
   end;
   if not FNombrePlazaOut.IsEmpty then
   begin
-    LPlazaOut := GetPlazas.First(function (const AElemento: IPlaza): boolean
-                    begin
-                      Result := (AElemento.Nombre = FNombrePlazaOut)
-                    end
-                   );
+    LPlazaOut := PetriNetController.GetPlaza(FNombrePlazaOut);
     if Assigned(LPlazaOut) then
       PlazaOut := LPlazaOut;
   end;

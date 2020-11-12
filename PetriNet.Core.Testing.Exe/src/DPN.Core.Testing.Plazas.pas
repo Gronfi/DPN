@@ -76,7 +76,7 @@ begin
   FCnt := 0;
 
   FPlaza   := TdpnPlazaStart.Create;
-  FPlaza.Nombre    := 'O1';
+  FPlaza.NombreReducido    := 'O1';
   FPlaza.Start;
 
 
@@ -136,7 +136,7 @@ begin
   LModelo := TdpnModelo.Create;
 
   LPlazaI1           := TdpnPlaza.Create;
-  LPlazaI1.Nombre    := 'I1';
+  LPlazaI1.NombreReducido    := 'I1';
   LPlazaI1.Capacidad := 1;
 
   LArcoI1             := TdpnArcoIn.Create;
@@ -145,7 +145,7 @@ begin
   LArcoI1.PesoEvaluar := 1;
 
   LPlazaO1           := TdpnPlazaFinish.Create;
-  LPlazaO1.Nombre    := 'O1';
+  LPlazaO1.NombreReducido    := 'O1';
   LPlazaO1.Capacidad := 1;
 
   LArcoO1       := TdpnArcoOut.Create;
@@ -205,7 +205,7 @@ begin
   FCnt := 0;
 
   FPlaza   := TdpnPlazaStart.Create;
-  FPlaza.Nombre    := 'O1';
+  FPlaza.NombreReducido    := 'O1';
   FPlaza.Start;
 
   FArco                        := TdpnArcoIn.Create;
@@ -249,7 +249,7 @@ begin
 
   FPlaza   := TdpnPlazaStart.Create;
   TdpnPlazaStart(FPlaza).GeneracionContinua := True;
-  FPlaza.Nombre    := 'O1';
+  FPlaza.NombreReducido    := 'O1';
   FPlaza.Start;
 
   FArco                        := TdpnArcoIn.Create;

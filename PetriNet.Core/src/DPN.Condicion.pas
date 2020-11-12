@@ -3,6 +3,8 @@ unit DPN.Condicion;
 interface
 
 uses
+  System.JSON,
+
   Spring,
   Spring.Collections,
 
@@ -14,6 +16,7 @@ type
   TdpnCondicion = class abstract(TdpnNodoPetriNet, ICondicion)
   protected
     FTransicion: ITransicion;
+    FNombreTransicion: string;
     FIsCondicionNegada: Boolean;
     FEventoOnContextoCondicionChanged: IEvent<EventoNodoPN>;
 
@@ -40,6 +43,12 @@ type
     procedure DoNotificarOncontextoCondicionChanged; virtual;
   public
     constructor Create; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
+    procedure Setup; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     procedure ClearEventos; virtual;
     procedure RemovePrimerEvento; virtual;
@@ -88,9 +97,27 @@ type
 implementation
 
 uses
+  System.SysUtils,
+
   DPN.Core;
 
 { TdpnCondicion }
+
+procedure TdpnCondicion.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreTransicion', ClassName, FNombreTransicion);
+end;
+
+function TdpnCondicion.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if not Assigned(Transicion) then
+  begin
+    Result := False;
+    AListaErrores.Add('Transicion = nil');
+  end;
+end;
 
 procedure TdpnCondicion.ClearEventos;
 begin
@@ -120,6 +147,12 @@ end;
 function TdpnCondicion.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
   Result := False;
+end;
+
+procedure TdpnCondicion.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('NombreTransicion', TJSONString.Create(Transicion.Nombre));
 end;
 
 function TdpnCondicion.GetDependencias: IList<IBloqueable>;
@@ -188,11 +221,22 @@ begin
   end;
 end;
 
-
-
 procedure TdpnCondicion.SetTransicion(const Value: ITransicion);
 begin
   FTransicion := Value;
+end;
+
+procedure TdpnCondicion.Setup;
+var
+  LTransicion: ITransicion;
+begin
+  inherited;
+  if not FNombreTransicion.IsEmpty then
+  begin
+    LTransicion := PetriNetController.GetTransicion(FNombreTransicion);
+    if Assigned(LTransicion) then
+      Transicion := LTransicion;
+  end;
 end;
 
 { TdpnCondicionBaseEsperaEvento }
