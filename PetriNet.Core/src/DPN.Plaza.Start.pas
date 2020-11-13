@@ -3,6 +3,8 @@ unit DPN.Plaza.Start;
 interface
 
 uses
+  System.JSON,
+
   Spring,
   Spring.Collections,
 
@@ -29,6 +31,9 @@ type
   public
     constructor Create; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     procedure EliminarToken(AToken: IToken); override;
     procedure EliminarTokens(ATokens: TListaTokens); overload; override;
     procedure EliminarTokens(ATokens: TArrayTokens); overload; override;
@@ -45,10 +50,18 @@ type
 implementation
 
 uses
+  DPN.Core,
   DPN.TokenColoreado,
   DPN.TokenSistema;
 
 { TdpnPlazaStart }
+
+procedure TdpnPlazaStart.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'GeneracionContinua', ClassName, FGeneracionContinua);
+  DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'GenerarTokensDeSistema', ClassName, FGenerarTokenDeSistema);
+end;
 
 procedure TdpnPlazaStart.CrearToken;
 var
@@ -102,6 +115,13 @@ procedure TdpnPlazaStart.EliminarTokens(const ACount: integer);
 begin
   inherited;
   CrearToken;
+end;
+
+procedure TdpnPlazaStart.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('GeneracionContinua', TJSONBool.Create(GeneracionContinua));
+  NodoJson_IN.AddPair('GenerarTokensDeSistema', TJSONBool.Create(GenerarTokensDeSistema));
 end;
 
 function TdpnPlazaStart.GetAceptaArcosOut: Boolean;

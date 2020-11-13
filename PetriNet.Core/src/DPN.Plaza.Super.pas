@@ -34,6 +34,7 @@ type
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
     procedure Start; override;
+    procedure Setup; override;
     function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     procedure AddPlaza(APlaza: IPlaza); virtual;
@@ -282,6 +283,19 @@ procedure TdpnPlazaSuper.RemovePlaza(APlaza: IPlaza);
 begin
   if FListaPlazas.Contains(APlaza) then
     FListaPlazas.Remove(APlaza);
+end;
+
+procedure TdpnPlazaSuper.Setup;
+var
+  LPlaza: IPlaza;
+  LNombre: string;
+begin
+  inherited;
+  for LNombre in FNombresListaPlazas do
+  begin
+    LPlaza := PetriNetController.GetPlaza(LNombre);
+    AddPlaza(LPlaza);
+  end;
 end;
 
 procedure TdpnPlazaSuper.Start;

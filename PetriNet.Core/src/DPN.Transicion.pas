@@ -5,6 +5,7 @@ unit DPN.Transicion;
 interface
 
 uses
+  System.JSON,
   System.SyncObjs,
 
   Spring,
@@ -44,6 +45,11 @@ type
 
     FCondicionesPropias: IList<ICondicion>;
     FAccionesPropias: IList<IAccion>;
+
+    FNombresCondiciones: IList<String>;
+    FNombresAcciones: IList<String>;
+    FNombresArcosIn: IList<String>;
+    FNombresArcosOut: IList<String>;
 
     FLock: TSpinLock;
     FLockTimer: TSpinLock;
@@ -116,6 +122,9 @@ type
     constructor Create; override;
     destructor Destroy; override;
 
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     function EjecutarTransicion: Boolean; virtual;
 
     procedure AddCondicion(ACondicion: ICondicion); virtual;
@@ -131,6 +140,7 @@ type
     procedure Start; override;
     procedure Stop; override;
     procedure Reset; override;
+    procedure Setup; override;
     function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     function LogAsString: string; override;
@@ -295,6 +305,48 @@ begin
     LBloqueable.AdquireLock;
 end;
 
+procedure TdpnTransicion.CargarDeJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LNodoJSon: TJSONString;
+  LNodo: INodoPetriNet;
+  I: integer;
+begin
+  inherited;
+  if NodoJson_IN.TryGetValue<TJSONArray>('ArcosIn', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresArcosIn.Add(LNodoJSon.Value);
+    end;
+  end;
+  if NodoJson_IN.TryGetValue<TJSONArray>('ArcosOut', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresArcosOut.Add(LNodoJSon.Value);
+    end;
+  end;
+  if NodoJson_IN.TryGetValue<TJSONArray>('Condiciones', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresCondiciones.Add(LNodoJSon.Value);
+    end;
+  end;
+  if NodoJson_IN.TryGetValue<TJSONArray>('Acciones', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresAcciones.Add(LNodoJSon.Value);
+    end;
+  end;
+end;
+
 function TdpnTransicion.CheckIsOK(out AListaErrores: IList<string>): boolean;
 begin
   Result := inherited;
@@ -331,6 +383,10 @@ begin
   FMarcadoEstados := TCollections.CreateDictionary<integer, integer>;
   FOnRequiereEvaluacion := DPNCore.CrearEvento<EventoNodoPN_Transicion>;
   FEventoOnMarcadoChanged := DPNCore.CrearEvento<EventoNodoPN_MarcadoPlazasTokenCount>;
+  FNombresCondiciones := TCollections.CreateList<String>;
+  FNombresAcciones := TCollections.CreateList<String>;
+  FNombresArcosIn := TCollections.CreateList<String>;
+  FNombresArcosOut := TCollections.CreateList<String>;
   FID_TimerReEvaluacion := 0;
   FActivo_TimerReEvaluacion := False;
 {$IFDEF TRAZAS_SECUNDARIAS_TdpnTransicion}
@@ -530,6 +586,12 @@ begin
   LMarcadoNotificacion := TdpnMarcadoPlazasCantidadTokens.Create;
   LMarcadoNotificacion.AddTokensPlazas(FMarcadoEstados);
   FEventoOnMarcadoChanged.Invoke(ID, LMarcadoNotificacion);
+end;
+
+procedure TdpnTransicion.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+
 end;
 
 function TdpnTransicion.GetAcciones: IReadOnlyList<IAccion>;
@@ -863,6 +925,36 @@ begin
   if FTiempoEvaluacion <> AValor then
   begin
     FTiempoEvaluacion := AValor;
+  end;
+end;
+
+procedure TdpnTransicion.Setup;
+var
+  LCondicion: ICondicion;
+  LAccion: IAccion;
+  LArco: IArco;
+  LNombre: string;
+begin
+  inherited;
+  for LNombre in FNombresCondiciones do
+  begin
+    LCondicion := PetriNetController.GetCondicion(LNombre);
+    AddCondicion(LCondicion);
+  end;
+  for LNombre in FNombresAcciones do
+  begin
+    LAccion := PetriNetController.GetAccion(LNombre);
+    AddAccion(LAccion);
+  end;
+  for LNombre in FNombresArcosIn do
+  begin
+    LArco := PetriNetController.GetArco(LNombre);
+    AddArcoIn(LArco as IArcoIn);
+  end;
+  for LNombre in FNombresArcosOut do
+  begin
+    LArco := PetriNetController.GetArco(LNombre);
+    AddArcoOut(LArco as IArcoOut);
   end;
 end;
 

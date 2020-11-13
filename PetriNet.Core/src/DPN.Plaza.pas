@@ -19,6 +19,12 @@ type
     FPreAcciones: IList<IAccion>;
     FPostCondiciones: IList<ICondicion>;
     FPostAcciones: IList<IAccion>;
+
+    FNombresPreCondiciones: IList<string>;
+    FNombresPreAcciones: IList<string>;
+    FNombresPostCondiciones: IList<string>;
+    FNombresPostAcciones: IList<string>;
+
     FCapacidad: Integer;
     FEventoOnTokenCountChanged: IEvent<EventoNodoPN_ValorInteger>;
 
@@ -45,6 +51,8 @@ type
 
     procedure Reset; override;
     procedure Start; override;
+    procedure Setup; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     function LogAsString: string; override;
 
@@ -196,9 +204,10 @@ end;
 procedure TdpnPlaza.CargarDeJSON(NodoJson_IN: TJSONObject);
 var
   LDatos: TJSONArray;
-  LNodoJSon: TJSONObject;
+  LNodoJSon: TJSONString;
   LCondicion: ICondicion;
   LAccion: IAccion;
+  LNombre: string;
   I: integer;
 begin
   inherited;
@@ -207,20 +216,16 @@ begin
   begin
     for I := 0 to LDatos.Count - 1 do
     begin
-      LNodoJSon := LDatos.Items[I] as TJSONObject;
-      LCondicion := DPNCore.CrearInstancia<ICondicion>(LNodoJSon);
-      LCondicion.CargarDeJSON(LNodoJSon);
-      AddPreCondicion(LCondicion);
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresPreCondiciones.Add(LNodoJSon.Value);
     end;
   end;
   if NodoJson_IN.TryGetValue<TJSONArray>('PreAcciones', LDatos) then
   begin
     for I := 0 to LDatos.Count - 1 do
     begin
-      LNodoJSon := LDatos.Items[I] as TJSONObject;
-      LAccion := DPNCore.CrearInstancia<IAccion>(LNodoJSon);
-      LAccion.CargarDeJSON(LNodoJSon);
-      AddPreAccion(LAccion);
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresPreAcciones.Add(LNodoJSon.Value);
     end;
   end;
 
@@ -228,32 +233,45 @@ begin
   begin
     for I := 0 to LDatos.Count - 1 do
     begin
-      LNodoJSon := LDatos.Items[I] as TJSONObject;
-      LCondicion := DPNCore.CrearInstancia<ICondicion>(LNodoJSon);
-      LCondicion.CargarDeJSON(LNodoJSon);
-      AddPostCondicion(LCondicion);
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresPostCondiciones.Add(LNodoJSon.Value);
     end;
   end;
   if NodoJson_IN.TryGetValue<TJSONArray>('PostAcciones', LDatos) then
   begin
     for I := 0 to LDatos.Count - 1 do
     begin
-      LNodoJSon := LDatos.Items[I] as TJSONObject;
-      LAccion := DPNCore.CrearInstancia<IAccion>(LNodoJSon);
-      LAccion.CargarDeJSON(LNodoJSon);
-      AddPostAccion(LAccion);
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresPostAcciones.Add(LNodoJSon.Value);
     end;
+  end;
+end;
+
+function TdpnPlaza.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if FCapacidad = 0 then
+  begin
+    Result := False;
+    AListaErrores.Add('Capacidad = 0');
   end;
 end;
 
 constructor TdpnPlaza.Create;
 begin
   inherited;
+  FCapacidad      := 0;
   FTokens         := TCollections.CreateList<IToken>;
   FPreCondiciones := TCollections.CreateList<ICondicion>;
   FPreAcciones    := TCollections.CreateList<IAccion>;
   FPostCondiciones:= TCollections.CreateList<ICondicion>;
   FPostAcciones   := TCollections.CreateList<IAccion>;
+
+  FNombresPreCondiciones := TCollections.CreateList<string>;
+  FNombresPreAcciones := TCollections.CreateList<string>;
+  FNombresPostCondiciones := TCollections.CreateList<string>;
+  FNombresPostAcciones := TCollections.CreateList<string>;
+
   FEventoOnTokenCountChanged := DPNCore.CrearEvento<EventoNodoPN_ValorInteger>;
 end;
 
@@ -358,25 +376,25 @@ begin
   LDatos := TJSONArray.Create;
   for LCondicion in FPreCondiciones do
   begin
-    LDatos.AddElement(LCondicion.FormatoJSon);
+    LDatos.AddElement(TJSonString.Create(LCondicion.Nombre));
   end;
   NodoJson_IN.AddPair('PreCondiciones', LDatos);
   LDatos := TJSONArray.Create;
   for LAccion in FPreAcciones do
   begin
-    LDatos.AddElement(LAccion.FormatoJSon);
+    LDatos.AddElement(TJSonString.Create(LAccion.Nombre));
   end;
   NodoJson_IN.AddPair('PreAcciones', LDatos);
   LDatos := TJSONArray.Create;
   for LCondicion in FPostCondiciones do
   begin
-    LDatos.AddElement(LCondicion.FormatoJSon);
+    LDatos.AddElement(TJSonString.Create(LCondicion.Nombre));
   end;
   NodoJson_IN.AddPair('PostCondiciones', LDatos);
   LDatos := TJSONArray.Create;
   for LAccion in FPostAcciones do
   begin
-    LDatos.AddElement(LAccion.FormatoJSon);
+    LDatos.AddElement(TJSonString.Create(LAccion.Nombre));
   end;
   NodoJson_IN.AddPair('PostAcciones', LDatos);
 end;
@@ -449,6 +467,36 @@ begin
   Guard.CheckTrue(Value > 0, 'La capacidad debe ser > 0');
   FCapacidad := Value;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+end;
+
+procedure TdpnPlaza.Setup;
+var
+  LNombre: string;
+  LCondicion: ICondicion;
+  LAccion: IAccion;
+begin
+  inherited;
+  for LNombre in FNombresPreCondiciones do
+  begin
+    LCondicion := PetriNetController.GetCondicion(LNombre);
+    AddPreCondicion(LCondicion);
+  end;
+  for LNombre in FNombresPreAcciones do
+  begin
+    LAccion := PetriNetController.GetAccion(LNombre);
+    AddPreAccion(LAccion);
+  end;
+
+  for LNombre in FNombresPostCondiciones do
+  begin
+    LCondicion := PetriNetController.GetCondicion(LNombre);
+    AddPostCondicion(LCondicion);
+  end;
+  for LNombre in FNombresPostAcciones do
+  begin
+    LAccion := PetriNetController.GetAccion(LNombre);
+    AddPostAccion(LAccion);
+  end;
 end;
 
 procedure TdpnPlaza.Start;

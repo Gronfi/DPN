@@ -461,6 +461,8 @@ type
     function GetTransiciones: IReadOnlyList<ITransicion>;
     function GetTokens: IReadOnlyList<IToken>;
     function GetVariables: IReadOnlyList<IVariable>;
+    function GetCondiciones: IReadOnlyList<ICondicion>;
+    function GetAcciones: IReadOnlyList<IAccion>;
 
     procedure AddElementoNodo(AElemento: INodoPetriNet);
     procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload;
@@ -499,10 +501,13 @@ type
 
     FNodos: IDictionary<Integer, INodoPetriNet>;
     FMarcado: IDictionary<Integer, Integer>;
-    FNombresPlazas: IBidiDictionary<String, Integer>;
-    FNombresTransiciones: IBidiDictionary<String, Integer>;
-    FNombresArcos: IBidiDictionary<String, Integer>;
-    FNombresModelos: IBidiDictionary<String, Integer>;
+    FNombresPlazas: IDictionary<String, Integer>;
+    FNombresTransiciones: IDictionary<String, Integer>;
+    FNombresArcos: IDictionary<String, Integer>;
+    FNombresModelos: IDictionary<String, Integer>;
+    FNombresCondiciones: IDictionary<String, Integer>;
+    FNombresAcciones: IDictionary<String, Integer>;
+
 
     function GetMultipleEnablednessOfTransitions: Boolean; virtual;
     procedure SetMultipleEnablednessOfTransitions(const Value: Boolean); virtual;
@@ -543,16 +548,21 @@ type
     function GetModelo(const AID: integer): IModelo; overload; virtual;
     function GetModelo(const ANombre: string): IModelo; overload; virtual;
 
+    function GetCondicion(const AID: integer): ICondicion; overload; virtual;
+    function GetCondicion(const ANombre: string): ICondicion; overload; virtual;
+    function GetAccion(const AID: integer): IAccion; overload; virtual;
+    function GetAccion(const ANombre: string): IAccion; overload; virtual;
+
     function CambiarNombreNodo(const AID: integer; const ANombreNuevo: string; const AFullNombreNuevo: string): boolean; virtual;
 
     property Grafo: IModelo read GetGrafo write SetGrafo;
     property Estado: EEstadoPetriNet read GetEstado;
     property OnEstadoChanged: IEvent<EventoEstadoPN> read GetOnEstadoChanged;
     property Nodos: IDictionary<Integer, INodoPetriNet> read FNodos;
-    property NombresPlazas: IBidiDictionary<String, Integer> read FNombresPlazas;
-    property NombresTransiciones: IBidiDictionary<String, Integer>read FNombresTransiciones;
-    property NombresArcos: IBidiDictionary<String, Integer>read FNombresArcos;
-    property NombresModelos: IBidiDictionary<String, Integer>read FNombresModelos;
+    property NombresPlazas: IDictionary<String, Integer> read FNombresPlazas;
+    property NombresTransiciones: IDictionary<String, Integer>read FNombresTransiciones;
+    property NombresArcos: IDictionary<String, Integer>read FNombresArcos;
+    property NombresModelos: IDictionary<String, Integer>read FNombresModelos;
     property StartedDateTimeAt: TDateTime read FStartedDateTimeAt;
     property StartedEllapsedAt: int64 read FStartedEllapsedAt;
     property MultipleEnablednessOfTransitions: Boolean read GetMultipleEnablednessOfTransitions write SetMultipleEnablednessOfTransitions;
@@ -702,10 +712,12 @@ begin
 
   FNodos := TCollections.CreateDictionary<Integer, INodoPetriNet>;
   FMarcado := TCollections.CreateDictionary<Integer, Integer>;
-  FNombresPlazas := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresPlazas := TCollections.CreateDictionary<String, Integer>;
   FNombresTransiciones := TCollections.CreateBidiDictionary<String, Integer>;
-  FNombresArcos := TCollections.CreateBidiDictionary<String, Integer>;
-  FNombresModelos := TCollections.CreateBidiDictionary<String, Integer>;
+  FNombresArcos := TCollections.CreateDictionary<String, Integer>;
+  FNombresModelos := TCollections.CreateDictionary<String, Integer>;
+  FNombresCondiciones := TCollections.CreateDictionary<String, Integer>;
+  FNombresAcciones := TCollections.CreateDictionary<String, Integer>;
 end;
 
 destructor TdpnPetriNetCoordinadorBase.Destroy;
@@ -728,6 +740,24 @@ begin
     NodoJson_IN.AddPair('Grafo', Grafo.FormatoJSON);
 end;
 
+function TdpnPetriNetCoordinadorBase.GetAccion(const AID: integer): IAccion;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IAccion
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetAccion(const ANombre: string): IAccion;
+var
+  LValor: integer;
+begin
+  if FNombresAcciones.TryGetValue(ANombre, LValor) then
+    Result := GetAccion(LValor)
+  else Result := nil;
+end;
+
 function TdpnPetriNetCoordinadorBase.GetArco(const ANombre: string): IArco;
 var
   LValor: integer;
@@ -743,6 +773,24 @@ var
 begin
   if FNodos.TryGetValue(AID, LNodo) then
     Result := LNodo as IArco
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetCondicion(const AID: integer): ICondicion;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as ICondicion
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetCondicion(const ANombre: string): ICondicion;
+var
+  LValor: integer;
+begin
+  if FNombresCondiciones.TryGetValue(ANombre, LValor) then
+    Result := GetCondicion(LValor)
   else Result := nil;
 end;
 

@@ -13,6 +13,7 @@ uses
   DPN.NodoPetriNet;
 
 type
+  // El modelo crea a todos sus hijos en cascada
   TdpnModelo = class(TdpnNodoPetriNet, IModelo)
   protected
     FTipoModelo: string;
@@ -46,6 +47,7 @@ type
     procedure Stop; override;
     procedure Reset; override;
     procedure Setup; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
 
     procedure AddElementoNodo(AElemento: INodoPetriNet); virtual;
     procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload; virtual;
@@ -61,6 +63,8 @@ type
     function GetArcos: IReadOnlyList<IArco>; virtual;
     function GetTokens: IReadOnlyList<IToken>; virtual;
     function GetVariables: IReadOnlyList<IVariable>; virtual;
+    function GetCondiciones: IReadOnlyList<ICondicion>; virtual;
+    function GetAcciones: IReadOnlyList<IAccion>; virtual;
 
     procedure AddArcoEntrada(AArco: IArcoOut); virtual;
     procedure EliminarArcoEntrada(AArco: IArcoOut); virtual;
@@ -140,6 +144,16 @@ begin
   end;
 end;
 
+function TdpnModelo.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if TipoModelo.IsEmpty then
+  begin
+    Result := False;
+    AListaErrores.Add('TipoModelo is Empty');
+  end;
+end;
+
 procedure TdpnModelo.ClearElementos;
 var
   LNodo: INodoPetriNet;
@@ -210,6 +224,26 @@ begin
   NodoJson_IN.AddPair('Elementos', LDatos);
 end;
 
+function TdpnModelo.GetAcciones: IReadOnlyList<IAccion>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LAccion: IAccion;
+  LResult : IList<IAccion>;
+begin
+  LResult := TCollections.CreateList<IAccion>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IAccion, LAccion) then
+      LResult.Add(LAccion)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetAcciones.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
 function TdpnModelo.GetArcos: IReadOnlyList<IArco>;
 var
   LNodo: INodoPetriNet;
@@ -225,6 +259,26 @@ begin
     else begin
            if Supports(LNodo, IModelo, LModelo) then
              LResult.AddRange(LModelo.GetArcos.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
+function TdpnModelo.GetCondiciones: IReadOnlyList<ICondicion>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LCondicion: ICondicion;
+  LResult : IList<ICondicion>;
+begin
+  LResult := TCollections.CreateList<ICondicion>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, ICondicion, LCondicion) then
+      LResult.Add(LCondicion)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetCondiciones.ToArray);
          end;
   end;
   Result := LResult.AsReadOnly;

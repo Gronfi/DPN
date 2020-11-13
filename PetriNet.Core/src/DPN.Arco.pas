@@ -119,6 +119,11 @@ begin
     Result := False;
     AListaErrores.Add('Transicion = nil');
   end;
+  if (FPeso = 0) then
+  begin
+    Result := False;
+    AListaErrores.Add('Peso = 0');
+  end;
 end;
 
 constructor TdpnArco.Create;

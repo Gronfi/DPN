@@ -100,6 +100,18 @@ begin
                                    FNodos[AModelo.ID] := AModelo;
                                    FNombresModelos[AModelo.Nombre] := AModelo.ID;
                                  end);
+  FGrafo.GetCondiciones.ForEach(
+                                 procedure (const ACondicion: ICondicion)
+                                 begin
+                                   FNodos[ACondicion.ID] := ACondicion;
+                                   FNombresCondiciones[ACondicion.Nombre] := ACondicion.ID;
+                                 end);
+  FGrafo.GetAcciones.ForEach(
+                                 procedure (const AAccion: IAccion)
+                                 begin
+                                   FNodos[AAccion.ID] := AAccion;
+                                   FNombresAcciones[AAccion.Nombre] := AAccion.ID;
+                                 end);
 end;
 
 constructor TdpnPetriNetCoordinador.Create;
