@@ -31,6 +31,7 @@ implementation
 constructor TdpnEtiqueta.Create;
 begin
   inherited;
+  FTexto := '';
 end;
 
 procedure TdpnEtiqueta.Execute;

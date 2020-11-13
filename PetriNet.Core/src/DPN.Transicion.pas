@@ -42,6 +42,9 @@ type
     FPreCondicionesAgregadas: IList<ICondicion>;
     FPreAccionesAgregadas: IList<IAccion>;
 
+    FCondicionesPropias: IList<ICondicion>;
+    FAccionesPropias: IList<IAccion>;
+
     FLock: TSpinLock;
     FLockTimer: TSpinLock;
 
@@ -86,7 +89,7 @@ type
 
     procedure DoOnTokenCountChanged(const AID: integer; const ACount: Integer); virtual;
 
-    procedure PrepararPreCondicionesSiguientesEstados;
+    procedure PrepararPreCondicionesYPreAccionesSiguientesEstados;
 
     procedure AgregarDependencia(ADependencia: IBloqueable); virtual;
     procedure AgregarDependencias(ADependencias: IList<IBloqueable>); virtual;
@@ -213,6 +216,7 @@ end;
 
 procedure TdpnTransicion.AddAccion(AAccion: IAccion);
 begin
+  FAccionesPropias.Add(AAccion);
   FAcciones.Add(AAccion);
 end;
 
@@ -234,6 +238,7 @@ end;
 
 procedure TdpnTransicion.AddCondicion(ACondicion: ICondicion);
 begin
+  FCondicionesPropias.Add(ACondicion);
   FCondiciones.Add(ACondicion);
   ACondicion.OnContextoCondicionChanged.Add(OnCondicionContextChanged);
 end;
@@ -316,6 +321,8 @@ begin
   FPreAccionesAgregadas := TCollections.CreateList<IAccion>;
   FCondiciones := TCollections.CreateList<ICondicion>;
   FAcciones := TCollections.CreateList<IAccion>;
+  FCondicionesPropias := TCollections.CreateList<ICondicion>;
+  FAccionesPropias := TCollections.CreateList<IAccion>;
   FArcosIn := TCollections.CreateList<IArcoIn>;
   FArcosOut := TCollections.CreateList<IArcoOut>;
   FEstadosHabilitacion := TCollections.CreateDictionary<integer, boolean>;
@@ -418,6 +425,7 @@ end;
 
 procedure TdpnTransicion.EliminarAccion(AAccion: IAccion);
 begin
+  FAccionesPropias.Remove(AAccion);
   FAcciones.Remove(AAccion);
 end;
 
@@ -437,6 +445,7 @@ end;
 procedure TdpnTransicion.EliminarCondicion(ACondicion: ICondicion);
 begin
   ACondicion.OnContextoCondicionChanged.Remove(OnCondicionContextChanged);
+  FCondicionesPropias.Remove(ACondicion);
   FCondiciones.Remove(ACondicion)
 end;
 
@@ -717,7 +726,7 @@ begin
                      end);
 end;
 
-procedure TdpnTransicion.PrepararPreCondicionesSiguientesEstados;
+procedure TdpnTransicion.PrepararPreCondicionesYPreAccionesSiguientesEstados;
 var
   LCondicion: ICondicion;
   LAccion: IAccion;
@@ -862,7 +871,7 @@ var
   LCount: Integer;
 begin
   //precondiciones
-  PrepararPreCondicionesSiguientesEstados;
+  PrepararPreCondicionesYPreAccionesSiguientesEstados;
   //calculados
   FCondicionesPreparadas := FCondiciones.AsReadOnly;
   FAccionesPreparadas    := FAcciones.AsReadOnly;

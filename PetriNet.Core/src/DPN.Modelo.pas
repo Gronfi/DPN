@@ -133,7 +133,7 @@ begin
     for I := 0 to LDatos.Count - 1 do
     begin
       LNodoJSon := LDatos.Items[I] as TJSONObject;
-      LNodo := DPNCore.CrearInstancia(LNodoJSon).AsType<INodoPetriNet>;
+      LNodo := DPNCore.CrearInstancia<INodoPetriNet>(LNodoJSon);
       LNodo.CargarDeJSON(LNodoJSon);
       AddElementoNodo(LNodo);
     end;

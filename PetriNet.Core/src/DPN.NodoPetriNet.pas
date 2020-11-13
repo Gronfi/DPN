@@ -133,7 +133,7 @@ var
 begin
   OJSon := Self.FormatoJSON;
   try
-    LNew := DPNCore.CrearInstancia(OJSon).AsType<ISerializable>;
+    LNew := DPNCore.CrearInstancia<ISerializable>(OJSon);
     LNew.CargarDeJSON(OJSon);
   finally
     OJSon.Destroy;

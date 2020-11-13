@@ -93,7 +93,7 @@ begin
   LJSon := LModelo.FormatoJSON;
   LTmp := LJSON.ToString;
   WriteLn('Json: ' + LTmp);
-  LModelo2 := DPNCore.CrearInstancia(LJSon).AsType<IModelo>;
+  LModelo2 := DPNCore.CrearInstancia<IModelo>(LJSon);
   LModelo2.CargarDeJSON(LJSon);
   WriteLn(LModelo2.LogAsString);
   WriteLn(LModelo2.FormatoJSON.ToJSON);

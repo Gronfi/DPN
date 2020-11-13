@@ -3,6 +3,8 @@ unit DPN.Plaza.Super;
 interface
 
 uses
+  System.JSON,
+
   Spring,
   Spring.Collections,
 
@@ -14,6 +16,7 @@ type
   protected
     FCapacidadAcumulada: Integer;
     FListaPlazas: IList<IPlaza>;
+    FNombresListaPlazas: IList<string>;
 
     function GetAceptaArcosOUT: Boolean; override;
 
@@ -26,6 +29,9 @@ type
 
   public
     constructor Create; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
     procedure Start; override;
     function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
@@ -49,11 +55,14 @@ type
     procedure EliminarPreCondicion(ACondicion: ICondicion); override;
     procedure EliminarPreCondiciones(ACondiciones: TCondiciones); overload; override;
     procedure EliminarPreCondiciones(ACondiciones: TArrayCondiciones); overload; override;
+
+    property ListaPlazasContenidas: IList<IPlaza> read FListaPlazas;
   end;
 
 implementation
 
 uses
+  DPN.Core,
   DPN.TokenSistema;
 
 { TdpnPlazaSuper }
@@ -97,6 +106,23 @@ begin
   ;
 end;
 
+procedure TdpnPlazaSuper.CargarDeJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LNodoJSon: TJSONString;
+  I: integer;
+begin
+  inherited;
+  if NodoJson_IN.TryGetValue<TJSONArray>('Plazas', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONString;
+      FNombresListaPlazas.Add(LNodoJSon.Value);
+    end;
+  end;
+end;
+
 function TdpnPlazaSuper.CheckIsOK(out AListaErrores: IList<string>): boolean;
 begin
   Result := inherited;
@@ -111,6 +137,7 @@ constructor TdpnPlazaSuper.Create;
 begin
   inherited;
   FListaPlazas := TCollections.CreateList<IPlaza>;
+  FNombresListaPlazas := TCollections.CreateList<string>;
 end;
 
 procedure TdpnPlazaSuper.DoOnTokenCountChanged(const AID, ACount: Integer);
@@ -199,6 +226,20 @@ begin
                          end
                        );
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+end;
+
+procedure TdpnPlazaSuper.FormatoJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LNombre: string;
+begin
+  inherited;
+  LDatos := TJSONArray.Create;
+  for LNombre in FNombresListaPlazas do
+  begin
+    LDatos.AddElement(TJSonString.Create(LNombre));
+  end;
+  NodoJson_IN.AddPair('Plazas', LDatos);
 end;
 
 function TdpnPlazaSuper.GetAceptaArcosOUT: Boolean;

@@ -655,7 +655,7 @@ begin
   DPNCore.CargarCampoDeNodo<boolean>(NodoJson_IN, 'MultiplesDisparosDeTransiciones', ClassName, FMultipleEnablednessOfTransitions);
   if NodoJson_IN.TryGetValue('Grafo', LJSon) then
   begin
-    Grafo := DPNCore.CrearInstancia(LJSon).AsType<IModelo>;
+    Grafo := DPNCore.CrearInstancia<IModelo>(LJSon);
     Grafo.CargarDeJSON(LJSon);
     FEstado := EEstadoPetriNet.GrafoSinSetup;
     AsociacionesPN;

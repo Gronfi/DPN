@@ -39,6 +39,9 @@ type
       class function CrearInstancia(const typeInfo: PTypeInfo): TValue; overload; static;
       class function CrearInstancia(const NodoJSON: TJSonObject): TValue; overload; static;
       class function CrearInstancia(const ADescriptorCualificado: string): TValue; overload; static;
+      class function CrearInstancia<T>(const typeInfo: PTypeInfo): T; overload; static;
+      class function CrearInstancia<T>(const NodoJSON: TJSonObject): T; overload; static;
+      class function CrearInstancia<T>(const ADescriptorCualificado: string): T; overload; static;
 
       class function CrearNodoJSONObjeto(Objeto: TObject): TJSONObject; static;
       class procedure CargarCampoDeNodo<T>(var AObjetoJSON: TJSONObject; const ACampo, AErrorMsg: string; var ADato: T); overload; static;
@@ -105,6 +108,22 @@ begin
   LNombreCualificado := NodoJSON.GetValue('Clase').Value;
   // Creamos la instacia.
   Result := CrearInstancia(LNombreCualificado);
+end;
+
+
+class function DPNCore.CrearInstancia<T>(const typeInfo: PTypeInfo): T;
+begin
+  Result := CrearInstancia(typeInfo).AsType<T>;
+end;
+
+class function DPNCore.CrearInstancia<T>(const NodoJSON: TJSonObject): T;
+begin
+  Result := CrearInstancia(NodoJSON).AsType<T>;
+end;
+
+class function DPNCore.CrearInstancia<T>(const ADescriptorCualificado: string): T;
+begin
+  Result := CrearInstancia(ADescriptorCualificado).AsType<T>;
 end;
 
 class function DPNCore.CrearNodoJSONObjeto(Objeto: TObject): TJSONObject;
