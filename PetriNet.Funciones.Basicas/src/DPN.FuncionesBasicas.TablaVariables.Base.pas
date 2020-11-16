@@ -39,6 +39,34 @@ type
     property Variable: IVariable read GetVariable write SetVariable;
   end;
 
+  TdpnCondicion_DosVariables = class abstract(TdpnCondicion)
+  protected
+    FVariable1: IVariable;
+    FNombreVariable1: string;
+    FVariable2: IVariable;
+    FNombreVariable2: string;
+
+    function GetDependencias: IList<IBloqueable>; override;
+
+    function GetVariable1: IVariable;
+    procedure SetVariable1(AVariable: IVariable);
+    function GetVariable2: IVariable;
+    procedure SetVariable2(AVariable: IVariable);
+
+    procedure DoOnVarChanged(const AID: Integer; const AValue: TValue);
+  public
+    constructor Create; override;
+
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
+
+    procedure Setup; override;
+    function CheckIsOK(out AListaErrores: IList<string>): boolean; override;
+
+    property Variable1: IVariable read GetVariable1 write SetVariable1;
+    property Variable2: IVariable read GetVariable2 write SetVariable2;
+  end;
+
   TdpnAccion_Variable = class abstract(TdpnAccion)
   protected
     FVariable: IVariable;
@@ -202,6 +230,115 @@ begin
   if FVariable <> AVariable then
   begin
     FVariable := AVariable;
+  end;
+end;
+
+{ TdpnCondicion_DosVariables }
+
+procedure TdpnCondicion_DosVariables.CargarDeJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreVariable1', ClassName, FNombreVariable1);
+  DPNCore.CargarCampoDeNodo<string>(NodoJson_IN, 'NombreVariable2', ClassName, FNombreVariable2);
+end;
+
+function TdpnCondicion_DosVariables.CheckIsOK(out AListaErrores: IList<string>): boolean;
+begin
+  Result := inherited;
+  if FNombreVariable1.IsEmpty then
+  begin
+    Result := False;
+    AListaErrores.Add('NombreVariable1 is Empty');
+  end;
+  if FNombreVariable2.IsEmpty then
+  begin
+    Result := False;
+    AListaErrores.Add('NombreVariable2 is Empty');
+  end;
+end;
+
+constructor TdpnCondicion_DosVariables.Create;
+begin
+  inherited;
+  FNombreVariable1 := '';
+  FNombreVariable2 := '';
+end;
+
+procedure TdpnCondicion_DosVariables.DoOnVarChanged(const AID: Integer; const AValue: TValue);
+begin
+  OnContextoCondicionChanged.Invoke(ID);
+end;
+
+procedure TdpnCondicion_DosVariables.FormatoJSON(NodoJson_IN: TJSONObject);
+begin
+  inherited;
+  NodoJson_IN.AddPair('NombreVariable1', TJSONString.Create(Variable1.Nombre));
+  NodoJson_IN.AddPair('NombreVariable2', TJSONString.Create(Variable2.Nombre));
+end;
+
+function TdpnCondicion_DosVariables.GetDependencias: IList<IBloqueable>;
+begin
+  Result := TCollections.CreateList<IBloqueable>;
+  if Assigned(FVariable1) then
+    Result.Add(FVariable1);
+  if Assigned(FVariable2) then
+    Result.Add(FVariable2);
+end;
+
+function TdpnCondicion_DosVariables.GetVariable1: IVariable;
+begin
+  Result := FVariable1;
+end;
+
+function TdpnCondicion_DosVariables.GetVariable2: IVariable;
+begin
+  Result := FVariable2;
+end;
+
+procedure TdpnCondicion_DosVariables.Setup;
+var
+  LVariable: IVariable;
+begin
+  inherited;
+  if not FNombreVariable1.IsEmpty then
+  begin
+    LVariable := PetriNetController.GetVariable(FNombreVariable1);
+    if Assigned(LVariable) then
+      FVariable1 := LVariable;
+  end;
+  if not FNombreVariable2.IsEmpty then
+  begin
+    LVariable := PetriNetController.GetVariable(FNombreVariable2);
+    if Assigned(LVariable) then
+      FVariable2 := LVariable;
+  end;
+end;
+
+procedure TdpnCondicion_DosVariables.SetVariable1(AVariable: IVariable);
+begin
+  if Assigned(FVariable1) then
+  begin
+    FVariable1.OnValueChanged.Remove(DoOnVarChanged);
+  end;
+  if FVariable1 <> AVariable then
+  begin
+    FVariable1 := AVariable;
+    if Assigned(FVariable1) then
+      FVariable1.OnValueChanged.Add(DoOnVarChanged);
+  end;
+end;
+
+procedure TdpnCondicion_DosVariables.SetVariable2(AVariable: IVariable);
+begin
+  if Assigned(FVariable2) then
+  begin
+    FVariable2.OnValueChanged.Remove(DoOnVarChanged);
+  end;
+  if FVariable2 <> AVariable then
+  begin
+    FVariable2 := AVariable;
+    if Assigned(FVariable2) then
+      FVariable2.OnValueChanged.Add(DoOnVarChanged);
   end;
 end;
 
