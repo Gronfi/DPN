@@ -195,7 +195,7 @@ begin
       begin
         if (I < LEnum.Count) then
         begin
-          LToken := LEnum.ElementAt(I).Clon;
+          LToken := LEnum.ElementAt(I).Clon as IToken;
           Result.Add(LToken);
           Inc(LGeneradosCount);
         end
@@ -211,7 +211,7 @@ begin
       LTokenPlus := Result.ElementAt(0);
       for I := (LGeneradosCount - 1) to ACount - 1 do
       begin
-        LToken := LTokenPlus.Clon;
+        LToken := LTokenPlus.Clon as IToken;
         Result.Add(LToken);
       end;
     end

@@ -31,6 +31,7 @@ requires
   PetriNet.Core;
 
 contains
-  DPN.FuncionesBasicas.TablaVariables in 'src\DPN.FuncionesBasicas.TablaVariables.pas';
+  DPN.FuncionesBasicas.TablaVariables in 'src\DPN.FuncionesBasicas.TablaVariables.pas',
+  DPN.FuncionesBasicas.TablaVariables.Base in 'src\DPN.FuncionesBasicas.TablaVariables.Base.pas';
 
 end.

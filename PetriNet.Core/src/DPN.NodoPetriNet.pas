@@ -66,7 +66,7 @@ type
 
     Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); virtual;
     Function FormatoEstadoJSON: TJSONObject; overload; virtual;
-    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; virtual;
+    Procedure FormatoEstadoJSON(NodoJson_IN: TJSONObject); overload; virtual;
 
     property ID: integer read GetID write SetID;
     property Nombre: string read GetNombre;
@@ -171,18 +171,6 @@ begin
   FormatoJSON(Result);
 end;
 
-procedure TdpnNodoPetriNet.FormatoEstado(NodoJson_IN: TJSONObject);
-begin
-  NodoJson_IN.AddPair('Nombre', TJsonString.Create(NombreReducido)); //completo
-  NodoJson_IN.AddPair('Enabled', TJSONBool.Create(Enabled));
-end;
-
-function TdpnNodoPetriNet.FormatoEstadoJSON: TJSONObject;
-begin
-  Result := DPNCore.CrearNodoJSONObjeto(Self);
-  FormatoJSON(Result);
-end;
-
 procedure TdpnNodoPetriNet.FormatoJSON(NodoJson_IN: TJSONObject);
 var
   LModelo: string;
@@ -192,6 +180,18 @@ begin
     LModelo := FModelo.Nombre
   else LModelo := ''; //es el caso del modelo de mas alto nivel, no tiene padre
   NodoJson_IN.AddPair('Modelo', TJsonString.Create(LModelo)); //para asociar
+end;
+
+procedure TdpnNodoPetriNet.FormatoEstadoJSON(NodoJson_IN: TJSONObject);
+begin
+  NodoJson_IN.AddPair('Nombre', TJsonString.Create(NombreReducido)); //completo
+  NodoJson_IN.AddPair('Enabled', TJSONBool.Create(Enabled));
+end;
+
+function TdpnNodoPetriNet.FormatoEstadoJSON: TJSONObject;
+begin
+  Result := DPNCore.CrearNodoJSONObjeto(Self);
+  FormatoEstadoJSON(Result);
 end;
 
 function TdpnNodoPetriNet.GetAsObject: TObject;

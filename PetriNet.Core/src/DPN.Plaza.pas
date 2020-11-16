@@ -44,6 +44,9 @@ type
     Procedure CargarDeJSON(NodoJson_IN: TJSONObject); override;
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); override;
+    Procedure FormatoEstadoJSON(NodoJson_IN: TJSONObject); overload; override;
+
     function GetPreCondiciones: IList<ICondicion>; virtual;
     function GetPreAcciones: IList<IAccion>; virtual;
     function GetPostCondiciones: IList<ICondicion>; virtual;
@@ -181,6 +184,7 @@ end;
 procedure TdpnPlaza.AddToken(AToken: IToken);
 begin
   FTokens.Add(AToken);
+  AToken.PetriNetController := PetriNetController;
   AToken.Plaza := Self;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
@@ -191,23 +195,22 @@ var
 begin
   FTokens.AddRange(ATokens);
   for I := Low(ATokens) to High(ATokens) do
+  begin
+    ATokens[I].PetriNetController := PetriNetController;
     ATokens[I].Plaza := Self;
+  end;
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
 procedure TdpnPlaza.AddTokens(ATokens: TListaTokens);
 begin
-  FTokens.AddRange(ATokens.ToArray);
-  FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+  AddTokens(ATokens.ToArray);
 end;
 
 procedure TdpnPlaza.CargarDeJSON(NodoJson_IN: TJSONObject);
 var
   LDatos: TJSONArray;
   LNodoJSon: TJSONString;
-  LCondicion: ICondicion;
-  LAccion: IAccion;
-  LNombre: string;
   I: integer;
 begin
   inherited;
@@ -243,6 +246,26 @@ begin
     begin
       LNodoJSon := LDatos.Items[I] as TJSONString;
       FNombresPostAcciones.Add(LNodoJSon.Value);
+    end;
+  end;
+end;
+
+procedure TdpnPlaza.CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LNodoJSon: TJSONObject;
+  LToken: IToken;
+  I: integer;
+begin
+  FTokens.Clear;
+  if NodoJson_IN.TryGetValue<TJSONArray>('Tokens', LDatos) then
+  begin
+    for I := 0 to LDatos.Count - 1 do
+    begin
+      LNodoJSon := LDatos.Items[I] as TJSONObject;
+      LToken := DPNCore.CrearInstancia<IToken>(LNodoJSon);
+      LToken.CargarEstadoDeJSON(LNodoJSon);
+      AddToken(LToken);
     end;
   end;
 end;
@@ -363,6 +386,19 @@ procedure TdpnPlaza.EliminarTokens(const ACount: integer);
 begin
   FTokens.DeleteRange(0, ACount);
   FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+end;
+
+procedure TdpnPlaza.FormatoEstadoJSON(NodoJson_IN: TJSONObject);
+var
+  LDatos: TJSONArray;
+  LToken: IToken;
+begin
+  LDatos := TJSONArray.Create;
+  for LToken in FTokens do
+  begin
+    LDatos.AddElement(LToken.FormatoEstadoJSON);
+  end;
+  NodoJson_IN.AddPair('Tokens', LDatos);
 end;
 
 procedure TdpnPlaza.FormatoJSON(NodoJson_IN: TJSONObject);

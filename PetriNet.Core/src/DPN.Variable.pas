@@ -28,7 +28,7 @@ type
     Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload; override;
 
     Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject); override;
-    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload; override;
+    Procedure FormatoEstadoJSON(NodoJson_IN: TJSONObject); overload; override;
 
     function LogAsString: string; override;
 
@@ -68,7 +68,7 @@ begin
   FEventoOnValueChanged := DPNCore.CrearEvento<EventoNodoPN_ValorTValue>;
 end;
 
-procedure TdpnVariable.FormatoEstado(NodoJson_IN: TJSONObject);
+procedure TdpnVariable.FormatoEstadoJSON(NodoJson_IN: TJSONObject);
 begin
   inherited;
   NodoJson_IN.AddPair('Valor', TJSONString.Create(FValor.ToString));

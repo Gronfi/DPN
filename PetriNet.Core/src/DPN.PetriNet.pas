@@ -112,6 +112,18 @@ begin
                                    FNodos[AAccion.ID] := AAccion;
                                    FNombresAcciones[AAccion.Nombre] := AAccion.ID;
                                  end);
+  FGrafo.GetVariables.ForEach(
+                                 procedure (const AVariable: IVariable)
+                                 begin
+                                   FNodos[AVariable.ID] := AVariable;
+                                   FNombresVariables[AVariable.Nombre] := AVariable.ID;
+                                 end);
+  FGrafo.GetDecoraciones.ForEach(
+                                 procedure (const ADecoracion: IDecoracion)
+                                 begin
+                                   FNodos[ADecoracion.ID] := ADecoracion;
+                                   FNombresDecoraciones[ADecoracion.Nombre] := ADecoracion.ID;
+                                 end);
 end;
 
 constructor TdpnPetriNetCoordinador.Create;

@@ -309,7 +309,6 @@ procedure TdpnTransicion.CargarDeJSON(NodoJson_IN: TJSONObject);
 var
   LDatos: TJSONArray;
   LNodoJSon: TJSONString;
-  LNodo: INodoPetriNet;
   I: integer;
 begin
   inherited;

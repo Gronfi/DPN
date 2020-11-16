@@ -1,5 +1,11 @@
 unit DPN.Interfaces;
 
+//******************************************************************
+// NOTAS                                                           *
+//******************************************************************
+// 1.Los IDs de los nodos y de los tokens son únicos por ejecución *
+//******************************************************************
+
 interface
 
 uses
@@ -56,7 +62,20 @@ type
     function GetAsObject: TObject;
   end;
 
-  IIdentificado = interface(IObjeto)
+  ISerializable = interface(IObjeto)
+    ['{965202FB-0847-413D-B21F-A4A86C67CB1C}']
+    Procedure CargarDeJSON(NodoJson_IN: TJSONObject);
+    Function FormatoJSON: TJSONObject; overload;
+    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload;
+
+    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
+    Function FormatoEstadoJSON: TJSONObject; overload;
+    Procedure FormatoEstadoJSON(NodoJson_IN: TJSONObject); overload;
+
+    function Clon: ISerializable;
+  end;
+
+  IIdentificado = interface(ISerializable)
   ['{67839BCB-0819-419C-A78F-CA92566D3491}']
     function GetID: integer;
     procedure SetID(const Value: integer);
@@ -80,20 +99,7 @@ type
     property OnNombreChanged: IEvent<EventoNodoPN_ValorString> read GetOnNombreChanged;
   end;
 
-  ISerializable = interface(INombrado)
-    ['{965202FB-0847-413D-B21F-A4A86C67CB1C}']
-    Procedure CargarDeJSON(NodoJson_IN: TJSONObject);
-    Function FormatoJSON: TJSONObject; overload;
-    Procedure FormatoJSON(NodoJson_IN: TJSONObject); overload;
-
-    Procedure CargarEstadoDeJSON(NodoJson_IN: TJSONObject);
-    Function FormatoEstadoJSON: TJSONObject; overload;
-    Procedure FormatoEstado(NodoJson_IN: TJSONObject); overload;
-
-    function Clon: ISerializable;
-  end;
-
-  INodoPetriNet = interface(ISerializable)
+  INodoPetriNet = interface(INombrado)
   ['{B713E58D-4060-49D0-B377-AA929E274A8D}']
     function GetOnEnabledChanged: IEvent<EventoNodoPN_ValorBooleano>;
 
@@ -134,7 +140,11 @@ type
     property Dependencias: IList<IBloqueable> read GetDependencias;
   end;
 
-  IEtiqueta = interface(INodoPetriNet)
+  IDecoracion = interface(INodoPetriNet)
+  ['{513E1A74-04DB-460E-BB7A-C616F170C001}']
+  end;
+
+  IEtiqueta = interface(IDecoracion)
   ['{52F9BEFC-531B-4E33-8BBB-881DD659F5DD}']
     function GetTexto: string;
     procedure SetTexto(const Value: string);
@@ -361,7 +371,7 @@ type
     property IsTransicionDependeDeEvento: Boolean read GetIsTransicionDependeDeEvento;
   end;
 
-  IToken = interface
+  IToken = interface(ISerializable)
   ['{DBC2D293-3584-477D-9EA9-6B75251A4397}']
     function GetID: int64;
 
@@ -370,9 +380,11 @@ type
 
     function GetTablaVariables: IDictionary<String, TValue>;
 
-    function Clon: IToken;
     function GetPlaza: IPlaza;
     procedure SetPlaza(APlaza: IPlaza);
+
+    function GetPetriNetController: TdpnPetriNetCoordinadorBase;
+    procedure SetPetriNetController(APetriNetController: TdpnPetriNetCoordinadorBase);
 
     function GetCantidadCambiosPlaza: int64;
 
@@ -389,6 +401,7 @@ type
     property CantidadCambiosPlaza: int64 read GetCantidadCambiosPlaza;
     property MomentoCreacion: int64 read GetMomentoCreacion;
     property MomentoCambioPlaza: int64 read GetMomentoCambioPlaza;
+    property PetriNetController: TdpnPetriNetCoordinadorBase read GetPetriNetController write SetPetriNetController;
   end;
 
   ITokenSistema = interface(IToken)
@@ -463,6 +476,7 @@ type
     function GetVariables: IReadOnlyList<IVariable>;
     function GetCondiciones: IReadOnlyList<ICondicion>;
     function GetAcciones: IReadOnlyList<IAccion>;
+    function GetDecoraciones: IReadOnlyList<IDecoracion>;
 
     procedure AddElementoNodo(AElemento: INodoPetriNet);
     procedure AddElementosNodos(AElementos: TArray<INodoPetriNet>); overload;
@@ -507,7 +521,8 @@ type
     FNombresModelos: IDictionary<String, Integer>;
     FNombresCondiciones: IDictionary<String, Integer>;
     FNombresAcciones: IDictionary<String, Integer>;
-
+    FNombresVariables: IDictionary<String, Integer>;
+    FNombresDecoraciones: IDictionary<String, Integer>;
 
     function GetMultipleEnablednessOfTransitions: Boolean; virtual;
     procedure SetMultipleEnablednessOfTransitions(const Value: Boolean); virtual;
@@ -550,8 +565,15 @@ type
 
     function GetCondicion(const AID: integer): ICondicion; overload; virtual;
     function GetCondicion(const ANombre: string): ICondicion; overload; virtual;
+
     function GetAccion(const AID: integer): IAccion; overload; virtual;
     function GetAccion(const ANombre: string): IAccion; overload; virtual;
+
+    function GetVariable(const AID: integer): IVariable; overload; virtual;
+    function GetVariable(const ANombre: string): IVariable; overload; virtual;
+
+    function GetDecoracion(const AID: integer): IDecoracion; overload; virtual;
+    function GetDecoracion(const ANombre: string): IDecoracion; overload; virtual;
 
     function CambiarNombreNodo(const AID: integer; const ANombreNuevo: string; const AFullNombreNuevo: string): boolean; virtual;
 
@@ -718,6 +740,8 @@ begin
   FNombresModelos := TCollections.CreateDictionary<String, Integer>;
   FNombresCondiciones := TCollections.CreateDictionary<String, Integer>;
   FNombresAcciones := TCollections.CreateDictionary<String, Integer>;
+  FNombresVariables := TCollections.CreateDictionary<String, Integer>;
+  FNombresDecoraciones := TCollections.CreateDictionary<String, Integer>;
 end;
 
 destructor TdpnPetriNetCoordinadorBase.Destroy;
@@ -794,6 +818,24 @@ begin
   else Result := nil;
 end;
 
+function TdpnPetriNetCoordinadorBase.GetDecoracion(const ANombre: string): IDecoracion;
+var
+  LValor: integer;
+begin
+  if FNombresDecoraciones.TryGetValue(ANombre, LValor) then
+    Result := GetDecoracion(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetDecoracion(const AID: integer): IDecoracion;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IDecoracion
+  else Result := nil;
+end;
+
 function TdpnPetriNetCoordinadorBase.GetEstado: EEstadoPetriNet;
 begin
   Result := FEstado;
@@ -856,6 +898,24 @@ var
 begin
   if FNombresModelos.TryGetValue(ANombre, LValor) then
     Result := GetTransicion(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetVariable(const ANombre: string): IVariable;
+var
+  LValor: integer;
+begin
+  if FNombresVariables.TryGetValue(ANombre, LValor) then
+    Result := GetVariable(LValor)
+  else Result := nil;
+end;
+
+function TdpnPetriNetCoordinadorBase.GetVariable(const AID: integer): IVariable;
+var
+  LNodo: INodoPetriNet;
+begin
+  if FNodos.TryGetValue(AID, LNodo) then
+    Result := LNodo as IVariable
   else Result := nil;
 end;
 

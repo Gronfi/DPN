@@ -65,6 +65,7 @@ type
     function GetVariables: IReadOnlyList<IVariable>; virtual;
     function GetCondiciones: IReadOnlyList<ICondicion>; virtual;
     function GetAcciones: IReadOnlyList<IAccion>; virtual;
+    function GetDecoraciones: IReadOnlyList<IDecoracion>; virtual;
 
     procedure AddArcoEntrada(AArco: IArcoOut); virtual;
     procedure EliminarArcoEntrada(AArco: IArcoOut); virtual;
@@ -279,6 +280,26 @@ begin
     else begin
            if Supports(LNodo, IModelo, LModelo) then
              LResult.AddRange(LModelo.GetCondiciones.ToArray);
+         end;
+  end;
+  Result := LResult.AsReadOnly;
+end;
+
+function TdpnModelo.GetDecoraciones: IReadOnlyList<IDecoracion>;
+var
+  LNodo: INodoPetriNet;
+  LModelo: IModelo;
+  LDeco: IDecoracion;
+  LResult : IList<IDecoracion>;
+begin
+  LResult := TCollections.CreateList<IDecoracion>;
+  for LNodo in FElementos do
+  begin
+    if Supports(LNodo, IDecoracion, LDeco) then
+      LResult.Add(LDeco)
+    else begin
+           if Supports(LNodo, IModelo, LModelo) then
+             LResult.AddRange(LModelo.GetDecoraciones.ToArray);
          end;
   end;
   Result := LResult.AsReadOnly;
