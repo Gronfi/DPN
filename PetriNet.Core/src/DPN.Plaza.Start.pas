@@ -15,6 +15,7 @@ type
   TdpnPlazaStart = class (TdpnPlaza)
   protected
     FEjecutado: Boolean;
+    FPrimeraVez: Boolean;
     FGeneracionContinua: Boolean;
     FGenerarTokenDeSistema: Boolean;
 
@@ -28,6 +29,8 @@ type
 
     function GetAceptaArcosOUT: Boolean; override;
     procedure CrearToken;
+
+    procedure AddToken(AToken: IToken); override;
   public
     constructor Create; override;
 
@@ -56,6 +59,18 @@ uses
 
 { TdpnPlazaStart }
 
+procedure TdpnPlazaStart.AddToken(AToken: IToken);
+begin
+  FTokens.Add(AToken);
+  AToken.PetriNetController := PetriNetController;
+  AToken.Plaza := Self;
+  if FPrimeraVez then
+  begin
+    FPrimeraVez := False;
+    FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+  end;
+end;
+
 procedure TdpnPlazaStart.CargarDeJSON(NodoJson_IN: TJSONObject);
 begin
   inherited;
@@ -73,47 +88,52 @@ begin
       False: LToken := TdpnTokenColoreado.Create;
       True: LToken := TdpnTokenSistema.Create;
     end;
-    FTokens.Add(LToken);
+    AddToken(LToken);
     if not GeneracionContinua then
+    begin
       FEjecutado := True;
-  end;
+      FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
+    end;
+  end
+  else FEventoOnTokenCountChanged.Invoke(ID, TokenCount);
 end;
 
 constructor TdpnPlazaStart.Create;
 begin
   inherited;
   FEjecutado := False;
+  FPrimeraVez := True;
   FGenerarTokenDeSistema := False;
   FGeneracionContinua := False;
 end;
 
 procedure TdpnPlazaStart.EliminarTodosTokens;
 begin
-  inherited;
+  FTokens.Clear;
   CrearToken;
 end;
 
 procedure TdpnPlazaStart.EliminarToken(AToken: IToken);
 begin
-  inherited;
+  FTokens.Remove(AToken);
   CrearToken;
 end;
 
 procedure TdpnPlazaStart.EliminarTokens(ATokens: TListaTokens);
 begin
-  inherited;
+  FTokens.RemoveRange(ATokens.ToArray);
   CrearToken;
 end;
 
 procedure TdpnPlazaStart.EliminarTokens(ATokens: TArrayTokens);
 begin
-  inherited;
+  FTokens.RemoveRange(ATokens);
   CrearToken;
 end;
 
 procedure TdpnPlazaStart.EliminarTokens(const ACount: integer);
 begin
-  inherited;
+  FTokens.DeleteRange(0, ACount);
   CrearToken;
 end;
 

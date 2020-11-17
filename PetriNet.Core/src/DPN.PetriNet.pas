@@ -129,7 +129,7 @@ end;
 constructor TdpnPetriNetCoordinador.Create;
 begin
   inherited;
-  FComm := TThreadedQueue<ITransicion>.Create(10, 100, Cardinal.MaxValue);
+  FComm := TThreadedQueue<ITransicion>.Create(1000, 100, Cardinal.MaxValue);
 end;
 
 destructor TdpnPetriNetCoordinador.Destroy;
@@ -142,6 +142,7 @@ procedure TdpnPetriNetCoordinador.DoOnMarcadoPlazasCantidadTokensChanged(const A
 var
   LPlaza: integer;
 begin
+  Exit;
   FLockMarcado.BeginWrite;
   try
     for LPlaza in AMarcado.Marcado.Keys do

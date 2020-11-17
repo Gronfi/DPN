@@ -742,6 +742,8 @@ begin
   FNombresAcciones := TCollections.CreateDictionary<String, Integer>;
   FNombresVariables := TCollections.CreateDictionary<String, Integer>;
   FNombresDecoraciones := TCollections.CreateDictionary<String, Integer>;
+
+  FEvento_OnEstadoChanged := DPNCore.CrearEvento<EventoEstadoPN>;
 end;
 
 destructor TdpnPetriNetCoordinadorBase.Destroy;
@@ -986,6 +988,7 @@ begin
     FStartedEllapsedAt := Utils.ElapsedMiliseconds;
     FEvento_OnEstadoChanged.Invoke(FEstado);
   end;
+  Sleep(500);
 end;
 
 procedure TdpnPetriNetCoordinadorBase.Stop;

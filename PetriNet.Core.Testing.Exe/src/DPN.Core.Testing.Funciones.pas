@@ -90,9 +90,11 @@ type
 
   TEventoPrueba = class(TEvento)
   protected
+    FIndex : integer;
     FNumero: integer;
     FTexto : string;
   public
+    property Indice: integer read FIndex write FIndex;
     property Numero: integer read FNumero write FNumero;
     property Texto: string read FTexto write FTexto;
   end;
@@ -453,6 +455,7 @@ end;
 
 function TdpnCondicion_Evento_Prueba.EvaluarInternal(ATokens: IMarcadoTokens; AEvento: IEvento): Boolean;
 begin
+  //WriteLn(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnCondicion_Evento_Prueba.EvaluarInternal> ID: ' + ID.ToString + ' - Cnt: ' + TEventoPrueba(AEvento).Indice.ToString);
   Result := TEventoPrueba(AEvento).Texto = 'Hola';
 end;
 

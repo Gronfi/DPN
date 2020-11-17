@@ -4,6 +4,7 @@ interface
 
 uses
   System.JSON,
+  System.SyncObjs,
 
   Spring,
   Spring.Collections,
@@ -69,6 +70,7 @@ type
 
   TdpnCondicionBaseEsperaEvento = class abstract(TdpnCondicion)
   protected
+    FLocker: TSpinLock;
     FListenerEvento: IEventoListener;
     FListaEventosRecibidos: IList<IEvento>;
 
@@ -85,6 +87,9 @@ type
     function CrearListenerEvento: IEventoListener; virtual; abstract;
 
     function GetIsCondicionQueEsperaEvento: Boolean; override;
+
+    procedure AdquireLock; inline;
+    procedure ReleaseLock; inline;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -241,9 +246,19 @@ end;
 
 { TdpnCondicionBaseEsperaEvento }
 
+procedure TdpnCondicionBaseEsperaEvento.AdquireLock;
+begin
+  FLocker.Enter;
+end;
+
 procedure TdpnCondicionBaseEsperaEvento.ClearEventos;
 begin
-  FListaEventosRecibidos.Clear;
+  AdquireLock;
+  try
+    FListaEventosRecibidos.Clear;
+  finally
+    ReleaseLock;
+  end;
 end;
 
 constructor TdpnCondicionBaseEsperaEvento.Create;
@@ -263,7 +278,13 @@ end;
 
 procedure TdpnCondicionBaseEsperaEvento.DoOnEventoRecibido(AEvento: IEvento);
 begin
-  FListaEventosRecibidos.Add(AEvento);
+  //WriteLn(FormatDateTime('hh:nn:ss.zzz ', Now) + '<TdpnCondicionBaseEsperaEvento.DoOnEventoRecibido> ID: ' + ID.ToString);
+  AdquireLock;
+  try
+    FListaEventosRecibidos.Add(AEvento);
+  finally
+    ReleaseLock;
+  end;
   FEventoOnContextoCondicionChanged.Invoke(ID)
 end;
 
@@ -289,15 +310,30 @@ end;
 
 function TdpnCondicionBaseEsperaEvento.GetPrimerEvento: IEvento;
 begin
-  if FListaEventosRecibidos.Count > 0 then
-    Result := FListaEventosRecibidos[0]
-  else Result := nil;
+  AdquireLock;
+  try
+    if FListaEventosRecibidos.Count > 0 then
+      Result := FListaEventosRecibidos[0]
+    else Result := nil;
+  finally
+    ReleaseLock;
+  end;
+end;
+
+procedure TdpnCondicionBaseEsperaEvento.ReleaseLock;
+begin
+  FLocker.Exit;
 end;
 
 procedure TdpnCondicionBaseEsperaEvento.RemovePrimerEvento;
 begin
-  if FListaEventosRecibidos.Count > 0 then
-    FListaEventosRecibidos.Delete(0);
+  AdquireLock;
+  try
+    if FListaEventosRecibidos.Count > 0 then
+      FListaEventosRecibidos.Delete(0);
+  finally
+    ReleaseLock;
+  end;
 end;
 
 procedure TdpnCondicionBaseEsperaEvento.SetEventoHabilitado(const AValor: Boolean);

@@ -692,10 +692,6 @@ var
   LFuncionE: ICondicion;
 
   LEvento  : IEvento;
-  LEventoR : IEvento;
-
-  LPlaza   : IPlaza;
-  LMarcado : IMarcadoTokens;
 begin
   LEnabled := TdpnVariable.Create;
   LEnabled.NombreReducido := 'Enabled';
@@ -800,10 +796,6 @@ var
   LFuncionE: ICondicion;
 
   LEvento  : IEvento;
-  LEventoR : IEvento;
-
-  LPlaza   : IPlaza;
-  LMarcado : IMarcadoTokens;
 begin
   LEnabled := TdpnVariable.Create;
   LEnabled.NombreReducido := 'Enabled';
@@ -914,10 +906,6 @@ var
   LFuncionE: ICondicion;
 
   LEvento  : IEvento;
-  LEventoR : IEvento;
-
-  LPlaza   : IPlaza;
-  LMarcado : IMarcadoTokens;
 begin
   LEnabled := TdpnVariable.Create;
   LEnabled.NombreReducido := 'Enabled';
